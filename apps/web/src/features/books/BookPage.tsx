@@ -20,6 +20,7 @@ import {
 import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal.js';
+import { PageTopbarActions } from '../../components/ui/PageTopbarActions.js';
 import { EmptyState, SectionError } from '../../components/ui/States.js';
 import { useToast } from '../../components/ui/ToastProvider.js';
 import { humanizeApiError } from '../../platform/api/client.js';
@@ -175,19 +176,15 @@ export function BookPage(): React.JSX.Element {
 
   return (
     <div className="library-page page-stack">
-      <header className="learning-hero learning-hero--books">
-        <div>
-          <p className="eyebrow">记录与知识</p>
-          <h2>书籍管理</h2>
-        </div>
+      <PageTopbarActions>
         <button
           className="button button--primary"
           type="button"
           onClick={() => setCreateOpen(true)}
         >
-          <Plus aria-hidden="true" size={18} /> 添加书籍
+          <Plus aria-hidden="true" size={18} /> <span>添加书籍</span>
         </button>
-      </header>
+      </PageTopbarActions>
 
       {mutationError ? (
         <SectionError title="操作没有完成" message={humanizeApiError(mutationError)} />

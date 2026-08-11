@@ -15,6 +15,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal.js';
+import { PageTopbarActions } from '../../components/ui/PageTopbarActions.js';
 import { EmptyState, SectionError } from '../../components/ui/States.js';
 import { useToast } from '../../components/ui/ToastProvider.js';
 import { humanizeApiError } from '../../platform/api/client.js';
@@ -120,22 +121,18 @@ export function LifeCountdownPage(): React.JSX.Element {
     remove.error;
   return (
     <div className="feature-shell-page feature-shell-page--life">
-      <header className="feature-hero feature-hero--life">
-        <div>
-          <p className="eyebrow">时间与提醒</p>
-          <h2>人生倒计时</h2>
-        </div>
-        <div className="life-hero-actions">
+      <PageTopbarActions>
+        <div className="topbar__context-action-group">
           <button className="button button--quiet" onClick={() => setProfileOpen(true)}>
             <Settings2 size={17} />
-            人生参数
+            <span>人生参数</span>
           </button>
           <button className="button button--primary" onClick={() => setCreateOpen(true)}>
             <Plus size={17} />
-            添加事件
+            <span>添加事件</span>
           </button>
         </div>
-      </header>
+      </PageTopbarActions>
       {error ? <SectionError title="数据没有更新" message={humanizeApiError(error)} /> : null}
       {dashboard.data ? (
         <LifeMetrics

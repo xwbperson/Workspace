@@ -14,6 +14,7 @@ import {
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal.js';
+import { PageTopbarActions } from '../../components/ui/PageTopbarActions.js';
 import { EmptyState, SectionError } from '../../components/ui/States.js';
 import { useToast } from '../../components/ui/ToastProvider.js';
 import { humanizeApiError } from '../../platform/api/client.js';
@@ -130,19 +131,15 @@ export function GoalPage(): React.JSX.Element {
 
   return (
     <div className="feature-shell-page feature-shell-page--goals">
-      <header className="feature-hero feature-hero--goals">
-        <div>
-          <p className="eyebrow">目标与复盘</p>
-          <h2>目标管理</h2>
-        </div>
+      <PageTopbarActions>
         <button
           type="button"
           className="button button--primary"
           onClick={() => setCreateOpen(true)}
         >
-          <Plus size={18} /> 添加目标
+          <Plus size={18} /> <span>添加目标</span>
         </button>
-      </header>
+      </PageTopbarActions>
 
       {mutationError ? (
         <SectionError title="操作没有完成" message={humanizeApiError(mutationError)} />

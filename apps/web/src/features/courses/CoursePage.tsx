@@ -32,6 +32,7 @@ import {
 import { useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal.js';
+import { PageTopbarActions } from '../../components/ui/PageTopbarActions.js';
 import { EmptyState, SectionError } from '../../components/ui/States.js';
 import { useToast } from '../../components/ui/ToastProvider.js';
 import { humanizeApiError } from '../../platform/api/client.js';
@@ -260,19 +261,15 @@ export function CoursePage(): React.JSX.Element {
 
   return (
     <div className="course-page page-stack">
-      <header className="learning-hero learning-hero--courses">
-        <div>
-          <p className="eyebrow">计划与执行</p>
-          <h2>课程管理</h2>
-        </div>
+      <PageTopbarActions>
         <button
           type="button"
           className="button button--primary"
           onClick={() => setCreateOpen(true)}
         >
-          <Plus aria-hidden="true" /> 添加课程
+          <Plus aria-hidden="true" /> <span>添加课程</span>
         </button>
-      </header>
+      </PageTopbarActions>
       {mutationError ? (
         <SectionError title="操作没有完成" message={humanizeApiError(mutationError)} />
       ) : null}

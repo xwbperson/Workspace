@@ -882,6 +882,34 @@
     gap: 8px;
   }
 
+  .topbar__title {
+    min-width: 0;
+  }
+
+  .topbar__actions {
+    flex: none;
+  }
+
+  .topbar__context-actions,
+  .topbar__context-action-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .topbar__context-actions:empty {
+    display: none;
+  }
+
+  .topbar__context-actions:not(:empty) + .topbar__create {
+    display: none;
+  }
+
+  .topbar__context-actions .button {
+    min-height: 40px;
+    white-space: nowrap;
+  }
+
   .topbar__title span {
     display: block;
     color: var(--color-text-tertiary);
@@ -894,6 +922,7 @@
   .topbar__title h1 {
     font-size: 19px;
     line-height: 1.2;
+    white-space: nowrap;
   }
 
   .search-trigger,
@@ -4306,6 +4335,28 @@
     border-radius: var(--radius-sm);
   }
 
+  .finance-period-picker {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    padding: 0 4px 0 12px;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .finance-period-picker input {
+    width: 148px;
+    min-height: 40px;
+    padding: 7px 10px;
+    color: var(--color-text);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+
   .finance-overview,
   .finance-section {
     display: grid;
@@ -4871,6 +4922,31 @@
       display: none;
     }
 
+    .topbar__context-actions,
+    .topbar__context-action-group {
+      gap: 4px;
+    }
+
+    .topbar__context-actions .button {
+      width: 38px;
+      min-height: 38px;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .topbar__context-actions .button > span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    .workbench-shell:has(.topbar__context-actions:not(:empty)) > .mobile-create {
+      display: none;
+    }
+
     .page-content {
       padding: 20px 16px 32px;
     }
@@ -5292,129 +5368,10 @@
   .countdown-page {
     gap: 14px;
   }
-
-  .feature-hero,
-  .learning-hero,
-  .countdown-hero {
-    display: flex;
-    min-height: 0;
-    align-items: center;
-    justify-content: space-between;
-    gap: 18px;
-    padding: 13px 16px;
-    overflow: visible;
-    color: var(--color-text);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-left: 3px solid var(--color-accent);
-    border-radius: var(--radius-md);
-    box-shadow: none;
-  }
-
-  .feature-hero--goals,
-  .feature-hero--tasks,
-  .feature-hero--calendar,
-  .feature-hero--inbox,
-  .feature-hero--subscriptions,
-  .feature-hero--finance,
-  .feature-hero--life,
-  .learning-hero--books,
-  .learning-hero--courses {
-    color: var(--color-text);
-    background: var(--color-surface);
-  }
-
-  .feature-hero--goals::after {
-    display: none;
-  }
-
-  .feature-hero > div:first-child,
-  .learning-hero > div:first-child,
-  .countdown-hero > div:first-child {
-    display: grid;
-    gap: 1px;
-    max-width: none;
-  }
-
-  .feature-hero .eyebrow,
-  .feature-hero--goals .eyebrow,
-  .feature-hero--tasks .eyebrow,
-  .feature-hero--calendar .eyebrow,
-  .feature-hero--inbox .eyebrow,
-  .learning-hero .eyebrow,
-  .countdown-hero .eyebrow {
-    margin: 0;
-    color: var(--color-accent);
-    font-size: 11px;
-  }
-
-  .feature-hero h2,
-  .learning-hero h2,
-  .countdown-hero h2 {
-    max-width: none;
-    margin: 0;
-    color: var(--color-text);
-    font-size: 20px;
-    line-height: 1.3;
-    letter-spacing: -0.015em;
-  }
-
-  .feature-hero p:last-child,
-  .learning-hero p:last-child,
-  .countdown-hero p:last-child {
-    display: none;
-  }
-
-  .feature-hero .button,
-  .learning-hero .button,
-  .countdown-hero .button,
-  .life-hero-actions .button {
-    min-height: 38px;
-    padding-block: 7px;
-  }
-
-  .period-picker {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    color: var(--color-text-secondary);
-  }
-
-  .period-picker input {
-    min-height: 38px;
-    color: var(--color-text);
-    background: var(--color-surface-muted);
-    border-color: var(--color-border);
-  }
 }
 
 @layer responsive {
   @media (max-width: 599px) {
-    .feature-hero,
-    .learning-hero,
-    .countdown-hero {
-      min-height: 0;
-      flex-flow: row wrap;
-      align-items: center;
-      padding: 11px 12px;
-    }
-
-    .feature-hero h2,
-    .learning-hero h2,
-    .countdown-hero h2 {
-      font-size: 18px;
-    }
-
-    .feature-hero > .button,
-    .learning-hero > .button,
-    .countdown-hero > .button,
-    .life-hero-actions,
-    .life-hero-actions .button,
-    .period-picker,
-    .period-picker input {
-      width: auto;
-    }
-
     .annual-debt-card > header,
     .finance-subheading {
       align-items: flex-start;
@@ -5424,6 +5381,23 @@
     .annual-debt-actions {
       width: 100%;
       justify-content: space-between;
+    }
+
+    .finance-tabs {
+      flex-wrap: wrap;
+      overflow: visible;
+    }
+
+    .finance-period-picker {
+      width: 100%;
+      justify-content: space-between;
+      margin-left: 0;
+      padding: 6px 4px 0;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .finance-period-picker input {
+      width: min(190px, 62vw);
     }
   }
 }
@@ -5441,9 +5415,6 @@
   }
 
   .feature-shell-page,
-  .feature-hero,
-  .learning-hero,
-  .countdown-hero,
   .lifecycle-tabs {
     width: 100%;
   }

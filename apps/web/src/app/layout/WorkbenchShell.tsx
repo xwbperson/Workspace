@@ -12,12 +12,13 @@ import {
   UserRound,
   X,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { featureCatalog, featureCategories } from '../feature-catalog.js';
 import { getVisibleFeatureNavigation } from '../navigation.js';
 import { FeatureIcon } from '../../components/ui/FeatureIcon.js';
 import { Modal } from '../../components/ui/Modal.js';
+import { PageTopbarActionsProvider } from '../../components/ui/PageTopbarActions.js';
 import { useAuth } from '../../platform/auth/AuthProvider.js';
 import { workbenchClient } from '../../platform/api/client.js';
 import { usePreferences } from '../../platform/preferences/usePreferences.js';
@@ -45,6 +46,10 @@ export function WorkbenchShell(): React.JSX.Element {
   const [collapsed, setCollapsed] = useState(readCollapsedPreference);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [topbarActionTarget, setTopbarActionTarget] = useState<HTMLDivElement | null>(null);
+  const registerTopbarActionTarget = useCallback((element: HTMLDivElement | null): void => {
+    setTopbarActionTarget(element);
+  }, []);
   const page = pageTitle(location.pathname);
   const visibleFeatureNavigation = useMemo(
     () => getVisibleFeatureNavigation(preferences.hiddenFeatureIds),
@@ -164,67 +169,74 @@ export function WorkbenchShell(): React.JSX.Element {
         />
       ) : null}
 
-      <div className="workbench-main">
-        <header className="topbar">
-          <div className="topbar__title">
-            <button
-              type="button"
-              className="icon-button topbar__menu"
-              aria-label="打开导航"
-              onClick={() => setMobileMenuOpen(true)}
-            >
-              <Menu aria-hidden="true" />
-            </button>
-            <div>
-              {page.eyebrow ? <span>{page.eyebrow}</span> : null}
-              <h1>{page.title}</h1>
+      <PageTopbarActionsProvider target={topbarActionTarget}>
+        <div className="workbench-main">
+          <header className="topbar">
+            <div className="topbar__title">
+              <button
+                type="button"
+                className="icon-button topbar__menu"
+                aria-label="打开导航"
+                onClick={() => setMobileMenuOpen(true)}
+              >
+                <Menu aria-hidden="true" />
+              </button>
+              <div>
+                {page.eyebrow ? <span>{page.eyebrow}</span> : null}
+                <h1>{page.title}</h1>
+              </div>
             </div>
-          </div>
-          <div className="topbar__actions">
-            <button
-              type="button"
-              className="search-trigger"
-              onClick={() => void navigate('/search?focus=1')}
-            >
-              <Search aria-hidden="true" size={18} />
-              <span>搜索工作台</span>
-              <kbd>Ctrl K</kbd>
-            </button>
-            <button
-              type="button"
-              className="button button--primary topbar__create"
-              onClick={() => setQuickCreateOpen(true)}
-            >
-              <Plus aria-hidden="true" size={18} />
-              <span>快速创建</span>
-            </button>
-            <button
-              type="button"
-              className="icon-button notification-button"
-              aria-label={unreadCount > 0 ? `${unreadCount} 条未读通知` : '通知'}
-              onClick={() => void navigate('/notifications')}
-            >
-              <Bell aria-hidden="true" />
-              {unreadCount > 0 ? (
-                <span className="notification-dot">{Math.min(unreadCount, 9)}</span>
-              ) : null}
-            </button>
-            <button
-              type="button"
-              className="account-button"
-              aria-label="打开账户设置"
-              onClick={() => void navigate('/settings')}
-            >
-              <UserRound aria-hidden="true" size={18} />
-              <span>{session?.owner.username}</span>
-            </button>
-          </div>
-        </header>
+            <div className="topbar__actions">
+              <button
+                type="button"
+                className="search-trigger"
+                onClick={() => void navigate('/search?focus=1')}
+              >
+                <Search aria-hidden="true" size={18} />
+                <span>搜索工作台</span>
+                <kbd>Ctrl K</kbd>
+              </button>
+              <div
+                className="topbar__context-actions"
+                aria-label="当前页面操作"
+                ref={registerTopbarActionTarget}
+              />
+              <button
+                type="button"
+                className="button button--primary topbar__create"
+                onClick={() => setQuickCreateOpen(true)}
+              >
+                <Plus aria-hidden="true" size={18} />
+                <span>快速创建</span>
+              </button>
+              <button
+                type="button"
+                className="icon-button notification-button"
+                aria-label={unreadCount > 0 ? `${unreadCount} 条未读通知` : '通知'}
+                onClick={() => void navigate('/notifications')}
+              >
+                <Bell aria-hidden="true" />
+                {unreadCount > 0 ? (
+                  <span className="notification-dot">{Math.min(unreadCount, 9)}</span>
+                ) : null}
+              </button>
+              <button
+                type="button"
+                className="account-button"
+                aria-label="打开账户设置"
+                onClick={() => void navigate('/settings')}
+              >
+                <UserRound aria-hidden="true" size={18} />
+                <span>{session?.owner.username}</span>
+              </button>
+            </div>
+          </header>
 
-        <main id="main-content" className="page-content" tabIndex={-1}>
-          <Outlet />
-        </main>
-      </div>
+          <main id="main-content" className="page-content" tabIndex={-1}>
+            <Outlet />
+          </main>
+        </div>
+      </PageTopbarActionsProvider>
 
       <button
         type="button"

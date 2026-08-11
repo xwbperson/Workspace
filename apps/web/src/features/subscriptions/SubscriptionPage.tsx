@@ -13,6 +13,7 @@ import {
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal.js';
+import { PageTopbarActions } from '../../components/ui/PageTopbarActions.js';
 import { EmptyState, SectionError } from '../../components/ui/States.js';
 import { useToast } from '../../components/ui/ToastProvider.js';
 import { humanizeApiError } from '../../platform/api/client.js';
@@ -99,16 +100,12 @@ export function SubscriptionPage(): React.JSX.Element {
   const error = create.error ?? update.error ?? archive.error ?? restore.error ?? remove.error;
   return (
     <div className="feature-shell-page feature-shell-page--subscriptions">
-      <header className="feature-hero feature-hero--subscriptions">
-        <div>
-          <p className="eyebrow">工具</p>
-          <h2>订阅管理</h2>
-        </div>
+      <PageTopbarActions>
         <button className="button button--primary" onClick={() => setCreateOpen(true)}>
           <Plus size={18} />
-          添加订阅
+          <span>添加订阅</span>
         </button>
-      </header>
+      </PageTopbarActions>
       {error ? <SectionError title="操作没有完成" message={humanizeApiError(error)} /> : null}
       <div className="lifecycle-tabs" aria-label="订阅状态">
         {(['active', 'expired', 'archived'] as const).map((status) => (

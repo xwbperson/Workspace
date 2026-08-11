@@ -135,21 +135,6 @@ export function FinancePage(): React.JSX.Element {
     remove.error;
   return (
     <div className="feature-shell-page feature-shell-page--finance">
-      <header className="feature-hero feature-hero--finance">
-        <div>
-          <p className="eyebrow">工具</p>
-          <h2>财务管理</h2>
-        </div>
-        <label className="period-picker">
-          <span>查看月份</span>
-          <input
-            aria-label="查看月份"
-            type="month"
-            value={period}
-            onChange={(event) => setPeriod(event.target.value)}
-          />
-        </label>
-      </header>
       {error ? <SectionError title="数据没有更新" message={humanizeApiError(error)} /> : null}
       <div className="lifecycle-tabs finance-tabs">
         {(['overview', 'accounts', 'debt', 'archived'] as const).map((item) => (
@@ -161,6 +146,15 @@ export function FinancePage(): React.JSX.Element {
             {{ overview: '总览', accounts: '资金账户', debt: '负债管理', archived: '已归档' }[item]}
           </button>
         ))}
+        <label className="finance-period-picker">
+          <span>汇总月份</span>
+          <input
+            aria-label="汇总月份"
+            type="month"
+            value={period}
+            onChange={(event) => setPeriod(event.target.value)}
+          />
+        </label>
       </div>
       {view === 'overview' ? (
         <FinanceOverview summary={summary.data} />

@@ -19,6 +19,7 @@ import {
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal.js';
+import { PageTopbarActions } from '../../components/ui/PageTopbarActions.js';
 import { EmptyState, SectionError } from '../../components/ui/States.js';
 import { useToast } from '../../components/ui/ToastProvider.js';
 import { humanizeApiError } from '../../platform/api/client.js';
@@ -170,15 +171,11 @@ export function TaskPage(): React.JSX.Element {
 
   return (
     <div className="feature-shell-page feature-shell-page--tasks">
-      <header className="feature-hero feature-hero--tasks">
-        <div>
-          <p className="eyebrow">计划与执行</p>
-          <h2>任务管理</h2>
-        </div>
+      <PageTopbarActions>
         <button type="button" className="button button--primary" onClick={() => openCreate()}>
-          <Plus size={18} /> 添加任务
+          <Plus size={18} /> <span>添加任务</span>
         </button>
-      </header>
+      </PageTopbarActions>
 
       {error ? <SectionError title="操作没有完成" message={humanizeApiError(error)} /> : null}
       <div className="lifecycle-tabs" aria-label="任务状态">

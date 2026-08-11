@@ -12,6 +12,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal.js';
+import { PageTopbarActions } from '../../components/ui/PageTopbarActions.js';
 import { EmptyState, SectionError } from '../../components/ui/States.js';
 import { useToast } from '../../components/ui/ToastProvider.js';
 import { humanizeApiError } from '../../platform/api/client.js';
@@ -135,19 +136,15 @@ export function CalendarPage(): React.JSX.Element {
 
   return (
     <div className="feature-shell-page feature-shell-page--calendar">
-      <header className="feature-hero feature-hero--calendar">
-        <div>
-          <p className="eyebrow">时间与提醒</p>
-          <h2>日程管理</h2>
-        </div>
+      <PageTopbarActions>
         <button
           type="button"
           className="button button--primary"
           onClick={() => setCreateOpen(true)}
         >
-          <Plus size={18} /> 添加记录
+          <Plus size={18} /> <span>添加记录</span>
         </button>
-      </header>
+      </PageTopbarActions>
       {error ? <SectionError title="操作没有完成" message={humanizeApiError(error)} /> : null}
       <div className="calendar-toolbar">
         <div className="calendar-toolbar__move">

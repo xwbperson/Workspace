@@ -25,6 +25,7 @@ import {
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal.js';
+import { PageTopbarActions } from '../../components/ui/PageTopbarActions.js';
 import { EmptyState, SectionError } from '../../components/ui/States.js';
 import { useToast } from '../../components/ui/ToastProvider.js';
 import { humanizeApiError } from '../../platform/api/client.js';
@@ -131,19 +132,15 @@ export function InboxPage(): React.JSX.Element {
 
   return (
     <div className="feature-shell-page feature-shell-page--inbox">
-      <header className="feature-hero feature-hero--inbox">
-        <div>
-          <p className="eyebrow">文件与收藏</p>
-          <h2>收集箱</h2>
-        </div>
+      <PageTopbarActions>
         <button
           type="button"
           className="button button--primary"
           onClick={() => setCreateOpen(true)}
         >
-          <Plus size={18} /> 收集内容
+          <Plus size={18} /> <span>收集内容</span>
         </button>
-      </header>
+      </PageTopbarActions>
       {error ? <SectionError title="操作没有完成" message={humanizeApiError(error)} /> : null}
       <div className="lifecycle-tabs" aria-label="收集箱状态">
         {(['inbox', 'processed', 'archived'] as const).map((status) => (
