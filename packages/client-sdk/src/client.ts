@@ -8,6 +8,11 @@ import type {
   BookListResponse,
   BookReadingStatus,
   BookUpdateInput,
+  CalendarEntry,
+  CalendarEntryInput,
+  CalendarEntryListResponse,
+  CalendarEntryStatus,
+  CalendarEntryUpdateInput,
   Countdown,
   CountdownInput,
   CountdownUpdateInput,
@@ -26,8 +31,34 @@ import type {
   CourseMaterialGroup,
   CourseUpdateInput,
   FeatureRuntimeState,
+  FinanceAccount,
+  FinanceAccountInput,
+  FinanceAccountUpdateInput,
+  FinanceDebtPlatform,
+  FinanceDebtPlatformInput,
+  FinanceDebtPlatformUpdateInput,
+  FinanceDebtRecord,
+  FinanceDebtRecordInput,
+  FinanceSummary,
+  Goal,
+  GoalInput,
+  GoalListResponse,
+  GoalMeasurementInput,
+  GoalStatus,
+  GoalUpdateInput,
+  InboxItem,
+  InboxItemInput,
+  InboxItemListResponse,
+  InboxItemStatus,
+  InboxItemUpdateInput,
   LoginInput,
   LoginResponse,
+  LifeCountdownDashboard,
+  LifeEvent,
+  LifeEventInput,
+  LifeEventUpdateInput,
+  LifeProfile,
+  LifeProfileInput,
   OverviewContributionDefinition,
   OverviewResponse,
   PaginatedCountdowns,
@@ -35,7 +66,18 @@ import type {
   SearchResponse,
   SessionView,
   StoredFile,
+  Subscription,
+  SubscriptionInput,
+  SubscriptionListResponse,
+  SubscriptionStatus,
+  SubscriptionUpdateInput,
   SystemStatus,
+  Task,
+  TaskCompletion,
+  TaskInput,
+  TaskListResponse,
+  TaskStatus,
+  TaskUpdateInput,
   WorkbenchNotification,
   WorkbenchPreferences,
 } from './types.js';
@@ -513,5 +555,338 @@ export class WorkbenchClient {
       `/courses/${encodeURIComponent(courseId)}/materials/${encodeURIComponent(materialId)}`,
       { method: 'DELETE', body: { version } },
     );
+  }
+
+  public getGoals(
+    options: { status?: GoalStatus; limit?: number } = {},
+  ): Promise<GoalListResponse> {
+    const query = new URLSearchParams();
+    if (options.status) query.set('status', options.status);
+    if (options.limit) query.set('limit', String(options.limit));
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return this.request(`/goals${suffix}`);
+  }
+
+  public getGoal(id: string): Promise<Goal> {
+    return this.request(`/goals/${encodeURIComponent(id)}`);
+  }
+
+  public createGoal(input: GoalInput): Promise<Goal> {
+    return this.request('/goals', { method: 'POST', body: input });
+  }
+
+  public updateGoal(id: string, input: GoalUpdateInput): Promise<Goal> {
+    return this.request(`/goals/${encodeURIComponent(id)}`, { method: 'PUT', body: input });
+  }
+
+  public addGoalMeasurement(id: string, input: GoalMeasurementInput): Promise<Goal> {
+    return this.request(`/goals/${encodeURIComponent(id)}/measurements`, {
+      method: 'POST',
+      body: input,
+    });
+  }
+
+  public archiveGoal(id: string, version: number): Promise<void> {
+    return this.request(`/goals/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public restoreGoal(id: string, version: number): Promise<Goal> {
+    return this.request(`/goals/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public deleteGoalPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/goals/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public getTasks(
+    options: { status?: TaskStatus | 'open'; limit?: number } = {},
+  ): Promise<TaskListResponse> {
+    const query = new URLSearchParams();
+    if (options.status) query.set('status', options.status);
+    if (options.limit) query.set('limit', String(options.limit));
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return this.request(`/tasks${suffix}`);
+  }
+
+  public getTask(id: string): Promise<Task> {
+    return this.request(`/tasks/${encodeURIComponent(id)}`);
+  }
+
+  public createTask(input: TaskInput): Promise<Task> {
+    return this.request('/tasks', { method: 'POST', body: input });
+  }
+
+  public updateTask(id: string, input: TaskUpdateInput): Promise<Task> {
+    return this.request(`/tasks/${encodeURIComponent(id)}`, { method: 'PUT', body: input });
+  }
+
+  public completeTask(id: string, version: number): Promise<TaskCompletion> {
+    return this.request(`/tasks/${encodeURIComponent(id)}/complete`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public archiveTask(id: string, version: number): Promise<void> {
+    return this.request(`/tasks/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public restoreTask(id: string, version: number): Promise<Task> {
+    return this.request(`/tasks/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public deleteTaskPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/tasks/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public getCalendarEntries(options: {
+    from: string;
+    to: string;
+    status?: CalendarEntryStatus;
+    limit?: number;
+  }): Promise<CalendarEntryListResponse> {
+    const query = new URLSearchParams({ from: options.from, to: options.to });
+    if (options.status) query.set('status', options.status);
+    if (options.limit) query.set('limit', String(options.limit));
+    return this.request(`/calendar-entries?${query.toString()}`);
+  }
+
+  public getCalendarEntry(id: string): Promise<CalendarEntry> {
+    return this.request(`/calendar-entries/${encodeURIComponent(id)}`);
+  }
+  public createCalendarEntry(input: CalendarEntryInput): Promise<CalendarEntry> {
+    return this.request('/calendar-entries', { method: 'POST', body: input });
+  }
+  public updateCalendarEntry(id: string, input: CalendarEntryUpdateInput): Promise<CalendarEntry> {
+    return this.request(`/calendar-entries/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: input,
+    });
+  }
+  public archiveCalendarEntry(id: string, version: number): Promise<void> {
+    return this.request(`/calendar-entries/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public restoreCalendarEntry(id: string, version: number): Promise<CalendarEntry> {
+    return this.request(`/calendar-entries/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public deleteCalendarEntryPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/calendar-entries/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public getInboxItems(
+    options: { status?: InboxItemStatus; limit?: number } = {},
+  ): Promise<InboxItemListResponse> {
+    const query = new URLSearchParams();
+    if (options.status) query.set('status', options.status);
+    if (options.limit) query.set('limit', String(options.limit));
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return this.request(`/inbox-items${suffix}`);
+  }
+
+  public getInboxItem(id: string): Promise<InboxItem> {
+    return this.request(`/inbox-items/${encodeURIComponent(id)}`);
+  }
+  public createInboxItem(input: InboxItemInput): Promise<InboxItem> {
+    return this.request('/inbox-items', { method: 'POST', body: input });
+  }
+  public updateInboxItem(id: string, input: InboxItemUpdateInput): Promise<InboxItem> {
+    return this.request(`/inbox-items/${encodeURIComponent(id)}`, { method: 'PUT', body: input });
+  }
+  public archiveInboxItem(id: string, version: number): Promise<void> {
+    return this.request(`/inbox-items/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public restoreInboxItem(id: string, version: number): Promise<InboxItem> {
+    return this.request(`/inbox-items/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public deleteInboxItemPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/inbox-items/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public getSubscriptions(
+    options: { status?: SubscriptionStatus; limit?: number } = {},
+  ): Promise<SubscriptionListResponse> {
+    const query = new URLSearchParams();
+    if (options.status) query.set('status', options.status);
+    if (options.limit) query.set('limit', String(options.limit));
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return this.request(`/subscriptions${suffix}`);
+  }
+  public getSubscription(id: string): Promise<Subscription> {
+    return this.request(`/subscriptions/${encodeURIComponent(id)}`);
+  }
+  public createSubscription(input: SubscriptionInput): Promise<Subscription> {
+    return this.request('/subscriptions', { method: 'POST', body: input });
+  }
+  public updateSubscription(id: string, input: SubscriptionUpdateInput): Promise<Subscription> {
+    return this.request(`/subscriptions/${encodeURIComponent(id)}`, { method: 'PUT', body: input });
+  }
+  public archiveSubscription(id: string, version: number): Promise<void> {
+    return this.request(`/subscriptions/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public restoreSubscription(id: string, version: number): Promise<Subscription> {
+    return this.request(`/subscriptions/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public deleteSubscriptionPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/subscriptions/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public getFinanceSummary(year: number, month: number): Promise<FinanceSummary> {
+    return this.request(`/finance/summary?year=${year}&month=${month}`);
+  }
+  public getFinanceAccounts(archived = false): Promise<{ items: FinanceAccount[] }> {
+    return this.request(`/finance/accounts?archived=${String(archived)}`);
+  }
+  public createFinanceAccount(input: FinanceAccountInput): Promise<FinanceAccount> {
+    return this.request('/finance/accounts', { method: 'POST', body: input });
+  }
+  public updateFinanceAccount(
+    id: string,
+    input: FinanceAccountUpdateInput,
+  ): Promise<FinanceAccount> {
+    return this.request(`/finance/accounts/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: input,
+    });
+  }
+  public archiveFinanceAccount(id: string, version: number): Promise<void> {
+    return this.request(`/finance/accounts/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public restoreFinanceAccount(id: string, version: number): Promise<FinanceAccount> {
+    return this.request(`/finance/accounts/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public deleteFinanceAccountPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/finance/accounts/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+  public getFinanceDebtPlatforms(archived = false): Promise<{ items: FinanceDebtPlatform[] }> {
+    return this.request(`/finance/debt-platforms?archived=${String(archived)}`);
+  }
+  public createFinanceDebtPlatform(input: FinanceDebtPlatformInput): Promise<FinanceDebtPlatform> {
+    return this.request('/finance/debt-platforms', { method: 'POST', body: input });
+  }
+  public updateFinanceDebtPlatform(
+    id: string,
+    input: FinanceDebtPlatformUpdateInput,
+  ): Promise<FinanceDebtPlatform> {
+    return this.request(`/finance/debt-platforms/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: input,
+    });
+  }
+  public archiveFinanceDebtPlatform(id: string, version: number): Promise<void> {
+    return this.request(`/finance/debt-platforms/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public restoreFinanceDebtPlatform(id: string, version: number): Promise<FinanceDebtPlatform> {
+    return this.request(`/finance/debt-platforms/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public deleteFinanceDebtPlatformPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/finance/debt-platforms/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+  public upsertFinanceDebtRecord(input: FinanceDebtRecordInput): Promise<FinanceDebtRecord> {
+    return this.request('/finance/debt-records', { method: 'PUT', body: input });
+  }
+  public deleteFinanceDebtRecord(id: string, version: number): Promise<void> {
+    return this.request(`/finance/debt-records/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public getLifeCountdown(
+    status: 'active' | 'archived' = 'active',
+  ): Promise<LifeCountdownDashboard> {
+    return this.request(`/life-countdown?status=${status}`);
+  }
+  public updateLifeProfile(input: LifeProfileInput): Promise<LifeProfile> {
+    return this.request('/life-countdown/profile', { method: 'PUT', body: input });
+  }
+  public createLifeEvent(input: LifeEventInput): Promise<LifeEvent> {
+    return this.request('/life-countdown/events', { method: 'POST', body: input });
+  }
+  public updateLifeEvent(id: string, input: LifeEventUpdateInput): Promise<LifeEvent> {
+    return this.request(`/life-countdown/events/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: input,
+    });
+  }
+  public archiveLifeEvent(id: string, version: number): Promise<void> {
+    return this.request(`/life-countdown/events/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public restoreLifeEvent(id: string, version: number): Promise<LifeEvent> {
+    return this.request(`/life-countdown/events/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public deleteLifeEventPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/life-countdown/events/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
   }
 }

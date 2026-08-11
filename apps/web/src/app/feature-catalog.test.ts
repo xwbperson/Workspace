@@ -3,7 +3,7 @@ import { featureCatalog } from './feature-catalog.js';
 
 describe('static feature catalog', () => {
   it('publishes countdowns, books and courses as released features', () => {
-    expect(featureCatalog).toHaveLength(3);
+    expect(featureCatalog).toHaveLength(10);
     expect(featureCatalog[0]).toMatchObject({
       featureId: 'countdowns',
       route: '/features/countdowns',
@@ -37,6 +37,49 @@ describe('static feature catalog', () => {
         search: true,
         quickCreate: true,
       },
+    });
+    expect(featureCatalog[3]).toMatchObject({
+      featureId: 'goals',
+      route: '/features/goals',
+      lifecycle: 'released',
+      capabilities: {
+        focusCandidates: true,
+        recent: true,
+        overviewBlocks: true,
+        search: true,
+        quickCreate: true,
+      },
+    });
+    expect(featureCatalog[4]).toMatchObject({
+      featureId: 'tasks',
+      route: '/features/tasks',
+      lifecycle: 'released',
+      capabilities: {
+        focusCandidates: true,
+        upcoming: true,
+        recent: true,
+        overviewBlocks: true,
+        search: true,
+        quickCreate: true,
+      },
+    });
+    expect(featureCatalog[5]).toMatchObject({
+      featureId: 'calendar',
+      route: '/features/calendar',
+      lifecycle: 'released',
+      capabilities: {
+        upcoming: true,
+        recent: true,
+        overviewBlocks: true,
+        search: true,
+        quickCreate: true,
+      },
+    });
+    expect(featureCatalog[6]).toMatchObject({
+      featureId: 'inbox',
+      route: '/features/inbox',
+      lifecycle: 'released',
+      capabilities: { recent: true, overviewBlocks: true, search: true, quickCreate: true },
     });
   });
 

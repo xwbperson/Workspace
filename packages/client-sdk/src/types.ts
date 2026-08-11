@@ -454,3 +454,340 @@ export interface CourseAssignmentUpdateInput extends Partial<CourseAssignmentInp
 export interface CourseListResponse {
   items: Course[];
 }
+
+export type GoalPeriodType = 'annual' | 'quarterly' | 'monthly';
+export type GoalStatus = 'active' | 'completed' | 'archived';
+export type GoalMetricDirection = 'increase' | 'decrease';
+
+export interface GoalKeyResult {
+  id: string;
+  title: string;
+  progress: number;
+  completed: boolean;
+}
+
+export interface GoalMetric {
+  startValue: number;
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  direction: GoalMetricDirection;
+}
+
+export interface GoalMeasurement {
+  id: string;
+  value: number;
+  note: string;
+  recordedAt: string;
+}
+
+export interface Goal {
+  id: string;
+  title: string;
+  description: string;
+  periodType: GoalPeriodType;
+  periodLabel: string;
+  startDate: string;
+  endDate: string;
+  status: GoalStatus;
+  metric?: GoalMetric;
+  keyResults: GoalKeyResult[];
+  measurements?: GoalMeasurement[];
+  progress: number;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GoalInput {
+  title: string;
+  description?: string;
+  periodType: GoalPeriodType;
+  periodLabel: string;
+  startDate: string;
+  endDate: string;
+  status?: Exclude<GoalStatus, 'archived'>;
+  metric?: GoalMetric | null;
+  keyResults?: GoalKeyResult[];
+}
+
+export interface GoalUpdateInput extends Partial<GoalInput> {
+  version: number;
+}
+
+export interface GoalMeasurementInput {
+  value: number;
+  note?: string;
+  recordedAt?: string;
+  version: number;
+}
+
+export interface GoalListResponse {
+  items: Goal[];
+}
+
+export type TaskStatus = 'todo' | 'in-progress' | 'completed' | 'archived';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type TaskRecurrence = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueAt?: string;
+  recurrence: TaskRecurrence;
+  parentId: string | null;
+  recurrenceSourceId: string | null;
+  completedAt?: string;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskInput {
+  title: string;
+  description?: string;
+  status?: Exclude<TaskStatus, 'completed' | 'archived'>;
+  priority?: TaskPriority;
+  dueAt?: string | null;
+  recurrence?: TaskRecurrence;
+  parentId?: string | null;
+}
+
+export interface TaskUpdateInput extends Omit<Partial<TaskInput>, 'status'> {
+  status?: Exclude<TaskStatus, 'archived'>;
+  version: number;
+}
+
+export interface TaskCompletion {
+  completed: Task;
+  nextTask?: Task;
+}
+
+export interface TaskListResponse {
+  items: Task[];
+}
+
+export type CalendarEntryType = 'schedule' | 'journal' | 'summary';
+export type CalendarEntryStatus = 'active' | 'archived';
+
+export interface CalendarEntry {
+  id: string;
+  type: CalendarEntryType;
+  title: string;
+  content: string;
+  entryDate: string;
+  startsAt?: string;
+  endsAt?: string;
+  status: CalendarEntryStatus;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CalendarEntryInput {
+  type: CalendarEntryType;
+  title: string;
+  content?: string;
+  entryDate: string;
+  startsAt?: string | null;
+  endsAt?: string | null;
+}
+
+export interface CalendarEntryUpdateInput extends Partial<CalendarEntryInput> {
+  version: number;
+}
+
+export interface CalendarEntryListResponse {
+  items: CalendarEntry[];
+}
+
+export type InboxItemType = 'idea' | 'inspiration' | 'snippet' | 'article' | 'link' | 'file';
+export type InboxItemStatus = 'inbox' | 'processed' | 'archived';
+
+export interface InboxItem {
+  id: string;
+  type: InboxItemType;
+  title: string;
+  content: string;
+  url: string;
+  file?: StoredFile;
+  status: InboxItemStatus;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InboxItemInput {
+  type: InboxItemType;
+  title: string;
+  content?: string;
+  url?: string;
+  fileId?: string | null;
+  status?: Exclude<InboxItemStatus, 'archived'>;
+}
+
+export interface InboxItemUpdateInput extends Partial<InboxItemInput> {
+  version: number;
+}
+
+export interface InboxItemListResponse {
+  items: InboxItem[];
+}
+
+export type SubscriptionCategory = 'software' | 'membership' | 'domain' | 'server' | 'other';
+export type SubscriptionBillingCycle = 'monthly' | 'quarterly' | 'yearly';
+export type SubscriptionStatus = 'active' | 'expired' | 'archived';
+
+export interface Subscription {
+  id: string;
+  name: string;
+  category: SubscriptionCategory;
+  amount: number;
+  currency: string;
+  billingCycle: SubscriptionBillingCycle;
+  monthlyEquivalent: number;
+  renewalDate: string;
+  autoRenew: boolean;
+  note: string;
+  status: SubscriptionStatus;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubscriptionInput {
+  name: string;
+  category: SubscriptionCategory;
+  amount: number;
+  currency?: string;
+  billingCycle: SubscriptionBillingCycle;
+  renewalDate: string;
+  autoRenew?: boolean;
+  note?: string;
+  status?: Exclude<SubscriptionStatus, 'archived'>;
+}
+
+export interface SubscriptionUpdateInput extends Partial<SubscriptionInput> {
+  version: number;
+}
+
+export interface SubscriptionListResponse {
+  items: Subscription[];
+}
+
+export type FinanceAccountType = 'cash' | 'alipay' | 'wechat' | 'bank' | 'digital-cny' | 'other';
+export interface FinanceAccount {
+  id: string;
+  type: FinanceAccountType;
+  name: string;
+  balance: number;
+  note: string;
+  archived: boolean;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface FinanceAccountInput {
+  type: FinanceAccountType;
+  name: string;
+  balance: number;
+  note?: string;
+}
+export interface FinanceAccountUpdateInput extends Partial<FinanceAccountInput> {
+  version: number;
+}
+export interface FinanceDebtPlatform {
+  id: string;
+  name: string;
+  billingDay: number | null;
+  repaymentDay: number | null;
+  fixedLimit: number;
+  temporaryLimit: number;
+  remainingLimit: number;
+  note: string;
+  archived: boolean;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface FinanceDebtPlatformInput {
+  name: string;
+  billingDay?: number | null;
+  repaymentDay?: number | null;
+  fixedLimit?: number;
+  temporaryLimit?: number;
+  remainingLimit?: number;
+  note?: string;
+}
+export interface FinanceDebtPlatformUpdateInput extends Partial<FinanceDebtPlatformInput> {
+  version: number;
+}
+export interface FinanceDebtRecord {
+  id: string;
+  platformId: string;
+  platformName: string;
+  year: number;
+  month: number;
+  amount: number;
+  version: number;
+  updatedAt: string;
+}
+export interface FinanceDebtRecordInput {
+  platformId: string;
+  year: number;
+  month: number;
+  amount: number;
+  version?: number;
+}
+export interface FinanceSummary {
+  year: number;
+  month: number;
+  totalAssets: number;
+  currentMonthDebt: number;
+  yearDebt: number;
+  netPosition: number;
+  totalCreditLimit: number;
+  remainingCredit: number;
+  accounts: FinanceAccount[];
+  platforms: FinanceDebtPlatform[];
+  records: FinanceDebtRecord[];
+}
+
+export interface LifeProfile {
+  birthDate: string | null;
+  expectedAge: number;
+  expectedEndDate: string | null;
+  version: number;
+  updatedAt: string;
+}
+export interface LifeProfileInput {
+  birthDate: string;
+  expectedAge: number;
+  version: number;
+}
+export type LifeEventStatus = 'active' | 'archived';
+export interface LifeEvent {
+  id: string;
+  title: string;
+  targetAt: string;
+  note: string;
+  status: LifeEventStatus;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface LifeEventInput {
+  title: string;
+  targetAt: string;
+  note?: string;
+}
+export interface LifeEventUpdateInput extends Partial<LifeEventInput> {
+  version: number;
+}
+export interface LifeCountdownDashboard {
+  profile: LifeProfile;
+  events: LifeEvent[];
+}

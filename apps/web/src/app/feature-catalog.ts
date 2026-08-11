@@ -1,4 +1,14 @@
-export type IconName = 'timer' | 'book-open' | 'graduation-cap';
+export type IconName =
+  | 'timer'
+  | 'book-open'
+  | 'graduation-cap'
+  | 'target'
+  | 'list-checks'
+  | 'calendar-days'
+  | 'inbox'
+  | 'credit-card'
+  | 'wallet-cards'
+  | 'hourglass';
 export type FeatureCategory =
   | 'planning-execution'
   | 'notes-knowledge'
@@ -86,6 +96,135 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     canPin: true,
     capabilities: {
       focusCandidates: true,
+      upcoming: true,
+      recent: true,
+      overviewBlocks: true,
+      search: true,
+      quickCreate: true,
+    },
+  },
+  {
+    featureId: 'goals',
+    name: '目标管理',
+    description: '管理年度、季度和月度目标，用数值与关键结果记录变化。',
+    icon: 'target',
+    route: '/features/goals',
+    category: 'goals-review',
+    keywords: ['目标', '年度', '季度', '月度', '关键结果', '进度', '数据'],
+    order: 40,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    canPin: true,
+    capabilities: {
+      focusCandidates: true,
+      recent: true,
+      overviewBlocks: true,
+      search: true,
+      quickCreate: true,
+    },
+  },
+  {
+    featureId: 'tasks',
+    name: '任务管理',
+    description: '管理多级任务、优先级、截止时间与自动滚动的重复事项。',
+    icon: 'list-checks',
+    route: '/features/tasks',
+    category: 'planning-execution',
+    keywords: ['任务', '待办', '子任务', '优先级', '截止', '重复'],
+    order: 50,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    canPin: true,
+    capabilities: {
+      focusCandidates: true,
+      upcoming: true,
+      recent: true,
+      overviewBlocks: true,
+      search: true,
+      quickCreate: true,
+    },
+  },
+  {
+    featureId: 'calendar',
+    name: '日程管理',
+    description: '用月历安排每天的行程，并记录日记和当日总结。',
+    icon: 'calendar-days',
+    route: '/features/calendar',
+    category: 'time-reminders',
+    keywords: ['日程', '日历', '行程', '日记', '总结', '日期'],
+    order: 60,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    canPin: true,
+    capabilities: {
+      upcoming: true,
+      recent: true,
+      overviewBlocks: true,
+      search: true,
+      quickCreate: true,
+    },
+  },
+  {
+    featureId: 'inbox',
+    name: '收集箱',
+    description: '收集想法、片段、网址和文件，作为多设备处理队列。',
+    icon: 'inbox',
+    route: '/features/inbox',
+    category: 'files-collections',
+    keywords: ['收集箱', '想法', '灵感', '片段', '网址', '文件', '中转'],
+    order: 70,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    canPin: true,
+    capabilities: { recent: true, overviewBlocks: true, search: true, quickCreate: true },
+  },
+  {
+    featureId: 'subscriptions',
+    name: '订阅管理',
+    description: '管理软件、会员、域名和服务器续费，并折算月均成本。',
+    icon: 'credit-card',
+    route: '/features/subscriptions',
+    category: 'tools',
+    keywords: ['订阅', '续费', '会员', '域名', '服务器', '费用'],
+    order: 80,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    canPin: true,
+    capabilities: {
+      upcoming: true,
+      recent: true,
+      overviewBlocks: true,
+      search: true,
+      quickCreate: true,
+    },
+  },
+  {
+    featureId: 'finance',
+    name: '财务管理',
+    description: '汇总资金账户、信用额度和月度负债，查看年度趋势。',
+    icon: 'wallet-cards',
+    route: '/features/finance',
+    category: 'tools',
+    keywords: ['财务', '账户', '资产', '负债', '信用卡', '余额'],
+    order: 90,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    canPin: true,
+    capabilities: { recent: true, overviewBlocks: true, search: true, quickCreate: true },
+  },
+  {
+    featureId: 'life-countdown',
+    name: '人生倒计时',
+    description: '查看人生、今年和今天的时间进度，记录重要人生节点。',
+    icon: 'hourglass',
+    route: '/features/life-countdown',
+    category: 'time-reminders',
+    keywords: ['人生', '倒计时', '寿命', '时间', '事件', '纪念日'],
+    order: 100,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    canPin: true,
+    capabilities: {
       upcoming: true,
       recent: true,
       overviewBlocks: true,

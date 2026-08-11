@@ -5,6 +5,13 @@ import { fileStorageMigration } from './004-file-storage.js';
 import { booksMigration } from './005-books.js';
 import { coursesMigration } from './006-courses.js';
 import { courseStatusMigration } from './007-course-status.js';
+import { goalsMigration } from './008-goals.js';
+import { tasksMigration } from './009-tasks.js';
+import { calendarMigration } from './010-calendar.js';
+import { inboxMigration } from './011-inbox.js';
+import { subscriptionsMigration } from './012-subscriptions.js';
+import { financeMigration } from './013-finance.js';
+import { lifeCountdownMigration } from './014-life-countdown.js';
 
 export interface Migration {
   id: string;
@@ -19,4 +26,11 @@ export const migrations: readonly Migration[] = [
   booksMigration,
   coursesMigration,
   courseStatusMigration,
+  goalsMigration,
+  tasksMigration,
+  calendarMigration,
+  inboxMigration,
+  subscriptionsMigration,
+  financeMigration,
+  lifeCountdownMigration,
 ];

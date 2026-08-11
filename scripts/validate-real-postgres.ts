@@ -66,6 +66,22 @@ try {
     cookie: `${csrfCookie}; ${sessionCookie}`,
     'x-csrf-token': csrfToken,
   };
+  const createApiRecord = async <T extends object>(
+    url: string,
+    payload: object,
+    label: string,
+  ): Promise<T> => {
+    const response = await app.inject({
+      method: 'POST',
+      url,
+      headers: authenticatedHeaders,
+      payload,
+    });
+    if (response.statusCode !== 201) {
+      throw new Error(`真实数据库${label}写入失败：${response.statusCode} ${response.body}`);
+    }
+    return response.json<T>();
+  };
   const created = await app.inject({
     method: 'POST',
     url: '/api/v1/countdowns',
@@ -127,6 +143,107 @@ try {
   });
   if (assignmentResponse.statusCode !== 201)
     throw new Error(`真实数据库作业写入失败：${assignmentResponse.statusCode}`);
+
+  await createApiRecord(
+    '/api/v1/goals',
+    {
+      title: '真实 PostgreSQL 目标样本',
+      periodType: 'annual',
+      periodLabel: '2031',
+      startDate: '2031-01-01',
+      endDate: '2031-12-31',
+      metric: {
+        startValue: 0,
+        targetValue: 100,
+        currentValue: 25,
+        unit: '%',
+        direction: 'increase',
+      },
+      keyResults: [{ id: 'kr-ci', title: '恢复关键结果', progress: 20, completed: false }],
+    },
+    '目标',
+  );
+  await createApiRecord(
+    '/api/v1/tasks',
+    {
+      title: '真实 PostgreSQL 任务样本',
+      priority: 'high',
+      dueAt: '2031-06-01T08:00:00.000Z',
+      recurrence: 'monthly',
+    },
+    '任务',
+  );
+  await createApiRecord(
+    '/api/v1/calendar-entries',
+    {
+      type: 'schedule',
+      title: '真实 PostgreSQL 日程样本',
+      entryDate: '2031-06-01',
+      startsAt: '2031-06-01T08:00:00.000Z',
+      content: '恢复验收日程',
+    },
+    '日历记录',
+  );
+  await createApiRecord(
+    '/api/v1/inbox-items',
+    {
+      type: 'idea',
+      title: '真实 PostgreSQL 收集箱样本',
+      content: '恢复验收想法',
+    },
+    '收集箱记录',
+  );
+  await createApiRecord(
+    '/api/v1/subscriptions',
+    {
+      name: '真实 PostgreSQL 订阅样本',
+      category: 'server',
+      amount: 360,
+      currency: 'CNY',
+      billingCycle: 'quarterly',
+      renewalDate: '2031-10-01',
+    },
+    '订阅',
+  );
+  await createApiRecord(
+    '/api/v1/finance/accounts',
+    {
+      type: 'bank',
+      name: '真实 PostgreSQL 资金账户',
+      balance: 10000,
+    },
+    '资金账户',
+  );
+  const debtPlatform = await createApiRecord<{ id: string }>(
+    '/api/v1/finance/debt-platforms',
+    { name: '真实 PostgreSQL 负债平台', fixedLimit: 20000, remainingLimit: 17500 },
+    '负债平台',
+  );
+  const debtRecordResponse = await app.inject({
+    method: 'PUT',
+    url: '/api/v1/finance/debt-records',
+    headers: authenticatedHeaders,
+    payload: { platformId: debtPlatform.id, year: 2031, month: 6, amount: 2500 },
+  });
+  if (debtRecordResponse.statusCode !== 200)
+    throw new Error(`真实数据库月度负债写入失败：${debtRecordResponse.statusCode}`);
+  const profileResponse = await app.inject({
+    method: 'PUT',
+    url: '/api/v1/life-countdown/profile',
+    headers: authenticatedHeaders,
+    payload: { birthDate: '1998-05-20', expectedAge: 80, version: 1 },
+  });
+  if (profileResponse.statusCode !== 200)
+    throw new Error(`真实数据库人生参数写入失败：${profileResponse.statusCode}`);
+  await createApiRecord(
+    '/api/v1/life-countdown/events',
+    {
+      title: '真实 PostgreSQL 人生事件',
+      targetAt: '2031-06-30T08:00:00.000Z',
+      note: '恢复验收事件',
+    },
+    '人生事件',
+  );
 
   const boundary = '----workbench-real-postgres-validation';
   const attachmentBytes = Buffer.from('%PDF-1.7\nreal-postgres-portable-attachment\n');
@@ -217,6 +334,17 @@ try {
         assignments: number;
         materialGroups: number;
         materials: number;
+        goals: number;
+        goalMeasurements: number;
+        tasks: number;
+        calendarEntries: number;
+        inboxItems: number;
+        subscriptions: number;
+        financeAccounts: number;
+        financePlatforms: number;
+        financeRecords: number;
+        lifeProfiles: number;
+        lifeEvents: number;
         storedFiles: number;
         sessions: number;
         attempts: number;
@@ -233,6 +361,17 @@ try {
            (SELECT count(*)::int FROM course_assignments) AS assignments,
            (SELECT count(*)::int FROM course_material_groups) AS "materialGroups",
            (SELECT count(*)::int FROM course_materials) AS materials,
+           (SELECT count(*)::int FROM goals) AS goals,
+           (SELECT count(*)::int FROM goal_measurements) AS "goalMeasurements",
+           (SELECT count(*)::int FROM tasks) AS tasks,
+           (SELECT count(*)::int FROM calendar_entries) AS "calendarEntries",
+           (SELECT count(*)::int FROM inbox_items) AS "inboxItems",
+           (SELECT count(*)::int FROM subscriptions) AS subscriptions,
+           (SELECT count(*)::int FROM finance_accounts) AS "financeAccounts",
+           (SELECT count(*)::int FROM finance_debt_platforms) AS "financePlatforms",
+           (SELECT count(*)::int FROM finance_debt_records) AS "financeRecords",
+           (SELECT count(*)::int FROM life_profiles) AS "lifeProfiles",
+           (SELECT count(*)::int FROM life_events) AS "lifeEvents",
            (SELECT count(*)::int FROM stored_files) AS "storedFiles",
            (SELECT count(*)::int FROM auth_sessions) AS sessions,
            (SELECT count(*)::int FROM auth_login_attempts) AS attempts,
@@ -251,6 +390,17 @@ try {
         value.assignments !== 1 ||
         value.materialGroups !== 1 ||
         value.materials !== 1 ||
+        value.goals !== 1 ||
+        value.goalMeasurements !== 1 ||
+        value.tasks !== 1 ||
+        value.calendarEntries !== 1 ||
+        value.inboxItems !== 1 ||
+        value.subscriptions !== 1 ||
+        value.financeAccounts !== 1 ||
+        value.financePlatforms !== 1 ||
+        value.financeRecords !== 1 ||
+        value.lifeProfiles !== 1 ||
+        value.lifeEvents !== 1 ||
         value.storedFiles !== 1 ||
         value.sessions !== 0 ||
         value.attempts !== 0 ||
