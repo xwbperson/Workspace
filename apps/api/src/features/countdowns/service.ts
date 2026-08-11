@@ -91,7 +91,7 @@ export class CountdownService {
 
   public async get(id: string): Promise<Countdown> {
     const row = await this.repository.get(id);
-    if (!row || row.status === 'archived') throw new NotFoundError('没有找到该倒计时。');
+    if (!row) throw new NotFoundError('没有找到该倒计时。');
     return toCountdown(row);
   }
 
@@ -103,6 +103,7 @@ export class CountdownService {
       note: normalizeNote(input.note),
       targetAt: parseDate(input.targetAt),
       status: 'active',
+      archivedFromStatus: null,
       priority: normalizePriority(input.priority),
       version: 1,
       createdAt: now,
@@ -138,6 +139,34 @@ export class CountdownService {
     const existing = await this.repository.get(id);
     if (!existing || existing.status === 'archived') throw new NotFoundError('没有找到该倒计时。');
     if (!(await this.repository.archive(id, version, this.now()))) {
+      throw new ConflictError('倒计时已在其他位置修改，请刷新后重试。', {
+        currentVersion: (await this.repository.get(id))?.version,
+      });
+    }
+  }
+
+  public async restore(id: string, version: number): Promise<Countdown> {
+    const existing = await this.repository.get(id);
+    if (!existing) throw new NotFoundError('没有找到该倒计时。');
+    if (existing.status !== 'archived') {
+      throw new ConflictError('该倒计时尚未归档，无需恢复。', { currentVersion: existing.version });
+    }
+    const restored = await this.repository.restore(id, version, this.now());
+    if (!restored) {
+      throw new ConflictError('倒计时已在其他位置修改，请刷新后重试。', {
+        currentVersion: (await this.repository.get(id))?.version,
+      });
+    }
+    return toCountdown(restored);
+  }
+
+  public async deletePermanently(id: string, version: number): Promise<void> {
+    const existing = await this.repository.get(id);
+    if (!existing) throw new NotFoundError('没有找到该倒计时。');
+    if (existing.status !== 'archived') {
+      throw new ConflictError('只能永久删除已归档的倒计时。', { currentVersion: existing.version });
+    }
+    if (!(await this.repository.deletePermanently(id, version))) {
       throw new ConflictError('倒计时已在其他位置修改，请刷新后重试。', {
         currentVersion: (await this.repository.get(id))?.version,
       });

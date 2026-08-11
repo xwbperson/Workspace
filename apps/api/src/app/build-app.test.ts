@@ -171,5 +171,91 @@ describe('workbench HTTP vertical slice', () => {
     });
     expect(search.statusCode).toBe(200);
     expect(search.body).toContain('论文提交');
+
+    const archived = await app.inject({
+      method: 'POST',
+      url: `/api/v1/countdowns/${countdown.id}/archive`,
+      headers: {
+        cookie: jar.header(),
+        origin: config.appOrigin,
+        'x-csrf-token': csrfToken,
+      },
+      payload: { version: 2 },
+    });
+    expect(archived.statusCode).toBe(204);
+
+    const archivedList = await app.inject({
+      method: 'GET',
+      url: '/api/v1/countdowns?status=archived',
+      headers: { cookie: jar.header() },
+    });
+    expect(archivedList.statusCode).toBe(200);
+    expect(archivedList.json().items).toMatchObject([
+      { id: countdown.id, status: 'archived', version: 3 },
+    ]);
+
+    const archivedDetail = await app.inject({
+      method: 'GET',
+      url: `/api/v1/countdowns/${countdown.id}`,
+      headers: { cookie: jar.header() },
+    });
+    expect(archivedDetail.statusCode).toBe(200);
+    expect(archivedDetail.json().status).toBe('archived');
+
+    const restored = await app.inject({
+      method: 'POST',
+      url: `/api/v1/countdowns/${countdown.id}/restore`,
+      headers: {
+        cookie: jar.header(),
+        origin: config.appOrigin,
+        'x-csrf-token': csrfToken,
+      },
+      payload: { version: 3 },
+    });
+    expect(restored.statusCode).toBe(200);
+    expect(restored.json()).toMatchObject({ status: 'completed', version: 4 });
+
+    const deleteBeforeArchive = await app.inject({
+      method: 'DELETE',
+      url: `/api/v1/countdowns/${countdown.id}`,
+      headers: {
+        cookie: jar.header(),
+        origin: config.appOrigin,
+        'x-csrf-token': csrfToken,
+      },
+      payload: { version: 4 },
+    });
+    expect(deleteBeforeArchive.statusCode).toBe(409);
+
+    const rearchived = await app.inject({
+      method: 'POST',
+      url: `/api/v1/countdowns/${countdown.id}/archive`,
+      headers: {
+        cookie: jar.header(),
+        origin: config.appOrigin,
+        'x-csrf-token': csrfToken,
+      },
+      payload: { version: 4 },
+    });
+    expect(rearchived.statusCode).toBe(204);
+
+    const permanentlyDeleted = await app.inject({
+      method: 'DELETE',
+      url: `/api/v1/countdowns/${countdown.id}`,
+      headers: {
+        cookie: jar.header(),
+        origin: config.appOrigin,
+        'x-csrf-token': csrfToken,
+      },
+      payload: { version: 5 },
+    });
+    expect(permanentlyDeleted.statusCode).toBe(204);
+
+    const deletedDetail = await app.inject({
+      method: 'GET',
+      url: `/api/v1/countdowns/${countdown.id}`,
+      headers: { cookie: jar.header() },
+    });
+    expect(deletedDetail.statusCode).toBe(404);
   });
 });

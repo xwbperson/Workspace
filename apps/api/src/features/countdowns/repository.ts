@@ -7,6 +7,7 @@ export interface CountdownRow {
   note: string;
   targetAt: Date;
   status: 'active' | 'completed' | 'archived';
+  archivedFromStatus: 'active' | 'completed' | null;
   priority: number;
   version: number;
   createdAt: Date;
@@ -19,6 +20,7 @@ interface CountdownDatabaseRow {
   note: string;
   target_at: Date;
   status: 'active' | 'completed' | 'archived';
+  archived_from_status: 'active' | 'completed' | null;
   priority: number;
   version: number;
   created_at: Date;
@@ -32,6 +34,7 @@ function mapRow(row: CountdownDatabaseRow): CountdownRow {
     note: row.note,
     targetAt: row.target_at,
     status: row.status,
+    archivedFromStatus: row.archived_from_status,
     priority: row.priority,
     version: row.version,
     createdAt: row.created_at,
@@ -63,7 +66,7 @@ export class CountdownRepository {
     afterId?: string;
   }): Promise<CountdownRow[]> {
     const result = await this.database.query<CountdownDatabaseRow>(
-      `SELECT id, title, note, target_at, status, priority, version, created_at, updated_at
+      `SELECT id, title, note, target_at, status, archived_from_status, priority, version, created_at, updated_at
        FROM countdowns
        WHERE status = $1
          AND (
@@ -80,7 +83,7 @@ export class CountdownRepository {
 
   public async get(id: string): Promise<CountdownRow | null> {
     const result = await this.database.query<CountdownDatabaseRow>(
-      `SELECT id, title, note, target_at, status, priority, version, created_at, updated_at
+      `SELECT id, title, note, target_at, status, archived_from_status, priority, version, created_at, updated_at
        FROM countdowns WHERE id = $1`,
       [id],
     );
@@ -90,15 +93,16 @@ export class CountdownRepository {
   public async create(row: CountdownRow): Promise<CountdownRow> {
     const result = await this.database.query<CountdownDatabaseRow>(
       `INSERT INTO countdowns
-         (id, title, note, target_at, status, priority, version, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-       RETURNING id, title, note, target_at, status, priority, version, created_at, updated_at`,
+         (id, title, note, target_at, status, archived_from_status, priority, version, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       RETURNING id, title, note, target_at, status, archived_from_status, priority, version, created_at, updated_at`,
       [
         row.id,
         row.title,
         row.note,
         row.targetAt,
         row.status,
+        row.archivedFromStatus,
         row.priority,
         row.version,
         row.createdAt,
@@ -111,10 +115,10 @@ export class CountdownRepository {
   public async update(row: CountdownRow, expectedVersion: number): Promise<CountdownRow | null> {
     const result = await this.database.query<CountdownDatabaseRow>(
       `UPDATE countdowns
-       SET title = $2, note = $3, target_at = $4, status = $5, priority = $6,
-           version = version + 1, updated_at = $7
+       SET title = $2, note = $3, target_at = $4, status = $5, archived_from_status = NULL,
+           priority = $6, version = version + 1, updated_at = $7
        WHERE id = $1 AND version = $8 AND status <> 'archived'
-       RETURNING id, title, note, target_at, status, priority, version, created_at, updated_at`,
+       RETURNING id, title, note, target_at, status, archived_from_status, priority, version, created_at, updated_at`,
       [
         row.id,
         row.title,
@@ -132,16 +136,41 @@ export class CountdownRepository {
   public async archive(id: string, expectedVersion: number, now: Date): Promise<boolean> {
     const result = await this.database.query(
       `UPDATE countdowns
-       SET status = 'archived', version = version + 1, updated_at = $3
+       SET archived_from_status = status, status = 'archived', version = version + 1, updated_at = $3
        WHERE id = $1 AND version = $2 AND status <> 'archived'`,
       [id, expectedVersion, now],
     );
     return (result.rowCount ?? 0) === 1;
   }
 
+  public async restore(
+    id: string,
+    expectedVersion: number,
+    now: Date,
+  ): Promise<CountdownRow | null> {
+    const result = await this.database.query<CountdownDatabaseRow>(
+      `UPDATE countdowns
+       SET status = archived_from_status, archived_from_status = NULL,
+           version = version + 1, updated_at = $3
+       WHERE id = $1 AND version = $2 AND status = 'archived'
+       RETURNING id, title, note, target_at, status, archived_from_status, priority, version, created_at, updated_at`,
+      [id, expectedVersion, now],
+    );
+    return result.rows[0] ? mapRow(result.rows[0]) : null;
+  }
+
+  public async deletePermanently(id: string, expectedVersion: number): Promise<boolean> {
+    const result = await this.database.query(
+      `DELETE FROM countdowns
+       WHERE id = $1 AND version = $2 AND status = 'archived'`,
+      [id, expectedVersion],
+    );
+    return (result.rowCount ?? 0) === 1;
+  }
+
   public async upcoming(input: { from: Date; to: Date; limit: number }): Promise<CountdownRow[]> {
     const result = await this.database.query<CountdownDatabaseRow>(
-      `SELECT id, title, note, target_at, status, priority, version, created_at, updated_at
+      `SELECT id, title, note, target_at, status, archived_from_status, priority, version, created_at, updated_at
        FROM countdowns
        WHERE status = 'active' AND target_at >= $1 AND target_at <= $2
        ORDER BY target_at ASC, priority DESC, id ASC
@@ -153,7 +182,7 @@ export class CountdownRepository {
 
   public async nearestActive(limit: number): Promise<CountdownRow[]> {
     const result = await this.database.query<CountdownDatabaseRow>(
-      `SELECT id, title, note, target_at, status, priority, version, created_at, updated_at
+      `SELECT id, title, note, target_at, status, archived_from_status, priority, version, created_at, updated_at
        FROM countdowns
        WHERE status = 'active'
        ORDER BY CASE WHEN target_at >= now() THEN 0 ELSE 1 END,
@@ -169,7 +198,7 @@ export class CountdownRepository {
 
   public async recent(limit: number): Promise<CountdownRow[]> {
     const result = await this.database.query<CountdownDatabaseRow>(
-      `SELECT id, title, note, target_at, status, priority, version, created_at, updated_at
+      `SELECT id, title, note, target_at, status, archived_from_status, priority, version, created_at, updated_at
        FROM countdowns
        WHERE status <> 'archived'
        ORDER BY updated_at DESC, id ASC
@@ -182,7 +211,7 @@ export class CountdownRepository {
   public async search(query: string, limit: number): Promise<CountdownRow[]> {
     const pattern = `%${query.toLocaleLowerCase('zh-CN')}%`;
     const result = await this.database.query<CountdownDatabaseRow>(
-      `SELECT id, title, note, target_at, status, priority, version, created_at, updated_at
+      `SELECT id, title, note, target_at, status, archived_from_status, priority, version, created_at, updated_at
        FROM countdowns
        WHERE status <> 'archived'
          AND (LOWER(title) LIKE $1 OR LOWER(note) LIKE $1)
@@ -195,7 +224,7 @@ export class CountdownRepository {
 
   public async reachedWithoutNotification(limit: number): Promise<CountdownRow[]> {
     const result = await this.database.query<CountdownDatabaseRow>(
-      `SELECT c.id, c.title, c.note, c.target_at, c.status, c.priority,
+      `SELECT c.id, c.title, c.note, c.target_at, c.status, c.archived_from_status, c.priority,
               c.version, c.created_at, c.updated_at
        FROM countdowns c
        LEFT JOIN workbench_notifications n

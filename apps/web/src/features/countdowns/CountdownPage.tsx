@@ -11,6 +11,7 @@ import {
   Plus,
   RotateCcw,
   Timer,
+  Trash2,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -23,7 +24,7 @@ import { countdownApi, countdownKeys, invalidateCountdownData } from './api.js';
 import { CountdownDisplay } from './components/CountdownDisplay.js';
 import { CountdownForm } from './components/CountdownForm.js';
 
-type CountdownFilter = 'active' | 'completed';
+type CountdownFilter = 'active' | 'completed' | 'archived';
 
 export function CountdownPage(): React.JSX.Element {
   const { countdownId } = useParams();
@@ -34,6 +35,7 @@ export function CountdownPage(): React.JSX.Element {
   const [createOpen, setCreateOpen] = useState(params.get('create') === '1');
   const [editOpen, setEditOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const list = useQuery({
     queryKey: countdownKeys.list(filter),
     queryFn: () => countdownApi.list(filter),
@@ -45,6 +47,10 @@ export function CountdownPage(): React.JSX.Element {
   });
   const selected = detail.data ?? list.data?.items.find((item) => item.id === countdownId);
   const ordered = useMemo(() => list.data?.items ?? [], [list.data]);
+  const changeFilter = (nextFilter: CountdownFilter): void => {
+    setFilter(nextFilter);
+    void navigate('/features/countdowns');
+  };
 
   const create = useMutation({
     mutationFn: (input: CountdownInput) => countdownApi.create(input),
@@ -88,8 +94,33 @@ export function CountdownPage(): React.JSX.Element {
       void navigate('/features/countdowns', { replace: true });
     },
   });
+  const restore = useMutation({
+    mutationFn: (countdown: Countdown) => countdownApi.restore(countdown.id, countdown.version),
+    onSuccess: async (value) => {
+      await invalidateCountdownData();
+      show('倒计时已恢复');
+      setFilter(value.status === 'completed' ? 'completed' : 'active');
+      void navigate('/features/countdowns', { replace: true });
+    },
+  });
+  const permanentDelete = useMutation({
+    mutationFn: (countdown: Countdown) =>
+      countdownApi.deletePermanently(countdown.id, countdown.version),
+    onSuccess: async () => {
+      await invalidateCountdownData();
+      setDeleteOpen(false);
+      show('倒计时已永久删除');
+      void navigate('/features/countdowns', { replace: true });
+    },
+  });
 
-  const mutationError = create.error ?? update.error ?? toggleComplete.error ?? archive.error;
+  const mutationError =
+    create.error ??
+    update.error ??
+    toggleComplete.error ??
+    archive.error ??
+    restore.error ??
+    permanentDelete.error;
 
   return (
     <div className="countdown-page">
@@ -119,7 +150,7 @@ export function CountdownPage(): React.JSX.Element {
               <button
                 type="button"
                 className={filter === 'active' ? 'active' : ''}
-                onClick={() => setFilter('active')}
+                onClick={() => changeFilter('active')}
               >
                 <Circle aria-hidden="true" />
                 进行中
@@ -127,10 +158,18 @@ export function CountdownPage(): React.JSX.Element {
               <button
                 type="button"
                 className={filter === 'completed' ? 'active' : ''}
-                onClick={() => setFilter('completed')}
+                onClick={() => changeFilter('completed')}
               >
                 <CheckCircle2 aria-hidden="true" />
                 已完成
+              </button>
+              <button
+                type="button"
+                className={filter === 'archived' ? 'active' : ''}
+                onClick={() => changeFilter('archived')}
+              >
+                <Archive aria-hidden="true" />
+                已归档
               </button>
             </div>
             <span>{ordered.length} 项</span>
@@ -174,11 +213,19 @@ export function CountdownPage(): React.JSX.Element {
             </div>
           ) : (
             <EmptyState
-              title={filter === 'active' ? '还没有进行中的倒计时' : '还没有已完成的倒计时'}
+              title={
+                filter === 'active'
+                  ? '还没有进行中的倒计时'
+                  : filter === 'completed'
+                    ? '还没有已完成的倒计时'
+                    : '还没有已归档的倒计时'
+              }
               description={
                 filter === 'active'
                   ? '添加一个目标日期，它会同时出现在总览时间轨道中。'
-                  : '完成的倒计时会保留在这里，随时可以恢复。'
+                  : filter === 'completed'
+                    ? '完成的倒计时会保留在这里，随时可以恢复。'
+                    : '归档后的倒计时会保留在这里，可以恢复或永久删除。'
               }
               action={
                 filter === 'active' ? (
@@ -210,6 +257,9 @@ export function CountdownPage(): React.JSX.Element {
               onEdit={() => setEditOpen(true)}
               onToggleComplete={() => toggleComplete.mutate(selected)}
               onArchive={() => setArchiveOpen(true)}
+              onRestore={() => restore.mutate(selected)}
+              onDeletePermanently={() => setDeleteOpen(true)}
+              restoring={restore.isPending}
             />
           ) : (
             <div className="countdown-detail-empty">
@@ -284,7 +334,35 @@ export function CountdownPage(): React.JSX.Element {
           </>
         }
       >
-        <p>要归档“{selected?.title}”吗？这不会物理删除记录，后续可以通过数据工具恢复。</p>
+        <p>要归档“{selected?.title}”吗？它会移入已归档列表，之后仍可恢复。</p>
+      </Modal>
+      <Modal
+        open={deleteOpen}
+        title="永久删除倒计时"
+        description="此操作会从数据库中删除记录，不能撤销。"
+        onClose={() => setDeleteOpen(false)}
+        footer={
+          <>
+            <button
+              type="button"
+              className="button button--quiet"
+              onClick={() => setDeleteOpen(false)}
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              className="button button--danger"
+              disabled={!selected || permanentDelete.isPending}
+              onClick={() => selected && permanentDelete.mutate(selected)}
+            >
+              <Trash2 aria-hidden="true" size={17} />
+              确认永久删除
+            </button>
+          </>
+        }
+      >
+        <p>确定永久删除“{selected?.title}”吗？删除后无法在工作台中恢复。</p>
       </Modal>
     </div>
   );
@@ -296,12 +374,18 @@ function CountdownDetail({
   onEdit,
   onToggleComplete,
   onArchive,
+  onRestore,
+  onDeletePermanently,
+  restoring,
 }: {
   countdown: Countdown;
   onBack(): void;
   onEdit(): void;
   onToggleComplete(): void;
   onArchive(): void;
+  onRestore(): void;
+  onDeletePermanently(): void;
+  restoring: boolean;
 }): React.JSX.Element {
   return (
     <div className="countdown-detail">
@@ -314,24 +398,62 @@ function CountdownDetail({
       <div className="countdown-detail__header">
         <div>
           <span
-            className={`source-pill ${countdown.status === 'completed' ? 'source-pill--complete' : ''}`}
+            className={`source-pill ${
+              countdown.status === 'completed'
+                ? 'source-pill--complete'
+                : countdown.status === 'archived'
+                  ? 'source-pill--archived'
+                  : ''
+            }`}
           >
-            {countdown.status === 'completed' ? '已完成' : '进行中'}
+            {countdown.status === 'completed'
+              ? '已完成'
+              : countdown.status === 'archived'
+                ? '已归档'
+                : '进行中'}
           </span>
           <h3>{countdown.title}</h3>
         </div>
         <div>
-          <button type="button" className="icon-button" aria-label="编辑倒计时" onClick={onEdit}>
-            <Edit3 aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="icon-button icon-button--danger"
-            aria-label="归档倒计时"
-            onClick={onArchive}
-          >
-            <Archive aria-hidden="true" />
-          </button>
+          {countdown.status === 'archived' ? (
+            <>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="恢复倒计时"
+                onClick={onRestore}
+              >
+                <RotateCcw aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="icon-button icon-button--danger"
+                aria-label="永久删除倒计时"
+                onClick={onDeletePermanently}
+              >
+                <Trash2 aria-hidden="true" />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="编辑倒计时"
+                onClick={onEdit}
+              >
+                <Edit3 aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="icon-button icon-button--danger"
+                aria-label="归档倒计时"
+                onClick={onArchive}
+              >
+                <Archive aria-hidden="true" />
+              </button>
+            </>
+          )}
         </div>
       </div>
       <div className="countdown-detail__clock">
@@ -366,18 +488,38 @@ function CountdownDetail({
         <p>{countdown.note || '没有备注。可以编辑倒计时补充背景或下一步。'}</p>
       </div>
       <div className="countdown-detail__actions">
-        <button type="button" className="button button--primary" onClick={onToggleComplete}>
-          {countdown.status === 'completed' ? (
-            <RotateCcw aria-hidden="true" />
-          ) : (
-            <CheckCircle2 aria-hidden="true" />
-          )}
-          {countdown.status === 'completed' ? '恢复进行中' : '标记为完成'}
-        </button>
-        <button type="button" className="button button--quiet" onClick={onEdit}>
-          <Edit3 aria-hidden="true" />
-          编辑
-        </button>
+        {countdown.status === 'archived' ? (
+          <>
+            <button
+              type="button"
+              className="button button--primary"
+              onClick={onRestore}
+              disabled={restoring}
+            >
+              <RotateCcw aria-hidden="true" />
+              恢复倒计时
+            </button>
+            <button type="button" className="button button--danger" onClick={onDeletePermanently}>
+              <Trash2 aria-hidden="true" />
+              永久删除
+            </button>
+          </>
+        ) : (
+          <>
+            <button type="button" className="button button--primary" onClick={onToggleComplete}>
+              {countdown.status === 'completed' ? (
+                <RotateCcw aria-hidden="true" />
+              ) : (
+                <CheckCircle2 aria-hidden="true" />
+              )}
+              {countdown.status === 'completed' ? '恢复进行中' : '标记为完成'}
+            </button>
+            <button type="button" className="button button--quiet" onClick={onEdit}>
+              <Edit3 aria-hidden="true" />
+              编辑
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

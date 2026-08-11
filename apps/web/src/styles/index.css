@@ -999,6 +999,11 @@
     background: var(--color-surface-muted);
   }
 
+  .source-pill--archived {
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+  }
+
   .quick-create-panel {
     display: flex;
     min-height: 250px;

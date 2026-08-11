@@ -220,6 +220,20 @@ export class WorkbenchClient {
   }
 
   public archiveCountdown(id: string, version: number): Promise<void> {
+    return this.request(`/countdowns/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public restoreCountdown(id: string, version: number): Promise<Countdown> {
+    return this.request(`/countdowns/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public deleteCountdownPermanently(id: string, version: number): Promise<void> {
     return this.request(`/countdowns/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       body: { version },

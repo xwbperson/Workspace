@@ -16,7 +16,7 @@ export async function invalidateCountdownData(): Promise<void> {
 }
 
 export const countdownApi = {
-  list(status: 'active' | 'completed') {
+  list(status: 'active' | 'completed' | 'archived') {
     return workbenchClient.getCountdowns({ status, limit: 50 });
   },
   get(id: string) {
@@ -30,5 +30,11 @@ export const countdownApi = {
   },
   archive(id: string, version: number) {
     return workbenchClient.archiveCountdown(id, version);
+  },
+  restore(id: string, version: number) {
+    return workbenchClient.restoreCountdown(id, version);
+  },
+  deletePermanently(id: string, version: number) {
+    return workbenchClient.deleteCountdownPermanently(id, version);
   },
 };

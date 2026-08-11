@@ -8,6 +8,13 @@ const uuidParamsSchema = {
   properties: { id: { type: 'string', format: 'uuid' } },
 } as const;
 
+const versionBodySchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['version'],
+  properties: { version: { type: 'integer', minimum: 1 } },
+} as const;
+
 export async function registerCountdownRoutes(
   app: FastifyInstance,
   service: CountdownService,
@@ -88,22 +95,38 @@ export async function registerCountdownRoutes(
     async (request) => service.update(request.params.id, request.body),
   );
 
-  app.delete<{ Params: { id: string }; Body: { version: number } }>(
-    '/api/v1/countdowns/:id',
+  app.post<{ Params: { id: string }; Body: { version: number } }>(
+    '/api/v1/countdowns/:id/archive',
     {
       config: { authenticated: true },
       schema: {
         params: uuidParamsSchema,
-        body: {
-          type: 'object',
-          additionalProperties: false,
-          required: ['version'],
-          properties: { version: { type: 'integer', minimum: 1 } },
-        },
+        body: versionBodySchema,
       },
     },
     async (request, reply) => {
       await service.archive(request.params.id, request.body.version);
+      return reply.status(204).send();
+    },
+  );
+
+  app.post<{ Params: { id: string }; Body: { version: number } }>(
+    '/api/v1/countdowns/:id/restore',
+    {
+      config: { authenticated: true },
+      schema: { params: uuidParamsSchema, body: versionBodySchema },
+    },
+    async (request) => service.restore(request.params.id, request.body.version),
+  );
+
+  app.delete<{ Params: { id: string }; Body: { version: number } }>(
+    '/api/v1/countdowns/:id',
+    {
+      config: { authenticated: true },
+      schema: { params: uuidParamsSchema, body: versionBodySchema },
+    },
+    async (request, reply) => {
+      await service.deletePermanently(request.params.id, request.body.version);
       return reply.status(204).send();
     },
   );
