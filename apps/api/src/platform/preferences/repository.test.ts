@@ -57,4 +57,23 @@ describe('PreferencesRepository', () => {
 
     expect(result.theme).toBe('dark');
   });
+
+  it('keeps the glass theme when it is stored', async () => {
+    const database = {
+      query: vi.fn(async () => ({
+        rows: [
+          {
+            value: {
+              theme: 'glass',
+            },
+          },
+        ],
+      })),
+    } as unknown as Database;
+    const repository = new PreferencesRepository(database, 'workspace');
+
+    const result = await repository.get(defaults);
+
+    expect(result.theme).toBe('glass');
+  });
 });

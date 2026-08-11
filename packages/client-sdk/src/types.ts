@@ -134,7 +134,7 @@ export interface OverviewResponse {
 export interface WorkbenchPreferences {
   hiddenFeatureIds: string[];
   overviewBlockIds: string[];
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'glass';
   dateDisplay: 'relative' | 'absolute';
   notificationsEnabled: boolean;
   refreshIntervalMinutes: 0 | 1 | 5 | 15 | 30;

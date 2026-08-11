@@ -25,6 +25,15 @@
   :root[data-theme='dark'] {
     color-scheme: dark;
     --browser-theme-color: #0e1411;
+    --app-background: #0e1411;
+    --surface-backdrop-filter: none;
+    --surface-panel-shadow: none;
+    --sidebar-backdrop-filter: none;
+    --topbar-background: rgb(14 20 17 / 90%);
+    --topbar-backdrop-filter: blur(16px);
+    --bottom-nav-background: rgb(22 29 25 / 94%);
+    --bottom-nav-backdrop-filter: blur(16px);
+    --modal-backdrop-filter: blur(3px);
     --color-bg: #0e1411;
     --color-surface: #161d19;
     --color-surface-raised: #1a221e;
@@ -150,6 +159,15 @@
   :root[data-theme='light'] {
     color-scheme: light;
     --browser-theme-color: #f3f6f4;
+    --app-background: #f3f6f4;
+    --surface-backdrop-filter: none;
+    --surface-panel-shadow: none;
+    --sidebar-backdrop-filter: none;
+    --topbar-background: rgb(243 246 244 / 90%);
+    --topbar-backdrop-filter: blur(16px);
+    --bottom-nav-background: rgb(255 255 255 / 94%);
+    --bottom-nav-backdrop-filter: blur(16px);
+    --modal-backdrop-filter: blur(3px);
     --color-bg: #f3f6f4;
     --color-surface: #ffffff;
     --color-surface-raised: #fbfcfb;
@@ -270,6 +288,155 @@
     --mobile-create-foreground: #ffffff;
     --mobile-create-background: #176b5b;
     --mobile-create-shadow: 0 10px 28px rgb(23 107 91 / 30%);
+  }
+
+  :root[data-theme='glass'] {
+    color-scheme: dark;
+    --browser-theme-color: #12162c;
+    --app-background:
+      radial-gradient(circle at 12% 8%, rgb(45 198 187 / 28%), transparent 34%),
+      radial-gradient(circle at 88% 6%, rgb(112 91 246 / 38%), transparent 36%),
+      radial-gradient(circle at 74% 92%, rgb(224 88 164 / 22%), transparent 34%),
+      linear-gradient(140deg, #0b1727 0%, #17142e 50%, #0c2331 100%);
+    --surface-backdrop-filter: blur(22px) saturate(145%);
+    --surface-panel-shadow: inset 0 1px 0 rgb(255 255 255 / 9%), 0 18px 48px rgb(4 7 24 / 18%);
+    --sidebar-backdrop-filter: blur(30px) saturate(150%);
+    --topbar-background: rgb(12 18 38 / 54%);
+    --topbar-backdrop-filter: blur(30px) saturate(150%);
+    --bottom-nav-background: rgb(16 22 46 / 72%);
+    --bottom-nav-backdrop-filter: blur(30px) saturate(150%);
+    --modal-backdrop-filter: blur(10px) saturate(125%);
+    --color-bg: #12162c;
+    --color-surface: rgb(21 28 52 / 68%);
+    --color-surface-raised: rgb(30 38 68 / 76%);
+    --color-surface-muted: rgb(50 59 91 / 52%);
+    --color-surface-accent: rgb(45 67 91 / 64%);
+    --color-text: #f5f7ff;
+    --color-text-secondary: #c5cbe0;
+    --color-text-tertiary: #949cb8;
+    --color-border: rgb(255 255 255 / 14%);
+    --color-border-strong: rgb(255 255 255 / 26%);
+    --color-accent: #71e4d4;
+    --color-accent-hover: #a7f6eb;
+    --color-accent-soft: rgb(113 228 212 / 14%);
+    --color-brass: #ffc978;
+    --color-brass-soft: rgb(255 201 120 / 15%);
+    --color-success: #5ed39a;
+    --color-warning: #ffc466;
+    --color-danger: #ff8fa5;
+    --color-danger-soft: rgb(255 106 143 / 14%);
+    --color-info: #83b7ff;
+    --shadow-float: inset 0 1px 0 rgb(255 255 255 / 11%), 0 22px 64px rgb(4 7 24 / 32%);
+    --shadow-card: inset 0 1px 0 rgb(255 255 255 / 9%), 0 12px 32px rgb(4 7 24 / 22%);
+    --selection-foreground: #0a1f25;
+    --selection-background: #8ef1e4;
+    --skip-link-foreground: #071d22;
+    --skip-link-background: #8ef1e4;
+    --button-primary-foreground: #071f24;
+    --button-danger-foreground: #ffffff;
+    --control-active-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 6px 18px rgb(4 7 24 / 18%);
+    --modal-backdrop: rgb(4 7 24 / 58%);
+    --brand-mark-background: rgb(58 191 181 / 48%);
+    --brand-mark-stripe: #f4fffd;
+    --brand-mark-light-background: rgb(255 255 255 / 14%);
+    --brand-mark-light-stripe: #f4fffd;
+    --sidebar-foreground: #e8edff;
+    --sidebar-background: rgb(11 22 39 / 56%);
+    --sidebar-border: rgb(255 255 255 / 14%);
+    --sidebar-name: #ffffff;
+    --sidebar-control: #c3cbe0;
+    --sidebar-control-hover: #ffffff;
+    --sidebar-control-hover-background: rgb(255 255 255 / 9%);
+    --sidebar-control-active: #ffffff;
+    --sidebar-control-active-background: rgb(84 205 193 / 24%);
+    --sidebar-group-label: #8e9bb7;
+    --notification-foreground: #ffffff;
+    --notification-background: #d84f76;
+    --focus-time-foreground: #f3fffd;
+    --focus-time-background: rgb(42 126 124 / 46%);
+    --focus-time-marker: #ffc978;
+    --focus-time-muted: #b8dcd8;
+    --quick-create-foreground: #f4fffd;
+    --quick-create-background: rgb(35 107 103 / 44%);
+    --quick-create-border: rgb(139 245 229 / 18%);
+    --quick-create-eyebrow: #ffd28d;
+    --quick-create-description: #c6dedc;
+    --quick-create-shortcut: #9fbdbb;
+    --filter-active-foreground: #071f24;
+    --filter-active-background: #71e4d4;
+    --countdown-hero-foreground: #f5fffd;
+    --countdown-hero-background:
+      radial-gradient(circle at 86% 12%, rgb(126 103 255 / 28%), transparent 36%),
+      linear-gradient(128deg, rgb(28 105 101 / 58%), rgb(35 39 79 / 64%));
+    --countdown-hero-eyebrow: #ffd28d;
+    --countdown-hero-description: #c2dbd9;
+    --login-foreground: #f6f8ff;
+    --login-background:
+      radial-gradient(circle at 18% 18%, rgb(51 213 196 / 28%), transparent 36%),
+      radial-gradient(circle at 82% 78%, rgb(124 96 255 / 36%), transparent 42%),
+      linear-gradient(145deg, #0c2430, #191631 68%, #11172e);
+    --login-orbit-border: rgb(153 236 226 / 28%);
+    --login-orbit-shadow: 0 0 0 60px rgb(255 255 255 / 2.5%), 0 0 0 120px rgb(255 255 255 / 1.5%);
+    --login-accent: #ffd28d;
+    --login-description: #c7cee2;
+    --login-rail: rgb(255 255 255 / 20%);
+    --login-marker-border: #151932;
+    --login-label: #95a2c0;
+    --learning-hero-foreground: #f6f8ff;
+    --learning-books-background:
+      radial-gradient(circle at 83% 20%, rgb(255 199 120 / 24%), transparent 28%),
+      linear-gradient(135deg, rgb(29 106 99 / 62%), rgb(42 77 101 / 64%));
+    --learning-courses-background:
+      radial-gradient(circle at 85% 16%, rgb(131 183 255 / 28%), transparent 30%),
+      linear-gradient(135deg, rgb(35 56 105 / 68%), rgb(54 73 122 / 62%));
+    --learning-books-description: #c9dedb;
+    --learning-courses-description: #ced9ed;
+    --progress-fill: linear-gradient(90deg, #71e4d4, #83b7ff);
+    --book-cover-action-foreground: #ffffff;
+    --book-cover-action-background: rgb(7 14 32 / 70%);
+    --chapter-hero-background: linear-gradient(135deg, rgb(36 132 122 / 72%), rgb(61 69 132 / 72%));
+    --course-icon-background: rgb(95 137 201 / 22%);
+    --goals-hero-background:
+      radial-gradient(circle at 86% 12%, rgb(255 255 255 / 10%), transparent 30%),
+      linear-gradient(110deg, rgb(28 126 113 / 68%), rgb(71 55 132 / 66%));
+    --goals-hero-foreground: #f7fffd;
+    --goals-hero-orbit: rgb(255 255 255 / 10%);
+    --goals-hero-eyebrow: #9af2e5;
+    --goals-hero-description: rgb(241 255 252 / 78%);
+    --goal-progress-fill: linear-gradient(90deg, #71e4d4, #9bf1dd);
+    --tasks-hero-background: linear-gradient(118deg, rgb(37 74 113 / 76%), rgb(39 125 127 / 68%));
+    --tasks-hero-foreground: #f5fbff;
+    --tasks-hero-eyebrow: #9debee;
+    --tasks-hero-description: rgb(239 252 255 / 78%);
+    --calendar-hero-background: linear-gradient(
+      118deg,
+      rgb(56 65 125 / 78%),
+      rgb(51 120 130 / 68%)
+    );
+    --calendar-hero-foreground: #f8fbff;
+    --calendar-hero-eyebrow: #a9eee7;
+    --calendar-hero-description: rgb(245 252 255 / 78%);
+    --inbox-hero-background: linear-gradient(118deg, rgb(104 63 89 / 72%), rgb(122 99 57 / 66%));
+    --inbox-hero-foreground: #fffaf2;
+    --inbox-hero-eyebrow: #ffda98;
+    --inbox-hero-description: rgb(255 249 239 / 78%);
+    --subscriptions-hero-background:
+      radial-gradient(circle at 82% 18%, rgb(113 228 212 / 24%), transparent 34%),
+      linear-gradient(135deg, rgb(27 52 85 / 72%), rgb(35 87 82 / 62%));
+    --finance-hero-background:
+      radial-gradient(circle at 88% 12%, rgb(255 201 120 / 25%), transparent 32%),
+      linear-gradient(135deg, rgb(44 53 75 / 76%), rgb(82 76 51 / 62%));
+    --life-hero-background:
+      radial-gradient(circle at 85% 18%, rgb(131 183 255 / 28%), transparent 34%),
+      linear-gradient(135deg, rgb(38 42 83 / 76%), rgb(67 54 102 / 66%));
+    --period-picker-foreground: #edf2ff;
+    --period-picker-input-foreground: #ffffff;
+    --period-picker-input-background: rgb(255 255 255 / 11%);
+    --period-picker-input-border: rgb(255 255 255 / 20%);
+    --sidebar-backdrop: rgb(4 7 24 / 58%);
+    --mobile-create-foreground: #071f24;
+    --mobile-create-background: #71e4d4;
+    --mobile-create-shadow: 0 12px 34px rgb(38 204 190 / 28%);
   }
 }
 
@@ -421,7 +588,7 @@
 @layer base {
   body {
     color: var(--color-text);
-    background: var(--color-bg);
+    background: var(--app-background);
     font-size: 15px;
     line-height: 1.55;
     text-rendering: optimizeLegibility;
@@ -753,6 +920,7 @@
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-float);
+    backdrop-filter: var(--surface-backdrop-filter);
   }
 
   .modal[open] {
@@ -761,7 +929,7 @@
 
   .modal::backdrop {
     background: var(--modal-backdrop);
-    backdrop-filter: blur(3px);
+    backdrop-filter: var(--modal-backdrop-filter);
   }
 
   .modal__header,
@@ -819,6 +987,43 @@
     border-left: 3px solid var(--color-accent);
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-card);
+  }
+
+  :where(
+    .modal,
+    .toast,
+    .search-trigger,
+    .account-button,
+    .focus-panel,
+    .quick-create-panel,
+    .timeline-panel,
+    .overview-block,
+    .recent-panel,
+    .settings-card,
+    .search-field,
+    .global-search-field,
+    .feature-tile,
+    .countdown-workspace,
+    .countdown-detail-panel,
+    .learning-workspace,
+    .learning-section,
+    .chapter-reader-card,
+    .feature-hero,
+    .lifecycle-tabs,
+    .entity-workspace,
+    .calendar-workspace,
+    .finance-chart-card,
+    .finance-section,
+    .finance-card-grid > article,
+    .annual-debt-card,
+    .inbox-card,
+    .life-setup-card,
+    .life-metrics,
+    .metric-card-row > div,
+    .agenda-detail
+  ) {
+    box-shadow: var(--surface-panel-shadow);
+    backdrop-filter: var(--surface-backdrop-filter);
   }
 
   .toast span {
@@ -959,6 +1164,7 @@
     color: var(--sidebar-foreground);
     background: var(--sidebar-background);
     border-right: 1px solid var(--sidebar-border);
+    backdrop-filter: var(--sidebar-backdrop-filter);
     transition: width 180ms ease;
   }
 
@@ -1081,9 +1287,9 @@
     justify-content: space-between;
     gap: 20px;
     padding: 0 24px;
-    background: color-mix(in srgb, var(--color-bg) 90%, transparent);
+    background: var(--topbar-background);
     border-bottom: 1px solid var(--color-border);
-    backdrop-filter: blur(16px);
+    backdrop-filter: var(--topbar-backdrop-filter);
   }
 
   .topbar__title,
@@ -5160,9 +5366,9 @@
       height: calc(64px + env(safe-area-inset-bottom));
       grid-template-columns: repeat(4, 1fr);
       padding-bottom: env(safe-area-inset-bottom);
-      background: color-mix(in srgb, var(--color-surface) 94%, transparent);
+      background: var(--bottom-nav-background);
       border-top: 1px solid var(--color-border);
-      backdrop-filter: blur(16px);
+      backdrop-filter: var(--bottom-nav-backdrop-filter);
     }
 
     .bottom-nav a {

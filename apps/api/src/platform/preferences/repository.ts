@@ -21,7 +21,9 @@ export class PreferencesRepository {
     const current = { ...stored };
     delete current.pinnedFeatureIds;
     const theme =
-      current.theme === 'light' || current.theme === 'dark' ? current.theme : defaults.theme;
+      current.theme === 'light' || current.theme === 'dark' || current.theme === 'glass'
+        ? current.theme
+        : defaults.theme;
     return {
       ...defaults,
       ...current,

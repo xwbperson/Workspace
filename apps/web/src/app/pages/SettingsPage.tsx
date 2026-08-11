@@ -6,6 +6,7 @@ import {
   Eye,
   EyeOff,
   Grid2X2,
+  Layers3,
   Laptop,
   LogOut,
   Moon,
@@ -119,27 +120,23 @@ export function SettingsPage(): React.JSX.Element {
               <small>在所有设备间同步</small>
             </div>
             <div className="segmented-control" aria-label="主题模式">
-              {(['dark', 'light'] as const).map((theme) => (
-                <button
-                  type="button"
-                  className={preferences.theme === theme ? 'active' : ''}
-                  key={theme}
-                  disabled={saving}
-                  onClick={() => void updatePreference('theme', theme)}
-                >
-                  {theme === 'light' ? (
-                    <>
-                      <Sun aria-hidden="true" />
-                      浅色
-                    </>
-                  ) : (
-                    <>
-                      <Moon aria-hidden="true" />
-                      深色
-                    </>
-                  )}
-                </button>
-              ))}
+              {(['dark', 'light', 'glass'] as const).map((theme) => {
+                const ThemeIcon = theme === 'light' ? Sun : theme === 'glass' ? Layers3 : Moon;
+                const label = theme === 'light' ? '浅色' : theme === 'glass' ? '玻璃' : '深色';
+
+                return (
+                  <button
+                    type="button"
+                    className={preferences.theme === theme ? 'active' : ''}
+                    key={theme}
+                    disabled={saving}
+                    onClick={() => void updatePreference('theme', theme)}
+                  >
+                    <ThemeIcon aria-hidden="true" />
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div className="setting-row">

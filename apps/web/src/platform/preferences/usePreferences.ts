@@ -15,7 +15,7 @@ const fallbackPreferences: WorkbenchPreferences = {
 
 function applyTheme(theme: WorkbenchPreferences['theme']): void {
   document.documentElement.dataset.theme = theme;
-  document.documentElement.style.colorScheme = theme;
+  document.documentElement.style.colorScheme = theme === 'light' ? 'light' : 'dark';
   const browserThemeColor = getComputedStyle(document.documentElement)
     .getPropertyValue('--browser-theme-color')
     .trim();

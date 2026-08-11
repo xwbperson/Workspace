@@ -8,6 +8,9 @@ const rawColorPattern = /#[\da-f]{3,8}\b|(?:rgb|hsl)a?\(/i;
 
 function extractRule(selector: string): string {
   const selectorStart = stylesheet.indexOf(selector);
+
+  if (selectorStart < 0) throw new Error(`找不到主题规则：${selector}`);
+
   const blockStart = stylesheet.indexOf('{', selectorStart);
   let depth = 0;
 
@@ -32,11 +35,13 @@ describe('theme contract', () => {
     expect(componentStyles).not.toMatch(rawColorPattern);
   });
 
-  it('requires light and dark themes to implement the same token contract', () => {
+  it('requires every theme to implement the same token contract', () => {
     const darkTokens = tokenNames(extractRule(":root[data-theme='dark']"));
     const lightTokens = tokenNames(extractRule(":root[data-theme='light']"));
+    const glassTokens = tokenNames(extractRule(":root[data-theme='glass']"));
 
     expect(darkTokens.length).toBeGreaterThan(0);
     expect(lightTokens).toEqual(darkTokens);
+    expect(glassTokens).toEqual(darkTokens);
   });
 });
