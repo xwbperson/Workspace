@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Command, Search, Timer, X } from 'lucide-react';
+import { ArrowRight, Command, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { featureCatalog } from '../feature-catalog.js';
 import { EmptyState, SectionError } from '../../components/ui/States.js';
+import { FeatureIcon } from '../../components/ui/FeatureIcon.js';
 import { humanizeApiError, workbenchClient } from '../../platform/api/client.js';
 import { formatRelativeTime } from '../../platform/time/format.js';
 
@@ -34,6 +35,8 @@ export function SearchPage(): React.JSX.Element {
   });
   const contentCount =
     results.data?.groups.reduce((count, group) => count + group.items.length, 0) ?? 0;
+  const visibleGroups =
+    results.data?.groups.filter((group) => group.items.length > 0 || group.error) ?? [];
 
   return (
     <div className="search-page page-stack">
@@ -50,7 +53,7 @@ export function SearchPage(): React.JSX.Element {
         <input
           ref={inputRef}
           type="search"
-          placeholder="输入功能名称、倒计时标题或备注"
+          placeholder="搜索功能、标题或备注…"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
@@ -75,7 +78,7 @@ export function SearchPage(): React.JSX.Element {
         <div className="search-suggestions">
           <p className="eyebrow">可以尝试</p>
           <div>
-            {['倒计时', '本月', '截止日期'].map((text) => (
+            {['任务', '书籍', '课程', '订阅'].map((text) => (
               <button type="button" key={text} onClick={() => setQuery(text)}>
                 {text}
               </button>
@@ -99,7 +102,7 @@ export function SearchPage(): React.JSX.Element {
               <div className="search-result-list">
                 {matchingFeatures.map((feature) => (
                   <Link to={feature.route} key={feature.featureId}>
-                    <Timer aria-hidden="true" />
+                    <FeatureIcon name={feature.icon} />
                     <span>
                       <strong>{feature.name}</strong>
                       <small>{feature.description}</small>
@@ -132,35 +135,39 @@ export function SearchPage(): React.JSX.Element {
                 <div className="skeleton" />
               </div>
             ) : null}
-            {results.data?.groups.map((group) => (
-              <div key={group.featureId} className="search-group">
-                <h3>
-                  {featureCatalog.find((feature) => feature.featureId === group.featureId)?.name ??
-                    group.featureId}
-                </h3>
-                {group.error ? (
-                  <SectionError message={group.error.message} />
-                ) : group.items.length ? (
-                  <div className="search-result-list">
-                    {group.items.map((item) => (
-                      <Link to={item.targetRoute} key={`${item.featureId}:${item.recordId}`}>
-                        <Timer aria-hidden="true" />
-                        <span>
-                          <strong>{item.title}</strong>
-                          <small>
-                            {item.snippet || item.type}
-                            {item.updatedAt ? ` · ${formatRelativeTime(item.updatedAt)}` : ''}
-                          </small>
-                        </span>
-                        <ArrowRight aria-hidden="true" />
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="muted">这个功能中没有匹配内容。</p>
-                )}
-              </div>
-            ))}
+            {visibleGroups.map((group) => {
+              const feature = featureCatalog.find(
+                (candidate) => candidate.featureId === group.featureId,
+              );
+              return (
+                <div key={group.featureId} className="search-group">
+                  <h3>{feature?.name ?? group.featureId}</h3>
+                  {group.error ? (
+                    <SectionError message={group.error.message} />
+                  ) : (
+                    <div className="search-result-list">
+                      {group.items.map((item) => (
+                        <Link to={item.targetRoute} key={`${item.featureId}:${item.recordId}`}>
+                          {feature ? (
+                            <FeatureIcon name={feature.icon} />
+                          ) : (
+                            <Search aria-hidden="true" />
+                          )}
+                          <span>
+                            <strong>{item.title}</strong>
+                            <small>
+                              {item.snippet || item.type}
+                              {item.updatedAt ? ` · ${formatRelativeTime(item.updatedAt)}` : ''}
+                            </small>
+                          </span>
+                          <ArrowRight aria-hidden="true" />
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {!results.isFetching && results.data && contentCount === 0 ? (
               <EmptyState
                 title="没有找到内容"

@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { featureCatalog } from '../feature-catalog.js';
+import { FeatureIcon } from '../../components/ui/FeatureIcon.js';
 import { EmptyState, SectionError } from '../../components/ui/States.js';
 import { Modal } from '../../components/ui/Modal.js';
 import { humanizeApiError, workbenchClient } from '../../platform/api/client.js';
@@ -46,12 +48,22 @@ function UpcomingRow({ item }: { item: UpcomingItem }): React.JSX.Element {
   );
 }
 
-function OverviewBlockView({ block }: { block: OverviewBlock }): React.JSX.Element {
+function featureDetails(featureId: string) {
+  return featureCatalog.find((feature) => feature.featureId === featureId);
+}
+
+function featureName(featureId: string): string {
+  return featureDetails(featureId)?.name ?? featureId;
+}
+
+export function OverviewBlockView({ block }: { block: OverviewBlock }): React.JSX.Element {
+  const sourceFeature = featureDetails(block.featureId);
+  const sourceName = featureName(block.featureId);
   return (
     <section className="overview-block">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">来自倒计时</p>
+          <p className="eyebrow">来自{sourceName}</p>
           <h2>{block.title}</h2>
         </div>
         <Link to={block.targetRoute}>
@@ -63,7 +75,11 @@ function OverviewBlockView({ block }: { block: OverviewBlock }): React.JSX.Eleme
           <div className="compact-list">
             {block.data.items.slice(0, 4).map((item) => (
               <Link key={item.id} to={item.targetRoute}>
-                <Timer aria-hidden="true" size={18} />
+                {sourceFeature ? (
+                  <FeatureIcon name={sourceFeature.icon} size={18} />
+                ) : (
+                  <Timer aria-hidden="true" size={18} />
+                )}
                 <span>
                   <strong>{item.title}</strong>
                   {item.occurredAt ? <small>{formatRelativeTime(item.occurredAt)}</small> : null}
@@ -73,7 +89,10 @@ function OverviewBlockView({ block }: { block: OverviewBlock }): React.JSX.Eleme
             ))}
           </div>
         ) : (
-          <EmptyState title="还没有倒计时" description="添加一个重要日期后，它会出现在这里。" />
+          <EmptyState
+            title={`暂无${block.title}`}
+            description={`在${sourceName}中添加或更新内容后，会显示在这里。`}
+          />
         )
       ) : null}
       {block.data.kind === 'metric' ? (
@@ -111,6 +130,9 @@ export function OverviewPage(): React.JSX.Element {
       preferences.refreshIntervalMinutes > 0 ? preferences.refreshIntervalMinutes * 60_000 : false,
   });
   const today = useMemo(() => format(new Date(), 'M月d日 EEEE', { locale: zhCN }), []);
+  const focusFeatureName = overview.data?.focus.primary
+    ? featureName(overview.data.focus.primary.featureId)
+    : undefined;
 
   const openEditor = (): void => {
     setDraftBlocks(preferences.overviewBlockIds);
@@ -181,28 +203,24 @@ export function OverviewPage(): React.JSX.Element {
                 ) : null}
               </div>
               <div className="focus-item__copy">
-                <span className="source-pill">倒计时</span>
+                <span className="source-pill">{focusFeatureName}</span>
                 <h3>{overview.data.focus.primary.title}</h3>
                 <Link
                   className="button button--primary"
                   to={overview.data.focus.primary.targetRoute}
                 >
-                  打开倒计时 <ArrowRight aria-hidden="true" size={17} />
+                  查看详情 <ArrowRight aria-hidden="true" size={17} />
                 </Link>
               </div>
             </div>
           ) : (
             <EmptyState
-              title="当前没有需要关注的日期"
-              description="添加第一个倒计时，工作台就能开始组织你的时间线。"
+              title="当前没有需要关注的事项"
+              description="倒计时、课程、目标和任务中的临近内容会集中显示在这里。"
               action={
-                <button
-                  type="button"
-                  className="button button--primary"
-                  onClick={() => void navigate('/features/countdowns?create=1')}
-                >
-                  <Plus aria-hidden="true" size={17} /> 添加倒计时
-                </button>
+                <Link className="button button--primary" to="/features">
+                  查看全部功能 <ArrowRight aria-hidden="true" size={17} />
+                </Link>
               }
             />
           )}
@@ -228,12 +246,9 @@ export function OverviewPage(): React.JSX.Element {
       <section className="timeline-panel">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">即将到来</p>
+            <p className="eyebrow">来自多个功能</p>
             <h2>时间轨道</h2>
           </div>
-          <Link to="/features/countdowns">
-            查看全部 <ArrowRight aria-hidden="true" size={16} />
-          </Link>
         </div>
         <div className="time-rail" aria-hidden="true">
           <CalendarClock />
@@ -359,7 +374,7 @@ export function OverviewPage(): React.JSX.Element {
                   />
                   <span>
                     <strong>{definition.title}</strong>
-                    <small>{definition.featureId}</small>
+                    <small>来自{featureName(definition.featureId)}</small>
                   </span>
                 </label>
                 <div>

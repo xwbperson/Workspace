@@ -54,7 +54,7 @@ export function LifeProfileForm({
         </label>
       </div>
       <div className="entity-form__actions">
-        <button className="button button--primary" disabled={submitting}>
+        <button type="submit" className="button button--primary" disabled={submitting}>
           {submitting ? '正在保存…' : '保存人生参数'}
         </button>
       </div>
@@ -116,7 +116,7 @@ export function LifeEventForm({
         </label>
       </div>
       <div className="entity-form__actions">
-        <button className="button button--primary" disabled={submitting}>
+        <button type="submit" className="button button--primary" disabled={submitting}>
           {submitting ? '正在保存…' : lifeEvent ? '保存事件' : '添加事件'}
         </button>
       </div>

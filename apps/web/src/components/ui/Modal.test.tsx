@@ -45,6 +45,29 @@ function DraftField(): React.JSX.Element {
 }
 
 describe('Modal', () => {
+  it('uses unique accessible labels for multiple mounted dialogs', () => {
+    render(
+      <>
+        <Modal open={false} title="新增书籍" description="填写书籍资料" onClose={() => undefined}>
+          书籍表单
+        </Modal>
+        <Modal open={false} title="归档书籍" onClose={() => undefined}>
+          归档确认
+        </Modal>
+      </>,
+    );
+
+    const dialogs = screen.getAllByRole('dialog', { hidden: true });
+    const titleIds = dialogs.map((dialog) => dialog.getAttribute('aria-labelledby'));
+    expect(new Set(titleIds).size).toBe(2);
+    expect(document.getElementById(titleIds[0]!)).toHaveTextContent('新增书籍');
+    expect(document.getElementById(titleIds[1]!)).toHaveTextContent('归档书籍');
+    expect(
+      document.getElementById(dialogs[0]!.getAttribute('aria-describedby')!),
+    ).toHaveTextContent('填写书籍资料');
+    expect(dialogs[1]).not.toHaveAttribute('aria-describedby');
+  });
+
   it('discards child form state after closing and reopening', () => {
     const { rerender } = render(
       <Modal open title="新建" onClose={() => undefined}>

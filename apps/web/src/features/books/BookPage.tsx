@@ -314,6 +314,7 @@ export function BookPage(): React.JSX.Element {
       <input
         ref={fileInput}
         className="sr-only"
+        aria-label="选择书籍封面图片"
         type="file"
         accept="image/*"
         onChange={(event) => {

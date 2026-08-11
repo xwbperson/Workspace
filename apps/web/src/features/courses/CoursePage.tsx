@@ -398,6 +398,7 @@ export function CoursePage(): React.JSX.Element {
       <input
         ref={materialInput}
         className="sr-only"
+        aria-label="选择课程资料文件"
         type="file"
         onChange={(event) => {
           const file = event.target.files?.[0];
@@ -413,6 +414,7 @@ export function CoursePage(): React.JSX.Element {
       <input
         ref={syllabusInput}
         className="sr-only"
+        aria-label="选择课程大纲文件"
         type="file"
         accept=".pdf,.doc,.docx,.html,.htm,.txt,.md"
         onChange={(event) => {

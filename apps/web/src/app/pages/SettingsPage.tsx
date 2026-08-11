@@ -150,6 +150,7 @@ export function SettingsPage(): React.JSX.Element {
               <small>相对时间或完整日期</small>
             </div>
             <select
+              aria-label="时间显示"
               value={preferences.dateDisplay}
               onChange={(event) =>
                 void updatePreference(
@@ -168,6 +169,7 @@ export function SettingsPage(): React.JSX.Element {
               <small>0 表示只手动刷新</small>
             </div>
             <select
+              aria-label="自动刷新间隔"
               value={preferences.refreshIntervalMinutes}
               onChange={(event) =>
                 void updatePreference(

@@ -89,7 +89,7 @@ export function FinanceAccountForm({
         </label>
       </div>
       <div className="entity-form__actions">
-        <button className="button button--primary" disabled={submitting}>
+        <button type="submit" className="button button--primary" disabled={submitting}>
           {submitting ? '正在保存…' : account ? '保存账户' : '添加账户'}
         </button>
       </div>
@@ -203,7 +203,7 @@ export function FinanceDebtPlatformForm({
         </label>
       </div>
       <div className="entity-form__actions">
-        <button className="button button--primary" disabled={submitting}>
+        <button type="submit" className="button button--primary" disabled={submitting}>
           {submitting ? '正在保存…' : platform ? '保存平台' : '添加平台'}
         </button>
       </div>
@@ -271,7 +271,11 @@ export function FinanceDebtRecordForm({
         </label>
       </div>
       <div className="entity-form__actions">
-        <button className="button button--primary" disabled={submitting || !platformId}>
+        <button
+          type="submit"
+          className="button button--primary"
+          disabled={submitting || !platformId}
+        >
           {submitting ? '正在保存…' : '保存月度负债'}
         </button>
       </div>
