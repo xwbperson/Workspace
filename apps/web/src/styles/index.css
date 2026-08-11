@@ -1178,6 +1178,10 @@
     padding-left: 30px;
   }
 
+  .timeline-panel > .section-heading {
+    padding-left: 18px;
+  }
+
   .time-rail {
     position: absolute;
     top: 24px;
@@ -5199,6 +5203,10 @@
     .search-results > section,
     .notification-list {
       padding: 17px;
+    }
+
+    .timeline-panel > .section-heading {
+      padding-left: 30px;
     }
 
     .focus-item {
