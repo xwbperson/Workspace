@@ -14,6 +14,7 @@
   "scripts": {
     "build": "npm run build -w @workspace/client-sdk && npm run build -w @workspace/api && npm run build -w @workspace/web",
     "typecheck": "npm run typecheck -w @workspace/client-sdk && npm run build -w @workspace/client-sdk && npm run typecheck -w @workspace/api && npm run typecheck -w @workspace/web",
+    "prelint": "npm run build -w @workspace/client-sdk",
     "lint": "eslint . --max-warnings=0",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
