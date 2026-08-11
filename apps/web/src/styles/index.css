@@ -2,7 +2,154 @@
 
 @layer tokens {
   :root {
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --sidebar-width: 232px;
+    --topbar-height: 64px;
+    font-family:
+      'Noto Sans SC',
+      'Microsoft YaHei UI',
+      'Microsoft YaHei',
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+
+  /*
+   * Theme contract: all visible colors, gradients, overlays and color shadows
+   * are declared in these theme blocks. New themes copy one complete block;
+   * page and component rules must only consume variables from this contract.
+   */
+  :root,
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --browser-theme-color: #0e1411;
+    --color-bg: #0e1411;
+    --color-surface: #161d19;
+    --color-surface-raised: #1a221e;
+    --color-surface-muted: #202a25;
+    --color-surface-accent: #20362e;
+    --color-text: #edf4f0;
+    --color-text-secondary: #acb8b2;
+    --color-text-tertiary: #839089;
+    --color-border: #2d3933;
+    --color-border-strong: #435149;
+    --color-accent: #69d1ba;
+    --color-accent-hover: #8cddca;
+    --color-accent-soft: #203d34;
+    --color-brass: #e2b45d;
+    --color-brass-soft: #40351f;
+    --color-success: #237a4b;
+    --color-warning: #946200;
+    --color-danger: #ff8c83;
+    --color-danger-soft: #402420;
+    --color-info: #2b62a3;
+    --shadow-float: 0 20px 56px rgb(0 0 0 / 32%);
+    --shadow-card: 0 8px 24px rgb(0 0 0 / 18%);
+    --selection-foreground: #ffffff;
+    --selection-background: #176b5b;
+    --skip-link-foreground: #ffffff;
+    --skip-link-background: #17211d;
+    --button-primary-foreground: #0e241d;
+    --button-danger-foreground: #ffffff;
+    --control-active-shadow: 0 2px 8px rgb(23 33 29 / 8%);
+    --modal-backdrop: rgb(11 20 16 / 48%);
+    --brand-mark-background: #176b5b;
+    --brand-mark-stripe: #ffffff;
+    --brand-mark-light-background: rgb(255 255 255 / 12%);
+    --brand-mark-light-stripe: #e8f4f0;
+    --sidebar-foreground: #d7e4df;
+    --sidebar-background: #13251f;
+    --sidebar-border: rgb(255 255 255 / 7%);
+    --sidebar-name: #ffffff;
+    --sidebar-control: #b7c8c1;
+    --sidebar-control-hover: #ffffff;
+    --sidebar-control-hover-background: rgb(255 255 255 / 7%);
+    --sidebar-control-active: #ffffff;
+    --sidebar-control-active-background: #225345;
+    --sidebar-group-label: #789189;
+    --notification-foreground: #ffffff;
+    --notification-background: #b42318;
+    --focus-time-foreground: #eef8f4;
+    --focus-time-background: #174f42;
+    --focus-time-marker: #d3a34d;
+    --focus-time-muted: #a9c9be;
+    --quick-create-foreground: #eaf4f0;
+    --quick-create-background: #18372e;
+    --quick-create-border: #18372e;
+    --quick-create-eyebrow: #dcb35e;
+    --quick-create-description: #abc1b9;
+    --quick-create-shortcut: #8eaaa0;
+    --filter-active-foreground: #ffffff;
+    --filter-active-background: #176b5b;
+    --countdown-hero-foreground: #edf6f2;
+    --countdown-hero-background: #173b31;
+    --countdown-hero-eyebrow: #e0b25d;
+    --countdown-hero-description: #aec6bd;
+    --login-foreground: #edf6f2;
+    --login-background: #132f27;
+    --login-orbit-border: rgb(220 179 94 / 35%);
+    --login-orbit-shadow: 0 0 0 60px rgb(255 255 255 / 2%), 0 0 0 120px rgb(255 255 255 / 1.5%);
+    --login-accent: #ddb45f;
+    --login-description: #adc4bb;
+    --login-rail: rgb(255 255 255 / 20%);
+    --login-marker-border: #132f27;
+    --login-label: #78988c;
+    --learning-hero-foreground: #f5fbf8;
+    --learning-books-background:
+      radial-gradient(circle at 83% 20%, rgb(237 190 96 / 30%), transparent 27%),
+      linear-gradient(135deg, #173d34, #215f50 70%, #2d6d5c);
+    --learning-courses-background:
+      radial-gradient(circle at 85% 16%, rgb(119 169 225 / 28%), transparent 28%),
+      linear-gradient(135deg, #1b3550, #285d78 72%, #33718a);
+    --learning-books-description: #c5dcd4;
+    --learning-courses-description: #c6dbe8;
+    --progress-fill: linear-gradient(90deg, #69d1ba, #5cb8a3);
+    --book-cover-action-foreground: #ffffff;
+    --book-cover-action-background: rgb(15 28 23 / 78%);
+    --chapter-hero-background: linear-gradient(135deg, #173d34, #2d6d5c);
+    --course-icon-background: #20334a;
+    --goals-hero-background: linear-gradient(105deg, rgb(15 68 58 / 96%), rgb(28 91 79 / 88%));
+    --goals-hero-foreground: #f4fffb;
+    --goals-hero-orbit: rgb(255 255 255 / 8%);
+    --goals-hero-eyebrow: #81e5cd;
+    --goals-hero-description: rgb(236 255 249 / 75%);
+    --goal-progress-fill: linear-gradient(90deg, #69d1ba, #7edac4);
+    --tasks-hero-background: linear-gradient(118deg, rgb(30 62 82 / 98%), rgb(31 95 103 / 92%));
+    --tasks-hero-foreground: #f4fbff;
+    --tasks-hero-eyebrow: #8bd9dc;
+    --tasks-hero-description: rgb(239 252 255 / 75%);
+    --calendar-hero-background: linear-gradient(118deg, #263d65, #376f7a);
+    --calendar-hero-foreground: #f8fbff;
+    --calendar-hero-eyebrow: #a9e6e2;
+    --calendar-hero-description: rgb(245 252 255 / 74%);
+    --inbox-hero-background: linear-gradient(118deg, #543a35, #84663a);
+    --inbox-hero-foreground: #fffaf0;
+    --inbox-hero-eyebrow: #f5d38d;
+    --inbox-hero-description: rgb(245 252 255 / 74%);
+    --subscriptions-hero-background:
+      radial-gradient(circle at 82% 18%, rgb(119 225 202 / 20%), transparent 34%),
+      linear-gradient(135deg, #162b34, #193e3c);
+    --finance-hero-background:
+      radial-gradient(circle at 88% 12%, rgb(226 180 93 / 22%), transparent 32%),
+      linear-gradient(135deg, #253028, #3b4028);
+    --life-hero-background:
+      radial-gradient(circle at 85% 18%, rgb(128 177 232 / 24%), transparent 34%),
+      linear-gradient(135deg, #1c243d, #30334c);
+    --period-picker-foreground: #dfe8df;
+    --period-picker-input-foreground: #ffffff;
+    --period-picker-input-background: rgb(255 255 255 / 10%);
+    --period-picker-input-border: rgb(255 255 255 / 18%);
+    --sidebar-backdrop: rgb(4 10 8 / 48%);
+    --mobile-create-foreground: #ffffff;
+    --mobile-create-background: #176b5b;
+    --mobile-create-shadow: 0 10px 28px rgb(23 107 91 / 30%);
+  }
+
+  :root[data-theme='light'] {
     color-scheme: light;
+    --browser-theme-color: #f3f6f4;
     --color-bg: #f3f6f4;
     --color-surface: #ffffff;
     --color-surface-raised: #fbfcfb;
@@ -25,41 +172,104 @@
     --color-info: #2b62a3;
     --shadow-float: 0 18px 50px rgb(23 33 29 / 12%);
     --shadow-card: 0 8px 24px rgb(23 33 29 / 7%);
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 18px;
-    --sidebar-width: 232px;
-    --topbar-height: 64px;
-    font-family:
-      'Noto Sans SC',
-      'Microsoft YaHei UI',
-      'Microsoft YaHei',
-      system-ui,
-      -apple-system,
-      sans-serif;
-  }
-
-  :root[data-theme='dark'] {
-    color-scheme: dark;
-    --color-bg: #0e1411;
-    --color-surface: #161d19;
-    --color-surface-raised: #1a221e;
-    --color-surface-muted: #202a25;
-    --color-surface-accent: #20362e;
-    --color-text: #edf4f0;
-    --color-text-secondary: #acb8b2;
-    --color-text-tertiary: #839089;
-    --color-border: #2d3933;
-    --color-border-strong: #435149;
-    --color-accent: #69d1ba;
-    --color-accent-hover: #8cddca;
-    --color-accent-soft: #203d34;
-    --color-brass: #e2b45d;
-    --color-brass-soft: #40351f;
-    --color-danger: #ff8c83;
-    --color-danger-soft: #402420;
-    --shadow-float: 0 20px 56px rgb(0 0 0 / 32%);
-    --shadow-card: 0 8px 24px rgb(0 0 0 / 18%);
+    --selection-foreground: #ffffff;
+    --selection-background: #176b5b;
+    --skip-link-foreground: #ffffff;
+    --skip-link-background: #17211d;
+    --button-primary-foreground: #ffffff;
+    --button-danger-foreground: #ffffff;
+    --control-active-shadow: 0 2px 8px rgb(23 33 29 / 8%);
+    --modal-backdrop: rgb(11 20 16 / 48%);
+    --brand-mark-background: #176b5b;
+    --brand-mark-stripe: #ffffff;
+    --brand-mark-light-background: rgb(255 255 255 / 12%);
+    --brand-mark-light-stripe: #e8f4f0;
+    --sidebar-foreground: #d7e4df;
+    --sidebar-background: #13251f;
+    --sidebar-border: rgb(255 255 255 / 7%);
+    --sidebar-name: #ffffff;
+    --sidebar-control: #b7c8c1;
+    --sidebar-control-hover: #ffffff;
+    --sidebar-control-hover-background: rgb(255 255 255 / 7%);
+    --sidebar-control-active: #ffffff;
+    --sidebar-control-active-background: #225345;
+    --sidebar-group-label: #789189;
+    --notification-foreground: #ffffff;
+    --notification-background: #b42318;
+    --focus-time-foreground: #eef8f4;
+    --focus-time-background: #174f42;
+    --focus-time-marker: #d3a34d;
+    --focus-time-muted: #a9c9be;
+    --quick-create-foreground: #eaf4f0;
+    --quick-create-background: #18372e;
+    --quick-create-border: #18372e;
+    --quick-create-eyebrow: #dcb35e;
+    --quick-create-description: #abc1b9;
+    --quick-create-shortcut: #8eaaa0;
+    --filter-active-foreground: #ffffff;
+    --filter-active-background: #176b5b;
+    --countdown-hero-foreground: #edf6f2;
+    --countdown-hero-background: #173b31;
+    --countdown-hero-eyebrow: #e0b25d;
+    --countdown-hero-description: #aec6bd;
+    --login-foreground: #edf6f2;
+    --login-background: #132f27;
+    --login-orbit-border: rgb(220 179 94 / 35%);
+    --login-orbit-shadow: 0 0 0 60px rgb(255 255 255 / 2%), 0 0 0 120px rgb(255 255 255 / 1.5%);
+    --login-accent: #ddb45f;
+    --login-description: #adc4bb;
+    --login-rail: rgb(255 255 255 / 20%);
+    --login-marker-border: #132f27;
+    --login-label: #78988c;
+    --learning-hero-foreground: #f5fbf8;
+    --learning-books-background:
+      radial-gradient(circle at 83% 20%, rgb(237 190 96 / 30%), transparent 27%),
+      linear-gradient(135deg, #173d34, #215f50 70%, #2d6d5c);
+    --learning-courses-background:
+      radial-gradient(circle at 85% 16%, rgb(119 169 225 / 28%), transparent 28%),
+      linear-gradient(135deg, #1b3550, #285d78 72%, #33718a);
+    --learning-books-description: #c5dcd4;
+    --learning-courses-description: #c6dbe8;
+    --progress-fill: linear-gradient(90deg, #176b5b, #5cb8a3);
+    --book-cover-action-foreground: #ffffff;
+    --book-cover-action-background: rgb(15 28 23 / 78%);
+    --chapter-hero-background: linear-gradient(135deg, #173d34, #2d6d5c);
+    --course-icon-background: #e7f0fb;
+    --goals-hero-background: linear-gradient(105deg, rgb(15 68 58 / 96%), rgb(28 91 79 / 88%));
+    --goals-hero-foreground: #f4fffb;
+    --goals-hero-orbit: rgb(255 255 255 / 8%);
+    --goals-hero-eyebrow: #81e5cd;
+    --goals-hero-description: rgb(236 255 249 / 75%);
+    --goal-progress-fill: linear-gradient(90deg, #176b5b, #7edac4);
+    --tasks-hero-background: linear-gradient(118deg, rgb(30 62 82 / 98%), rgb(31 95 103 / 92%));
+    --tasks-hero-foreground: #f4fbff;
+    --tasks-hero-eyebrow: #8bd9dc;
+    --tasks-hero-description: rgb(239 252 255 / 75%);
+    --calendar-hero-background: linear-gradient(118deg, #263d65, #376f7a);
+    --calendar-hero-foreground: #f8fbff;
+    --calendar-hero-eyebrow: #a9e6e2;
+    --calendar-hero-description: rgb(245 252 255 / 74%);
+    --inbox-hero-background: linear-gradient(118deg, #543a35, #84663a);
+    --inbox-hero-foreground: #fffaf0;
+    --inbox-hero-eyebrow: #f5d38d;
+    --inbox-hero-description: rgb(245 252 255 / 74%);
+    --subscriptions-hero-background:
+      radial-gradient(circle at 82% 18%, rgb(119 225 202 / 20%), transparent 34%),
+      linear-gradient(135deg, #162b34, #193e3c);
+    --finance-hero-background:
+      radial-gradient(circle at 88% 12%, rgb(226 180 93 / 22%), transparent 32%),
+      linear-gradient(135deg, #253028, #3b4028);
+    --life-hero-background:
+      radial-gradient(circle at 85% 18%, rgb(128 177 232 / 24%), transparent 34%),
+      linear-gradient(135deg, #1c243d, #30334c);
+    --period-picker-foreground: #dfe8df;
+    --period-picker-input-foreground: #ffffff;
+    --period-picker-input-background: rgb(255 255 255 / 10%);
+    --period-picker-input-border: rgb(255 255 255 / 18%);
+    --sidebar-backdrop: rgb(4 10 8 / 48%);
+    --mobile-create-foreground: #ffffff;
+    --mobile-create-background: #176b5b;
+    --mobile-create-shadow: 0 10px 28px rgb(23 107 91 / 30%);
   }
 }
 
@@ -218,8 +428,8 @@
   }
 
   ::selection {
-    color: #fff;
-    background: #176b5b;
+    color: var(--selection-foreground);
+    background: var(--selection-background);
   }
 
   :focus-visible {
@@ -245,8 +455,8 @@
     top: 8px;
     left: 8px;
     padding: 10px 14px;
-    color: #fff;
-    background: #17211d;
+    color: var(--skip-link-foreground);
+    background: var(--skip-link-background);
     border-radius: var(--radius-sm);
     transform: translateY(-150%);
   }
@@ -315,20 +525,14 @@
   }
 
   .button--primary {
-    color: #fff;
-    background: #176b5b;
-    border-color: #176b5b;
+    color: var(--button-primary-foreground);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
   }
 
   .button--primary:hover:not(:disabled) {
-    background: #115548;
-    border-color: #115548;
-  }
-
-  [data-theme='dark'] .button--primary {
-    color: #0e241d;
-    background: var(--color-accent);
-    border-color: var(--color-accent);
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
   }
 
   .button--quiet {
@@ -361,9 +565,9 @@
   }
 
   .button--danger {
-    color: #fff;
-    background: #b42318;
-    border-color: #b42318;
+    color: var(--button-danger-foreground);
+    background: var(--color-danger);
+    border-color: var(--color-danger);
   }
 
   .button--large {
@@ -535,7 +739,7 @@
   .segmented-control button.active {
     color: var(--color-text);
     background: var(--color-surface);
-    box-shadow: 0 2px 8px rgb(23 33 29 / 8%);
+    box-shadow: var(--control-active-shadow);
   }
 
   .modal {
@@ -550,7 +754,7 @@
   }
 
   .modal::backdrop {
-    background: rgb(11 20 16 / 48%);
+    background: var(--modal-backdrop);
     backdrop-filter: blur(3px);
   }
 
@@ -707,14 +911,14 @@
     justify-content: center;
     gap: 5px;
     padding: 7px;
-    background: #176b5b;
+    background: var(--brand-mark-background);
     border-radius: 9px;
   }
 
   .brand-mark span {
     display: block;
     height: 2px;
-    background: #fff;
+    background: var(--brand-mark-stripe);
     border-radius: 2px;
   }
 
@@ -723,11 +927,11 @@
   }
 
   .brand-mark--light {
-    background: rgb(255 255 255 / 12%);
+    background: var(--brand-mark-light-background);
   }
 
   .brand-mark--light span {
-    background: #e8f4f0;
+    background: var(--brand-mark-light-stripe);
   }
 }
 
@@ -745,9 +949,9 @@
     width: var(--sidebar-width);
     flex-direction: column;
     padding: 12px;
-    color: #d7e4df;
-    background: #13251f;
-    border-right: 1px solid rgb(255 255 255 / 7%);
+    color: var(--sidebar-foreground);
+    background: var(--sidebar-background);
+    border-right: 1px solid var(--sidebar-border);
     transition: width 180ms ease;
   }
 
@@ -761,7 +965,7 @@
   }
 
   .brand-name {
-    color: #fff;
+    color: var(--sidebar-name);
     font-size: 16px;
     font-weight: 720;
     white-space: nowrap;
@@ -782,7 +986,7 @@
     align-items: center;
     gap: 11px;
     padding: 9px 11px;
-    color: #b7c8c1;
+    color: var(--sidebar-control);
     background: transparent;
     border: 0;
     border-radius: 9px;
@@ -800,14 +1004,14 @@
   .sidebar nav a:hover,
   .sidebar__footer a:hover,
   .sidebar__collapse:hover {
-    color: #fff;
-    background: rgb(255 255 255 / 7%);
+    color: var(--sidebar-control-hover);
+    background: var(--sidebar-control-hover-background);
   }
 
   .sidebar nav a.active,
   .sidebar__footer a.active {
-    color: #fff;
-    background: #225345;
+    color: var(--sidebar-control-active);
+    background: var(--sidebar-control-active-background);
   }
 
   .sidebar__group {
@@ -816,7 +1020,7 @@
 
   .sidebar__group-label {
     padding: 0 11px 8px;
-    color: #789189;
+    color: var(--sidebar-group-label);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -957,8 +1161,8 @@
     height: 17px;
     place-items: center;
     padding: 0 4px;
-    color: #fff;
-    background: #b42318;
+    color: var(--notification-foreground);
+    background: var(--notification-background);
     border: 2px solid var(--color-bg);
     border-radius: 10px;
     font-size: 9px;
@@ -1075,8 +1279,8 @@
     flex-direction: column;
     justify-content: center;
     padding: 26px;
-    color: #eef8f4;
-    background: #174f42;
+    color: var(--focus-time-foreground);
+    background: var(--focus-time-background);
   }
 
   .focus-item__time::after {
@@ -1086,12 +1290,12 @@
     bottom: 24px;
     width: 3px;
     content: '';
-    background: #d3a34d;
+    background: var(--focus-time-marker);
   }
 
   .focus-item__time span,
   .focus-item__time small {
-    color: #a9c9be;
+    color: var(--focus-time-muted);
   }
 
   .focus-item__time strong {
@@ -1149,13 +1353,13 @@
     flex-direction: column;
     justify-content: center;
     padding: 28px;
-    color: #eaf4f0;
-    background: #18372e;
-    border-color: #18372e;
+    color: var(--quick-create-foreground);
+    background: var(--quick-create-background);
+    border-color: var(--quick-create-border);
   }
 
   .quick-create-panel .eyebrow {
-    color: #dcb35e;
+    color: var(--quick-create-eyebrow);
   }
 
   .quick-create-panel h2 {
@@ -1165,12 +1369,12 @@
 
   .quick-create-panel p:not(.eyebrow) {
     margin-bottom: 22px;
-    color: #abc1b9;
+    color: var(--quick-create-description);
   }
 
   .shortcut-hint {
     margin-top: 11px;
-    color: #8eaaa0;
+    color: var(--quick-create-shortcut);
     font-size: 11px;
   }
 
@@ -1344,9 +1548,9 @@
   }
 
   .filter-chips button.active {
-    color: #fff;
-    background: #176b5b;
-    border-color: #176b5b;
+    color: var(--filter-active-foreground);
+    background: var(--filter-active-background);
+    border-color: var(--filter-active-background);
   }
 
   .feature-grid {
@@ -1765,13 +1969,13 @@
     justify-content: space-between;
     gap: 24px;
     padding: 24px 28px;
-    color: #edf6f2;
-    background: #173b31;
+    color: var(--countdown-hero-foreground);
+    background: var(--countdown-hero-background);
     border-radius: var(--radius-md);
   }
 
   .countdown-hero .eyebrow {
-    color: #e0b25d;
+    color: var(--countdown-hero-eyebrow);
   }
 
   .countdown-hero h2 {
@@ -1781,7 +1985,7 @@
 
   .countdown-hero p:last-child {
     max-width: 720px;
-    color: #aec6bd;
+    color: var(--countdown-hero-description);
   }
 
   .countdown-workspace {
@@ -2079,8 +2283,8 @@
     justify-content: space-between;
     overflow: hidden;
     padding: clamp(30px, 5vw, 72px);
-    color: #edf6f2;
-    background: #132f27;
+    color: var(--login-foreground);
+    background: var(--login-background);
   }
 
   .login-story::after {
@@ -2090,11 +2294,9 @@
     width: 360px;
     height: 360px;
     content: '';
-    border: 1px solid rgb(220 179 94 / 35%);
+    border: 1px solid var(--login-orbit-border);
     border-radius: 50%;
-    box-shadow:
-      0 0 0 60px rgb(255 255 255 / 2%),
-      0 0 0 120px rgb(255 255 255 / 1.5%);
+    box-shadow: var(--login-orbit-shadow);
   }
 
   .login-story__brand {
@@ -2112,7 +2314,7 @@
   }
 
   .login-story__copy .eyebrow {
-    color: #ddb45f;
+    color: var(--login-accent);
   }
 
   .login-story__copy h1 {
@@ -2125,7 +2327,7 @@
 
   .login-story__copy > p:last-child {
     max-width: 500px;
-    color: #adc4bb;
+    color: var(--login-description);
     font-size: 16px;
   }
 
@@ -2144,7 +2346,7 @@
     right: 0;
     left: 0;
     height: 1px;
-    background: rgb(255 255 255 / 20%);
+    background: var(--login-rail);
   }
 
   .login-time-rail > div {
@@ -2159,14 +2361,14 @@
     width: 8px;
     height: 8px;
     content: '';
-    background: #ddb45f;
-    border: 2px solid #132f27;
+    background: var(--login-accent);
+    border: 2px solid var(--login-marker-border);
     border-radius: 50%;
-    box-shadow: 0 0 0 1px #ddb45f;
+    box-shadow: 0 0 0 1px var(--login-accent);
   }
 
   .login-time-rail small {
-    color: #78988c;
+    color: var(--login-label);
   }
 
   .login-panel {
@@ -2277,21 +2479,17 @@
     gap: 24px;
     padding: 30px;
     overflow: hidden;
-    color: #f5fbf8;
+    color: var(--learning-hero-foreground);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card);
   }
 
   .learning-hero--books {
-    background:
-      radial-gradient(circle at 83% 20%, rgb(237 190 96 / 30%), transparent 27%),
-      linear-gradient(135deg, #173d34, #215f50 70%, #2d6d5c);
+    background: var(--learning-books-background);
   }
 
   .learning-hero--courses {
-    background:
-      radial-gradient(circle at 85% 16%, rgb(119 169 225 / 28%), transparent 28%),
-      linear-gradient(135deg, #1b3550, #285d78 72%, #33718a);
+    background: var(--learning-courses-background);
   }
 
   .learning-hero h2 {
@@ -2303,11 +2501,11 @@
 
   .learning-hero p:last-child {
     max-width: 760px;
-    color: #c5dcd4;
+    color: var(--learning-books-description);
   }
 
   .learning-hero--courses p:last-child {
-    color: #c6dbe8;
+    color: var(--learning-courses-description);
   }
 
   .learning-filter {
@@ -2334,7 +2532,7 @@
   .learning-filter button.active {
     color: var(--color-text);
     background: var(--color-surface);
-    box-shadow: 0 2px 8px rgb(23 33 29 / 8%);
+    box-shadow: var(--control-active-shadow);
   }
 
   .learning-filter > span {
@@ -2479,7 +2677,7 @@
   .reading-progress__track i {
     display: block;
     height: 100%;
-    background: linear-gradient(90deg, var(--color-accent), #5cb8a3);
+    background: var(--progress-fill);
     border-radius: inherit;
   }
 
@@ -2542,8 +2740,8 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    color: #fff;
-    background: rgb(15 28 23 / 78%);
+    color: var(--book-cover-action-foreground);
+    background: var(--book-cover-action-background);
     border: 0;
     border-radius: 8px;
     cursor: pointer;
@@ -2759,8 +2957,8 @@
     align-items: center;
     gap: 18px;
     padding: 24px;
-    color: #f5fbf8;
-    background: linear-gradient(135deg, #173d34, #2d6d5c);
+    color: var(--learning-hero-foreground);
+    background: var(--chapter-hero-background);
     border-radius: var(--radius-lg);
   }
 
@@ -2819,12 +3017,8 @@
     align-items: center;
     justify-content: center;
     color: var(--color-info);
-    background: #e7f0fb;
+    background: var(--course-icon-background);
     border-radius: 12px;
-  }
-
-  :root[data-theme='dark'] .course-list__icon {
-    background: #20334a;
   }
 
   .course-list > a > span:last-child {
@@ -3165,9 +3359,8 @@
 
   .feature-hero--goals {
     position: relative;
-    background:
-      linear-gradient(105deg, rgb(15 68 58 / 96%), rgb(28 91 79 / 88%)), var(--color-surface);
-    color: #f4fffb;
+    color: var(--goals-hero-foreground);
+    background: var(--goals-hero-background), var(--color-surface);
   }
 
   .feature-hero--goals::after {
@@ -3176,7 +3369,7 @@
     bottom: -84px;
     width: 260px;
     height: 260px;
-    border: 34px solid rgb(255 255 255 / 8%);
+    border: 34px solid var(--goals-hero-orbit);
     border-radius: 50%;
     content: '';
   }
@@ -3188,7 +3381,7 @@
   }
 
   .feature-hero--goals .eyebrow {
-    color: #81e5cd;
+    color: var(--goals-hero-eyebrow);
   }
 
   .feature-hero h2 {
@@ -3205,7 +3398,7 @@
   }
 
   .feature-hero--goals p:last-child {
-    color: rgb(236 255 249 / 75%);
+    color: var(--goals-hero-description);
   }
 
   .feature-hero > .button {
@@ -3460,7 +3653,7 @@
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, var(--color-accent), #7edac4);
+    background: var(--goal-progress-fill);
   }
 
   .goal-progress-panel__dates {
@@ -3691,17 +3884,16 @@
 
 @layer pages {
   .feature-hero--tasks {
-    color: #f4fbff;
-    background:
-      linear-gradient(118deg, rgb(30 62 82 / 98%), rgb(31 95 103 / 92%)), var(--color-surface);
+    color: var(--tasks-hero-foreground);
+    background: var(--tasks-hero-background), var(--color-surface);
   }
 
   .feature-hero--tasks .eyebrow {
-    color: #8bd9dc;
+    color: var(--tasks-hero-eyebrow);
   }
 
   .feature-hero--tasks p:last-child {
-    color: rgb(239 252 255 / 75%);
+    color: var(--tasks-hero-description);
   }
 
   .task-tree {
@@ -3844,17 +4036,16 @@
 
 @layer pages {
   .feature-hero--calendar {
-    color: #f8fbff;
-    background: linear-gradient(118deg, #263d65, #376f7a);
+    color: var(--calendar-hero-foreground);
+    background: var(--calendar-hero-background);
   }
 
   .feature-hero--calendar .eyebrow {
-    color: #a9e6e2;
+    color: var(--calendar-hero-eyebrow);
   }
 
-  .feature-hero--calendar p:last-child,
-  .feature-hero--inbox p:last-child {
-    color: rgb(245 252 255 / 74%);
+  .feature-hero--calendar p:last-child {
+    color: var(--calendar-hero-description);
   }
 
   .calendar-toolbar {
@@ -4077,12 +4268,16 @@
   }
 
   .feature-hero--inbox {
-    color: #fffaf0;
-    background: linear-gradient(118deg, #543a35, #84663a);
+    color: var(--inbox-hero-foreground);
+    background: var(--inbox-hero-background);
   }
 
   .feature-hero--inbox .eyebrow {
-    color: #f5d38d;
+    color: var(--inbox-hero-eyebrow);
+  }
+
+  .feature-hero--inbox p:last-child {
+    color: var(--inbox-hero-description);
   }
 
   .inbox-card-list {
@@ -4210,21 +4405,15 @@
   }
 
   .feature-hero--subscriptions {
-    background:
-      radial-gradient(circle at 82% 18%, rgb(119 225 202 / 20%), transparent 34%),
-      linear-gradient(135deg, #162b34, #193e3c);
+    background: var(--subscriptions-hero-background);
   }
 
   .feature-hero--finance {
-    background:
-      radial-gradient(circle at 88% 12%, rgb(226 180 93 / 22%), transparent 32%),
-      linear-gradient(135deg, #253028, #3b4028);
+    background: var(--finance-hero-background);
   }
 
   .feature-hero--life {
-    background:
-      radial-gradient(circle at 85% 18%, rgb(128 177 232 / 24%), transparent 34%),
-      linear-gradient(135deg, #1c243d, #30334c);
+    background: var(--life-hero-background);
   }
 
   .subscription-list,
@@ -4326,16 +4515,16 @@
   .period-picker {
     display: grid;
     gap: 6px;
-    color: #dfe8df;
+    color: var(--period-picker-foreground);
     font-size: 12px;
   }
 
   .period-picker input {
     min-height: 42px;
     padding: 8px 12px;
-    color: #fff;
-    background: rgb(255 255 255 / 10%);
-    border: 1px solid rgb(255 255 255 / 18%);
+    color: var(--period-picker-input-foreground);
+    background: var(--period-picker-input-background);
+    border: 1px solid var(--period-picker-input-border);
     border-radius: var(--radius-sm);
   }
 
@@ -4899,7 +5088,7 @@
 
     .sidebar__mobile-close {
       margin-left: auto;
-      color: #d7e4df;
+      color: var(--sidebar-foreground);
     }
 
     .sidebar-backdrop {
@@ -4908,7 +5097,7 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      background: rgb(4 10 8 / 48%);
+      background: var(--sidebar-backdrop);
       border: 0;
     }
 
@@ -4997,11 +5186,11 @@
       width: 52px;
       height: 52px;
       place-items: center;
-      color: #fff;
-      background: #176b5b;
+      color: var(--mobile-create-foreground);
+      background: var(--mobile-create-background);
       border: 0;
       border-radius: 50%;
-      box-shadow: 0 10px 28px rgb(23 107 91 / 30%);
+      box-shadow: var(--mobile-create-shadow);
     }
 
     .overview-core-grid,

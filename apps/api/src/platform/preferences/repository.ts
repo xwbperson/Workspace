@@ -20,9 +20,12 @@ export class PreferencesRepository {
     if (!stored) return defaults;
     const current = { ...stored };
     delete current.pinnedFeatureIds;
+    const theme =
+      current.theme === 'light' || current.theme === 'dark' ? current.theme : defaults.theme;
     return {
       ...defaults,
       ...current,
+      theme,
       hiddenFeatureIds: Array.isArray(current.hiddenFeatureIds)
         ? current.hiddenFeatureIds
         : defaults.hiddenFeatureIds,

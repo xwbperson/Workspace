@@ -73,7 +73,7 @@ export async function registerWorkbenchRoutes(
           properties: {
             hiddenFeatureIds: { type: 'array', maxItems: 100, items: { type: 'string' } },
             overviewBlockIds: { type: 'array', maxItems: 100, items: { type: 'string' } },
-            theme: { type: 'string', enum: ['system', 'light', 'dark'] },
+            theme: { type: 'string', enum: ['light', 'dark'] },
             dateDisplay: { type: 'string', enum: ['relative', 'absolute'] },
             notificationsEnabled: { type: 'boolean' },
             refreshIntervalMinutes: { type: 'integer', enum: [0, 1, 5, 15, 30] },

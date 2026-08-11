@@ -84,7 +84,7 @@ export class WorkbenchService {
       overviewBlockIds: this.overviewDefinitions()
         .filter((definition) => definition.defaultVisible)
         .map((definition) => definition.blockId),
-      theme: 'system',
+      theme: 'dark',
       dateDisplay: 'relative',
       notificationsEnabled: true,
       refreshIntervalMinutes: 5,

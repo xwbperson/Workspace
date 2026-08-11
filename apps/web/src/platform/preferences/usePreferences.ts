@@ -7,15 +7,23 @@ import { useAuth } from '../auth/AuthProvider.js';
 const fallbackPreferences: WorkbenchPreferences = {
   hiddenFeatureIds: [],
   overviewBlockIds: ['countdowns:nearest'],
-  theme: 'system',
+  theme: 'dark',
   dateDisplay: 'relative',
   notificationsEnabled: true,
   refreshIntervalMinutes: 5,
 };
 
-function resolveTheme(theme: WorkbenchPreferences['theme']): 'light' | 'dark' {
-  if (theme !== 'system') return theme;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+function applyTheme(theme: WorkbenchPreferences['theme']): void {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+  const browserThemeColor = getComputedStyle(document.documentElement)
+    .getPropertyValue('--browser-theme-color')
+    .trim();
+  if (browserThemeColor) {
+    document
+      .querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+      ?.setAttribute('content', browserThemeColor);
+  }
 }
 
 export function usePreferences(): {
@@ -48,14 +56,7 @@ export function usePreferences(): {
   const preferences = query.data ?? fallbackPreferences;
 
   useEffect(() => {
-    const apply = (): void => {
-      document.documentElement.dataset.theme = resolveTheme(preferences.theme);
-      document.documentElement.style.colorScheme = resolveTheme(preferences.theme);
-    };
-    apply();
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    media.addEventListener('change', apply);
-    return () => media.removeEventListener('change', apply);
+    applyTheme(preferences.theme);
   }, [preferences.theme]);
 
   return {

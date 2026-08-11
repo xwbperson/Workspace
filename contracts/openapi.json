@@ -4651,7 +4651,7 @@
                   },
                   "theme": {
                     "type": "string",
-                    "enum": ["system", "light", "dark"]
+                    "enum": ["light", "dark"]
                   },
                   "dateDisplay": {
                     "type": "string",

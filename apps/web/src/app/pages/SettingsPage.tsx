@@ -119,7 +119,7 @@ export function SettingsPage(): React.JSX.Element {
               <small>在所有设备间同步</small>
             </div>
             <div className="segmented-control" aria-label="主题模式">
-              {(['system', 'light', 'dark'] as const).map((theme) => (
+              {(['dark', 'light'] as const).map((theme) => (
                 <button
                   type="button"
                   className={preferences.theme === theme ? 'active' : ''}
@@ -127,9 +127,7 @@ export function SettingsPage(): React.JSX.Element {
                   disabled={saving}
                   onClick={() => void updatePreference('theme', theme)}
                 >
-                  {theme === 'system' ? (
-                    '跟随系统'
-                  ) : theme === 'light' ? (
+                  {theme === 'light' ? (
                     <>
                       <Sun aria-hidden="true" />
                       浅色

@@ -6,7 +6,7 @@ import { PreferencesRepository } from './repository.js';
 const defaults: WorkbenchPreferences = {
   hiddenFeatureIds: [],
   overviewBlockIds: ['countdowns:nearest'],
-  theme: 'system',
+  theme: 'dark',
   dateDisplay: 'relative',
   notificationsEnabled: true,
   refreshIntervalMinutes: 5,
@@ -37,5 +37,24 @@ describe('PreferencesRepository', () => {
     expect(result.hiddenFeatureIds).toEqual([]);
     expect(result.theme).toBe('dark');
     expect(result).not.toHaveProperty('pinnedFeatureIds');
+  });
+
+  it('uses the dark default when a legacy system theme is stored', async () => {
+    const database = {
+      query: vi.fn(async () => ({
+        rows: [
+          {
+            value: {
+              theme: 'system',
+            },
+          },
+        ],
+      })),
+    } as unknown as Database;
+    const repository = new PreferencesRepository(database, 'workspace');
+
+    const result = await repository.get(defaults);
+
+    expect(result.theme).toBe('dark');
   });
 });

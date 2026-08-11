@@ -4049,7 +4049,7 @@ export interface paths {
             hiddenFeatureIds: string[];
             overviewBlockIds: string[];
             /** @enum {string} */
-            theme: 'system' | 'light' | 'dark';
+            theme: 'light' | 'dark';
             /** @enum {string} */
             dateDisplay: 'relative' | 'absolute';
             notificationsEnabled: boolean;
