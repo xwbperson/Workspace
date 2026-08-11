@@ -8,6 +8,7 @@ import {
   type ClassRecordRow,
   type CourseRepository,
   type CourseRow,
+  type CourseStatus,
   type MaterialGroupRow,
   type MaterialRow,
 } from './repository.js';
@@ -21,6 +22,7 @@ export interface CourseInput {
   objectives?: string;
   description?: string;
   schedule?: string;
+  status?: CourseStatus;
   syllabusFileId?: string | null;
   referenceBookIds?: string[];
 }
@@ -89,6 +91,7 @@ function courseSummary(row: CourseRow) {
     objectives: row.objectives,
     description: row.description,
     schedule: row.schedule,
+    status: row.status,
     ...(syllabus ? { syllabus } : {}),
     archived: row.archived,
     version: row.version,
@@ -160,10 +163,14 @@ export class CourseService {
     private readonly now: () => Date = () => new Date(),
   ) {}
 
-  public async list(input: { archived?: boolean; limit?: number }) {
+  public async list(input: { archived?: boolean; status?: CourseStatus; limit?: number }) {
     return {
       items: (
-        await this.repository.list(input.archived ?? false, Math.min(100, input.limit ?? 50))
+        await this.repository.list(
+          input.archived ?? false,
+          Math.min(100, input.limit ?? 50),
+          input.status,
+        )
       ).map(courseSummary),
     };
   }
@@ -204,6 +211,7 @@ export class CourseService {
       objectives: text(input.objectives),
       description: text(input.description),
       schedule: text(input.schedule),
+      status: input.status ?? 'in-progress',
       syllabusFileId: input.syllabusFileId ?? null,
       syllabusOriginalName: null,
       syllabusMimeType: null,
@@ -232,6 +240,7 @@ export class CourseService {
       objectives: text(input.objectives, existing.objectives),
       description: text(input.description, existing.description),
       schedule: text(input.schedule, existing.schedule),
+      status: input.status ?? existing.status,
       syllabusFileId:
         input.syllabusFileId === undefined
           ? existing.syllabusFileId

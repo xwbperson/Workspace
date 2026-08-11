@@ -4,13 +4,14 @@ import type {
   CourseClassRecordInput,
   CourseClassRecordUpdateInput,
   CourseInput,
+  CourseStatus,
   CourseUpdateInput,
 } from '@workspace/client-sdk';
 import { queryClient, workbenchClient } from '../../platform/api/client.js';
 
 export const courseKeys = {
   all: ['courses'] as const,
-  list: (archived: boolean) => ['courses', 'list', archived] as const,
+  list: (filter: CourseStatus | 'archived') => ['courses', 'list', filter] as const,
   detail: (id: string) => ['courses', 'detail', id] as const,
 };
 
@@ -22,8 +23,10 @@ export async function invalidateCourseData(): Promise<void> {
 }
 
 export const courseApi = {
-  list(archived = false) {
-    return workbenchClient.getCourses({ archived, limit: 100 });
+  list(filter: CourseStatus | 'archived' = 'in-progress') {
+    return filter === 'archived'
+      ? workbenchClient.getCourses({ archived: true, limit: 100 })
+      : workbenchClient.getCourses({ archived: false, status: filter, limit: 100 });
   },
   get(id: string) {
     return workbenchClient.getCourse(id);

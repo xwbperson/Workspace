@@ -863,6 +863,7 @@ export interface paths {
       parameters: {
         query?: {
           archived?: boolean;
+          status?: 'in-progress' | 'completed';
           limit?: number;
         };
         header?: never;
@@ -899,6 +900,8 @@ export interface paths {
             objectives?: string;
             description?: string;
             schedule?: string;
+            /** @enum {string} */
+            status?: 'in-progress' | 'completed';
             syllabusFileId?: string | null;
             referenceBookIds?: string[];
           };
@@ -967,6 +970,8 @@ export interface paths {
             objectives?: string;
             description?: string;
             schedule?: string;
+            /** @enum {string} */
+            status?: 'in-progress' | 'completed';
             syllabusFileId?: string | null;
             referenceBookIds?: string[];
             version: number;

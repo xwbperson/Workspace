@@ -21,6 +21,7 @@ import type {
   CourseClassRecordUpdateInput,
   CourseInput,
   CourseListResponse,
+  CourseStatus,
   CourseMaterial,
   CourseMaterialGroup,
   CourseUpdateInput,
@@ -365,10 +366,11 @@ export class WorkbenchClient {
   }
 
   public getCourses(
-    options: { archived?: boolean; limit?: number } = {},
+    options: { archived?: boolean; status?: CourseStatus; limit?: number } = {},
   ): Promise<CourseListResponse> {
     const query = new URLSearchParams();
     if (options.archived !== undefined) query.set('archived', String(options.archived));
+    if (options.status) query.set('status', options.status);
     if (options.limit) query.set('limit', String(options.limit));
     const suffix = query.size ? `?${query.toString()}` : '';
     return this.request(`/courses${suffix}`);

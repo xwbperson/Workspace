@@ -1,6 +1,7 @@
 import type { Database } from '../../platform/database/types.js';
 
 export type AssignmentStatus = 'pending' | 'in-progress' | 'completed' | 'abandoned';
+export type CourseStatus = 'in-progress' | 'completed';
 
 export interface CourseRow {
   id: string;
@@ -12,6 +13,7 @@ export interface CourseRow {
   objectives: string;
   description: string;
   schedule: string;
+  status: CourseStatus;
   syllabusFileId: string | null;
   syllabusOriginalName: string | null;
   syllabusMimeType: string | null;
@@ -79,6 +81,7 @@ interface CourseDbRow {
   objectives: string;
   description: string;
   schedule: string;
+  status: CourseStatus;
   syllabus_file_id: string | null;
   syllabus_original_name: string | null;
   syllabus_mime_type: string | null;
@@ -138,7 +141,7 @@ interface MaterialDbRow {
 
 const COURSE_COLUMNS = `
   c.id, c.name, c.instructor, c.course_code, c.credits, c.total_hours,
-  c.objectives, c.description, c.schedule, c.syllabus_file_id,
+  c.objectives, c.description, c.schedule, c.status, c.syllabus_file_id,
   f.original_name AS syllabus_original_name, f.mime_type AS syllabus_mime_type,
   f.size_bytes AS syllabus_size, c.archived, c.version, c.created_at, c.updated_at`;
 
@@ -153,6 +156,7 @@ function mapCourse(row: CourseDbRow): CourseRow {
     objectives: row.objectives,
     description: row.description,
     schedule: row.schedule,
+    status: row.status,
     syllabusFileId: row.syllabus_file_id,
     syllabusOriginalName: row.syllabus_original_name,
     syllabusMimeType: row.syllabus_mime_type,
@@ -222,12 +226,13 @@ function mapMaterial(row: MaterialDbRow): MaterialRow {
 export class CourseRepository {
   public constructor(private readonly database: Database) {}
 
-  public async list(archived: boolean, limit: number): Promise<CourseRow[]> {
+  public async list(archived: boolean, limit: number, status?: CourseStatus): Promise<CourseRow[]> {
     const result = await this.database.query<CourseDbRow>(
       `SELECT ${COURSE_COLUMNS}
        FROM courses c LEFT JOIN stored_files f ON f.id=c.syllabus_file_id
-       WHERE c.archived=$1 ORDER BY c.updated_at DESC, c.name ASC LIMIT $2`,
-      [archived, limit],
+       WHERE c.archived=$1${status ? ' AND c.status=$3' : ''}
+       ORDER BY c.updated_at DESC, c.name ASC LIMIT $2`,
+      status ? [archived, limit, status] : [archived, limit],
     );
     return result.rows.map(mapCourse);
   }
@@ -245,8 +250,8 @@ export class CourseRepository {
     await this.database.query(
       `INSERT INTO courses
          (id, name, instructor, course_code, credits, total_hours, objectives, description,
-          schedule, syllabus_file_id, archived, version, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+          schedule, status, syllabus_file_id, archived, version, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
       [
         row.id,
         row.name,
@@ -257,6 +262,7 @@ export class CourseRepository {
         row.objectives,
         row.description,
         row.schedule,
+        row.status,
         row.syllabusFileId,
         row.archived,
         row.version,
@@ -270,9 +276,9 @@ export class CourseRepository {
   public async update(row: CourseRow, expectedVersion: number): Promise<CourseRow | null> {
     const result = await this.database.query<{ id: string }>(
       `UPDATE courses SET name=$2, instructor=$3, course_code=$4, credits=$5, total_hours=$6,
-         objectives=$7, description=$8, schedule=$9, syllabus_file_id=$10,
-         version=version+1, updated_at=$11
-       WHERE id=$1 AND version=$12 AND archived=false RETURNING id`,
+         objectives=$7, description=$8, schedule=$9, status=$10, syllabus_file_id=$11,
+         version=version+1, updated_at=$12
+       WHERE id=$1 AND version=$13 AND archived=false RETURNING id`,
       [
         row.id,
         row.name,
@@ -283,6 +289,7 @@ export class CourseRepository {
         row.objectives,
         row.description,
         row.schedule,
+        row.status,
         row.syllabusFileId,
         row.updatedAt,
         expectedVersion,
@@ -562,7 +569,8 @@ export class CourseRepository {
       `SELECT a.id, a.course_id, a.title, a.description, a.due_at, a.status,
               a.version, a.created_at, a.updated_at
        FROM course_assignments a JOIN courses c ON c.id=a.course_id
-       WHERE c.archived=false AND a.status IN ('pending','in-progress')
+       WHERE c.archived=false AND c.status='in-progress'
+         AND a.status IN ('pending','in-progress')
          AND a.due_at IS NOT NULL AND a.due_at BETWEEN $1 AND $2
        ORDER BY a.due_at ASC LIMIT $3`,
       [from, to, limit],

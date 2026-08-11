@@ -1,4 +1,4 @@
-import type { Book, Course, CourseInput } from '@workspace/client-sdk';
+import type { Book, Course, CourseInput, CourseStatus } from '@workspace/client-sdk';
 import { useState } from 'react';
 
 const readingStatusLabels = {
@@ -7,6 +7,11 @@ const readingStatusLabels = {
   read: '已读',
   abandoned: '放弃',
 } as const;
+
+export const courseStatusLabels: Record<CourseStatus, string> = {
+  'in-progress': '进行中',
+  completed: '已完成',
+};
 
 export function CourseForm({
   course,
@@ -19,6 +24,7 @@ export function CourseForm({
   submitting: boolean;
   onSubmit(input: CourseInput): Promise<void>;
 }): React.JSX.Element {
+  const initialStatus: CourseStatus = course?.status ?? 'in-progress';
   const [form, setForm] = useState({
     name: course?.name ?? '',
     instructor: course?.instructor ?? '',
@@ -28,6 +34,7 @@ export function CourseForm({
     objectives: course?.objectives ?? '',
     description: course?.description ?? '',
     schedule: course?.schedule ?? '',
+    status: initialStatus,
     referenceBookIds: course?.referenceBooks?.map((book) => book.id) ?? [],
   });
 
@@ -49,6 +56,7 @@ export function CourseForm({
           objectives: form.objectives,
           description: form.description,
           schedule: form.schedule,
+          status: form.status,
           referenceBookIds: form.referenceBookIds,
         });
       }}
@@ -97,6 +105,16 @@ export function CourseForm({
             value={form.totalHours}
             onChange={(event) => set('totalHours', event.target.value)}
           />
+        </label>
+        <label className="field entity-form__wide">
+          <span>课程状态</span>
+          <select value={form.status} onChange={(event) => set('status', event.target.value)}>
+            {Object.entries(courseStatusLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="field entity-form__wide">
           <span>上课时间</span>

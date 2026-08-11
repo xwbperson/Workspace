@@ -319,6 +319,7 @@
 
   .field > input,
   .field > select,
+  .field > textarea,
   select {
     min-height: 44px;
     padding: 9px 11px;
@@ -326,6 +327,10 @@
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
+  }
+
+  .field > textarea {
+    resize: vertical;
   }
 
   .input-shell {
@@ -1004,6 +1009,11 @@
     background: var(--color-danger-soft);
   }
 
+  .source-pill--completed {
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+
   .quick-create-panel {
     display: flex;
     min-height: 250px;
@@ -1209,7 +1219,7 @@
 
   .feature-grid {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 14px;
   }
 
@@ -1232,6 +1242,7 @@
       transform 180ms ease,
       box-shadow 180ms ease,
       border-color 180ms ease;
+    min-width: 0;
   }
 
   .feature-tile:hover {

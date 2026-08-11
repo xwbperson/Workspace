@@ -104,6 +104,7 @@ try {
     payload: {
       name: '真实 PostgreSQL 课程样本',
       instructor: 'CI',
+      status: 'completed',
       referenceBookIds: [book.id],
     },
   });
@@ -210,6 +211,7 @@ try {
         books: number;
         chapters: number;
         courses: number;
+        completedCourses: number;
         referenceBooks: number;
         classRecords: number;
         assignments: number;
@@ -225,6 +227,7 @@ try {
            (SELECT count(*)::int FROM books) AS books,
            (SELECT count(*)::int FROM book_chapters) AS chapters,
            (SELECT count(*)::int FROM courses) AS courses,
+           (SELECT count(*)::int FROM courses WHERE status='completed') AS "completedCourses",
            (SELECT count(*)::int FROM course_reference_books) AS "referenceBooks",
            (SELECT count(*)::int FROM course_class_records) AS "classRecords",
            (SELECT count(*)::int FROM course_assignments) AS assignments,
@@ -242,6 +245,7 @@ try {
         value.books !== 1 ||
         value.chapters !== 1 ||
         value.courses !== 1 ||
+        value.completedCourses !== 1 ||
         value.referenceBooks !== 1 ||
         value.classRecords !== 1 ||
         value.assignments !== 1 ||

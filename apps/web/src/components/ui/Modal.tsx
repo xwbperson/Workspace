@@ -48,8 +48,8 @@ export function Modal({
           <X aria-hidden="true" size={20} />
         </button>
       </div>
-      <div className="modal__body">{children}</div>
-      {footer ? <div className="modal__footer">{footer}</div> : null}
+      <div className="modal__body">{open ? children : null}</div>
+      {open && footer ? <div className="modal__footer">{footer}</div> : null}
     </dialog>
   );
 }

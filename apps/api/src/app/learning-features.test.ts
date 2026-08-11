@@ -325,6 +325,56 @@ describe('books and courses vertical slices', () => {
     ).toBe(204);
   });
 
+  it('classifies active courses as in progress or completed and preserves status on archive', async () => {
+    const created = await inject({
+      method: 'POST',
+      url: '/api/v1/courses',
+      payload: { name: '已完成课程分类样本' },
+    });
+    expect(created.statusCode).toBe(201);
+    const course = created.json<{ id: string; status: string; version: number }>();
+    expect(course).toMatchObject({ status: 'in-progress', version: 1 });
+
+    const completed = await inject({
+      method: 'PUT',
+      url: `/api/v1/courses/${course.id}`,
+      payload: { status: 'completed', version: course.version },
+    });
+    expect(completed.statusCode).toBe(200);
+    expect(completed.json()).toMatchObject({ status: 'completed', version: 2 });
+
+    const completedList = await inject({
+      method: 'GET',
+      url: '/api/v1/courses?archived=false&status=completed',
+    });
+    expect(completedList.statusCode).toBe(200);
+    expect(completedList.json().items).toMatchObject([{ id: course.id, status: 'completed' }]);
+
+    const inProgressList = await inject({
+      method: 'GET',
+      url: '/api/v1/courses?archived=false&status=in-progress',
+    });
+    expect(inProgressList.statusCode).toBe(200);
+    expect(inProgressList.json().items).toEqual([]);
+
+    expect(
+      (
+        await inject({
+          method: 'POST',
+          url: `/api/v1/courses/${course.id}/archive`,
+          payload: { version: 2 },
+        })
+      ).statusCode,
+    ).toBe(204);
+    const restored = await inject({
+      method: 'POST',
+      url: `/api/v1/courses/${course.id}/restore`,
+      payload: { version: 3 },
+    });
+    expect(restored.statusCode).toBe(200);
+    expect(restored.json()).toMatchObject({ status: 'completed', archived: false, version: 4 });
+  });
+
   it('uploads, groups and opens course materials and a syllabus through authenticated storage', async () => {
     const created = await inject({
       method: 'POST',

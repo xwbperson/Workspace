@@ -4,6 +4,7 @@ import { countdownLifecycleMigration } from './003-countdown-lifecycle.js';
 import { fileStorageMigration } from './004-file-storage.js';
 import { booksMigration } from './005-books.js';
 import { coursesMigration } from './006-courses.js';
+import { courseStatusMigration } from './007-course-status.js';
 
 export interface Migration {
   id: string;
@@ -17,4 +18,5 @@ export const migrations: readonly Migration[] = [
   fileStorageMigration,
   booksMigration,
   coursesMigration,
+  courseStatusMigration,
 ];

@@ -50,6 +50,7 @@ const courseProperties = {
   objectives: { type: 'string', maxLength: 20_000 },
   description: { type: 'string', maxLength: 20_000 },
   schedule: { type: 'string', maxLength: 5_000 },
+  status: { type: 'string', enum: ['in-progress', 'completed'] },
   syllabusFileId: nullableUuid,
   referenceBookIds: {
     type: 'array',
@@ -73,7 +74,9 @@ export async function registerCourseRoutes(
   app: FastifyInstance,
   service: CourseService,
 ): Promise<void> {
-  app.get<{ Querystring: { archived?: boolean; limit?: number } }>(
+  app.get<{
+    Querystring: { archived?: boolean; status?: 'in-progress' | 'completed'; limit?: number };
+  }>(
     '/api/v1/courses',
     {
       config: { authenticated: true },
@@ -83,6 +86,7 @@ export async function registerCourseRoutes(
           additionalProperties: false,
           properties: {
             archived: { type: 'boolean' },
+            status: { type: 'string', enum: ['in-progress', 'completed'] },
             limit: { type: 'integer', minimum: 1, maximum: 100 },
           },
         },

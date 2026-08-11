@@ -7,6 +7,7 @@ import type {
   CourseInput,
   CourseMaterial,
   CourseMaterialGroup,
+  CourseStatus,
 } from '@workspace/client-sdk';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
@@ -39,7 +40,9 @@ import { bookApi, bookKeys } from '../books/index.js';
 import { courseApi, courseKeys, invalidateCourseData } from './api.js';
 import { AssignmentForm, assignmentStatusLabels } from './components/AssignmentForm.js';
 import { ClassRecordForm } from './components/ClassRecordForm.js';
-import { CourseForm } from './components/CourseForm.js';
+import { CourseForm, courseStatusLabels } from './components/CourseForm.js';
+
+type CourseFilter = CourseStatus | 'archived';
 
 type ConfirmTarget =
   | { kind: 'archive' | 'course-delete' }
@@ -55,7 +58,7 @@ export function CoursePage(): React.JSX.Element {
   const { show } = useToast();
   const materialInput = useRef<HTMLInputElement>(null);
   const syllabusInput = useRef<HTMLInputElement>(null);
-  const [archived, setArchived] = useState(false);
+  const [filter, setFilter] = useState<CourseFilter>('in-progress');
   const [createOpen, setCreateOpen] = useState(params.get('create') === '1');
   const [editOpen, setEditOpen] = useState(false);
   const [recordOpen, setRecordOpen] = useState(false);
@@ -68,8 +71,8 @@ export function CoursePage(): React.JSX.Element {
   const [confirmTarget, setConfirmTarget] = useState<ConfirmTarget>();
 
   const list = useQuery({
-    queryKey: courseKeys.list(archived),
-    queryFn: () => courseApi.list(archived),
+    queryKey: courseKeys.list(filter),
+    queryFn: () => courseApi.list(filter),
   });
   const detail = useQuery({
     queryKey: courseKeys.detail(courseId ?? ''),
@@ -88,6 +91,7 @@ export function CoursePage(): React.JSX.Element {
     onSuccess: async (course) => {
       await invalidateCourseData();
       setCreateOpen(false);
+      setFilter(course.status);
       show('课程已添加');
       void navigate(`/features/courses/${course.id}`, { replace: true });
     },
@@ -95,9 +99,10 @@ export function CoursePage(): React.JSX.Element {
   const update = useMutation({
     mutationFn: ({ course, input }: { course: Course; input: CourseInput }) =>
       courseApi.update(course.id, { ...input, version: course.version }),
-    onSuccess: async () => {
+    onSuccess: async (course) => {
       await invalidateCourseData();
       setEditOpen(false);
+      setFilter(course.status);
       show('课程已更新');
     },
   });
@@ -112,9 +117,9 @@ export function CoursePage(): React.JSX.Element {
   });
   const restoreCourse = useMutation({
     mutationFn: (course: Course) => courseApi.restore(course.id, course.version),
-    onSuccess: async () => {
+    onSuccess: async (course) => {
       await invalidateCourseData();
-      setArchived(false);
+      setFilter(course.status);
       show('课程已恢复');
       void navigate('/features/courses', { replace: true });
     },
@@ -272,27 +277,26 @@ export function CoursePage(): React.JSX.Element {
       {mutationError ? (
         <SectionError title="操作没有完成" message={humanizeApiError(mutationError)} />
       ) : null}
-      <div className="learning-filter">
-        <button
-          type="button"
-          className={!archived ? 'active' : ''}
-          onClick={() => {
-            setArchived(false);
-            void navigate('/features/courses');
-          }}
-        >
-          进行中
-        </button>
-        <button
-          type="button"
-          className={archived ? 'active' : ''}
-          onClick={() => {
-            setArchived(true);
-            void navigate('/features/courses');
-          }}
-        >
-          已归档
-        </button>
+      <div className="learning-filter" aria-label="课程状态">
+        {(
+          [
+            ['in-progress', '进行中'],
+            ['completed', '已完成'],
+            ['archived', '已归档'],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            className={filter === value ? 'active' : ''}
+            onClick={() => {
+              setFilter(value);
+              void navigate('/features/courses');
+            }}
+          >
+            {label}
+          </button>
+        ))}
         <span>{courses.length} 门</span>
       </div>
       <div className={`learning-workspace ${selected ? 'learning-workspace--detail' : ''}`}>
@@ -329,9 +333,19 @@ export function CoursePage(): React.JSX.Element {
             </div>
           ) : (
             <EmptyState
-              title={archived ? '还没有已归档课程' : '还没有课程'}
+              title={
+                filter === 'archived'
+                  ? '还没有已归档课程'
+                  : filter === 'completed'
+                    ? '还没有已完成课程'
+                    : '还没有进行中的课程'
+              }
               description={
-                archived ? '归档课程会保留在这里。' : '添加课程后，可以继续记录上课、作业和资料。'
+                filter === 'archived'
+                  ? '归档课程会保留在这里。'
+                  : filter === 'completed'
+                    ? '在编辑课程时将状态设为“已完成”，课程就会出现在这里。'
+                    : '添加课程后，可以继续记录上课、作业和资料。'
               }
             />
           )}
@@ -572,8 +586,16 @@ function CourseDetail({
       </button>
       <header className="course-detail-header">
         <div>
-          <span className={`source-pill ${course.archived ? 'source-pill--archived' : ''}`}>
-            {course.archived ? '已归档' : '进行中'}
+          <span
+            className={`source-pill ${
+              course.archived
+                ? 'source-pill--archived'
+                : course.status === 'completed'
+                  ? 'source-pill--completed'
+                  : ''
+            }`}
+          >
+            {course.archived ? '已归档' : courseStatusLabels[course.status]}
           </span>
           <h2>{course.name}</h2>
           <p>

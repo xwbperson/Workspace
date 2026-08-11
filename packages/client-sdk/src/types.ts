@@ -388,6 +388,8 @@ export interface CourseMaterial {
   file: StoredFile;
 }
 
+export type CourseStatus = 'in-progress' | 'completed';
+
 export interface Course {
   id: string;
   name: string;
@@ -398,6 +400,7 @@ export interface Course {
   objectives: string;
   description: string;
   schedule: string;
+  status: CourseStatus;
   syllabus?: StoredFile;
   archived: boolean;
   referenceBooks?: CourseReferenceBook[];
@@ -419,6 +422,7 @@ export interface CourseInput {
   objectives?: string;
   description?: string;
   schedule?: string;
+  status?: CourseStatus;
   syllabusFileId?: string | null;
   referenceBookIds?: string[];
 }
