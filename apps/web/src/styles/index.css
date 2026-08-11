@@ -745,12 +745,18 @@
   .modal {
     width: min(560px, calc(100vw - 32px));
     max-height: min(760px, calc(100vh - 32px));
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
     padding: 0;
     color: var(--color-text);
     background: var(--color-surface-raised);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-float);
+  }
+
+  .modal[open] {
+    display: grid;
   }
 
   .modal::backdrop {
@@ -782,6 +788,7 @@
   }
 
   .modal__body {
+    min-height: 0;
     overflow: auto;
     padding: 22px;
   }
