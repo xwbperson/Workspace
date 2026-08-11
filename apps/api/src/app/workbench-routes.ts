@@ -63,7 +63,7 @@ export async function registerWorkbenchRoutes(
           type: 'object',
           additionalProperties: false,
           required: [
-            'pinnedFeatureIds',
+            'hiddenFeatureIds',
             'overviewBlockIds',
             'theme',
             'dateDisplay',
@@ -71,7 +71,7 @@ export async function registerWorkbenchRoutes(
             'refreshIntervalMinutes',
           ],
           properties: {
-            pinnedFeatureIds: { type: 'array', maxItems: 100, items: { type: 'string' } },
+            hiddenFeatureIds: { type: 'array', maxItems: 100, items: { type: 'string' } },
             overviewBlockIds: { type: 'array', maxItems: 100, items: { type: 'string' } },
             theme: { type: 'string', enum: ['system', 'light', 'dark'] },
             dateDisplay: { type: 'string', enum: ['relative', 'absolute'] },

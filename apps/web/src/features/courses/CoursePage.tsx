@@ -262,9 +262,8 @@ export function CoursePage(): React.JSX.Element {
     <div className="course-page page-stack">
       <header className="learning-hero learning-hero--courses">
         <div>
-          <p className="eyebrow">课程管理</p>
-          <h2>从课程信息，走到每次上课和作业。</h2>
-          <p>参考书与书库保持联系，大纲和资料会跟随工作区一起备份。</p>
+          <p className="eyebrow">计划与执行</p>
+          <h2>课程管理</h2>
         </div>
         <button
           type="button"

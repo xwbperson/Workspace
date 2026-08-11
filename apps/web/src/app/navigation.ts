@@ -6,7 +6,12 @@ export const primaryNavigation = [
   { id: 'search', label: '搜索', route: '/search' },
 ] as const;
 
-export function getPinnedNavigation(pinnedFeatureIds: readonly string[]) {
-  const pinned = new Set(pinnedFeatureIds);
-  return featureCatalog.filter((feature) => pinned.has(feature.featureId));
+export function getVisibleFeatureNavigation(hiddenFeatureIds: readonly string[]) {
+  const hidden = new Set(hiddenFeatureIds);
+  return featureCatalog.filter(
+    (feature) =>
+      feature.lifecycle === 'released' &&
+      feature.discoverableInProduction &&
+      !hidden.has(feature.featureId),
+  );
 }

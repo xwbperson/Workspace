@@ -122,9 +122,8 @@ export function LifeCountdownPage(): React.JSX.Element {
     <div className="feature-shell-page feature-shell-page--life">
       <header className="feature-hero feature-hero--life">
         <div>
-          <p className="eyebrow">人生倒计时</p>
-          <h2>不是催促自己，是看见时间正在怎样流动。</h2>
-          <p>出生日期与预期寿命只用于本地计算；重要人生事件可以独立修改、归档和恢复。</p>
+          <p className="eyebrow">时间与提醒</p>
+          <h2>人生倒计时</h2>
         </div>
         <div className="life-hero-actions">
           <button className="button button--quiet" onClick={() => setProfileOpen(true)}>

@@ -4256,7 +4256,7 @@
                   },
                   "month": {
                     "type": "integer",
-                    "minimum": 1,
+                    "minimum": 0,
                     "maximum": 12
                   },
                   "amount": {
@@ -4627,7 +4627,7 @@
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "pinnedFeatureIds",
+                  "hiddenFeatureIds",
                   "overviewBlockIds",
                   "theme",
                   "dateDisplay",
@@ -4635,7 +4635,7 @@
                   "refreshIntervalMinutes"
                 ],
                 "properties": {
-                  "pinnedFeatureIds": {
+                  "hiddenFeatureIds": {
                     "type": "array",
                     "maxItems": 100,
                     "items": {

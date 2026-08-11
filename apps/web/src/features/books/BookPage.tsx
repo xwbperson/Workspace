@@ -177,9 +177,8 @@ export function BookPage(): React.JSX.Element {
     <div className="library-page page-stack">
       <header className="learning-hero learning-hero--books">
         <div>
-          <p className="eyebrow">书籍管理</p>
-          <h2>把藏书、章节和阅读轨迹放在一起。</h2>
-          <p>阅读状态由你决定，实际进度始终按各章页码计算。</p>
+          <p className="eyebrow">记录与知识</p>
+          <h2>书籍管理</h2>
         </div>
         <button
           className="button button--primary"

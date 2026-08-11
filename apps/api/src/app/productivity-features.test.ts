@@ -638,6 +638,14 @@ describe('productivity feature vertical slices', () => {
     expect(debt.statusCode, debt.body).toBe(200);
     expect(debt.json()).toMatchObject({ year: 2026, month: 8, amount: 2500, version: 1 });
 
+    const unbilledDebt = await inject({
+      method: 'PUT',
+      url: '/api/v1/finance/debt-records',
+      payload: { platformId: platform.id, year: 2026, month: 0, amount: 300 },
+    });
+    expect(unbilledDebt.statusCode, unbilledDebt.body).toBe(200);
+    expect(unbilledDebt.json()).toMatchObject({ year: 2026, month: 0, amount: 300 });
+
     const summary = await inject({
       method: 'GET',
       url: '/api/v1/finance/summary?year=2026&month=8',
@@ -646,6 +654,7 @@ describe('productivity feature vertical slices', () => {
     expect(summary.json()).toMatchObject({
       totalAssets: 10000,
       currentMonthDebt: 2500,
+      yearDebt: 2800,
       netPosition: 7500,
       totalCreditLimit: 20000,
       remainingCredit: 17500,

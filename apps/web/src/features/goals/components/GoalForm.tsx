@@ -146,13 +146,17 @@ export function GoalForm({
             <option value="completed">已完成</option>
           </select>
         </label>
-        <label className="check-field">
+        <label className="goal-metric-toggle entity-form__wide">
           <input
             type="checkbox"
+            aria-label="这是一个可记录数值的目标"
             checked={form.metricEnabled}
             onChange={(event) => set('metricEnabled', event.target.checked)}
           />
-          <span>这是一个可记录数值的目标</span>
+          <span>
+            <strong>记录数值进度</strong>
+            <small>适合体重、页数、金额等可持续测量的目标</small>
+          </span>
         </label>
       </div>
 
@@ -218,7 +222,7 @@ export function GoalForm({
           <legend>关键结果</legend>
           <button
             type="button"
-            className="button button--ghost"
+            className="button button--accent"
             onClick={() => set('keyResults', [...form.keyResults, newKeyResult()])}
           >
             <Plus size={16} /> 添加关键结果

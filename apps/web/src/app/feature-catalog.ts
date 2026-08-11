@@ -28,7 +28,6 @@ export interface WorkbenchFeatureDefinition {
   order: number;
   lifecycle: 'released' | 'preview' | 'in-development';
   discoverableInProduction: boolean;
-  canPin: boolean;
   capabilities: {
     focusCandidates?: boolean;
     upcoming?: boolean;
@@ -52,7 +51,6 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     order: 10,
     lifecycle: 'released',
     discoverableInProduction: true,
-    canPin: true,
     capabilities: {
       focusCandidates: true,
       upcoming: true,
@@ -74,7 +72,6 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     order: 20,
     lifecycle: 'released',
     discoverableInProduction: true,
-    canPin: true,
     capabilities: {
       recent: true,
       overviewBlocks: true,
@@ -93,7 +90,6 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     order: 30,
     lifecycle: 'released',
     discoverableInProduction: true,
-    canPin: true,
     capabilities: {
       focusCandidates: true,
       upcoming: true,
@@ -114,7 +110,6 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     order: 40,
     lifecycle: 'released',
     discoverableInProduction: true,
-    canPin: true,
     capabilities: {
       focusCandidates: true,
       recent: true,
@@ -134,7 +129,6 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     order: 50,
     lifecycle: 'released',
     discoverableInProduction: true,
-    canPin: true,
     capabilities: {
       focusCandidates: true,
       upcoming: true,
@@ -155,7 +149,6 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     order: 60,
     lifecycle: 'released',
     discoverableInProduction: true,
-    canPin: true,
     capabilities: {
       upcoming: true,
       recent: true,
@@ -175,7 +168,6 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     order: 70,
     lifecycle: 'released',
     discoverableInProduction: true,
-    canPin: true,
     capabilities: { recent: true, overviewBlocks: true, search: true, quickCreate: true },
   },
   {
@@ -189,7 +181,6 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     order: 80,
     lifecycle: 'released',
     discoverableInProduction: true,
-    canPin: true,
     capabilities: {
       upcoming: true,
       recent: true,
@@ -209,7 +200,6 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     order: 90,
     lifecycle: 'released',
     discoverableInProduction: true,
-    canPin: true,
     capabilities: { recent: true, overviewBlocks: true, search: true, quickCreate: true },
   },
   {
@@ -223,7 +213,6 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     order: 100,
     lifecycle: 'released',
     discoverableInProduction: true,
-    canPin: true,
     capabilities: {
       upcoming: true,
       recent: true,

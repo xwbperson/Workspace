@@ -132,7 +132,7 @@ export interface OverviewResponse {
 }
 
 export interface WorkbenchPreferences {
-  pinnedFeatureIds: string[];
+  hiddenFeatureIds: string[];
   overviewBlockIds: string[];
   theme: 'system' | 'light' | 'dark';
   dateDisplay: 'relative' | 'absolute';

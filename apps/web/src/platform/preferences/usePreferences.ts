@@ -5,7 +5,7 @@ import { queryClient, workbenchClient } from '../api/client.js';
 import { useAuth } from '../auth/AuthProvider.js';
 
 const fallbackPreferences: WorkbenchPreferences = {
-  pinnedFeatureIds: ['countdowns'],
+  hiddenFeatureIds: [],
   overviewBlockIds: ['countdowns:nearest'],
   theme: 'system',
   dateDisplay: 'relative',
@@ -32,6 +32,17 @@ export function usePreferences(): {
   });
   const mutation = useMutation({
     mutationFn: (input: WorkbenchPreferences) => workbenchClient.updatePreferences(input),
+    onMutate: (input) => {
+      void queryClient.cancelQueries({ queryKey: ['workbench', 'preferences'] });
+      const previous = queryClient.getQueryData<WorkbenchPreferences>(['workbench', 'preferences']);
+      queryClient.setQueryData(['workbench', 'preferences'], input);
+      return { previous };
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['workbench', 'preferences'], context.previous);
+      }
+    },
     onSuccess: (value) => queryClient.setQueryData(['workbench', 'preferences'], value),
   });
   const preferences = query.data ?? fallbackPreferences;

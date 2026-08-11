@@ -137,9 +137,8 @@ export function CalendarPage(): React.JSX.Element {
     <div className="feature-shell-page feature-shell-page--calendar">
       <header className="feature-hero feature-hero--calendar">
         <div>
-          <p className="eyebrow">日程管理</p>
-          <h2>一天不只有时间，还有留下的解释。</h2>
-          <p>在同一张月历里安排日程，也记录当天的日记和总结。</p>
+          <p className="eyebrow">时间与提醒</p>
+          <h2>日程管理</h2>
         </div>
         <button
           type="button"

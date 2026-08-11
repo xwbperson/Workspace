@@ -203,7 +203,7 @@ export async function registerFinanceRoutes(
           properties: {
             platformId: { type: 'string', format: 'uuid' },
             year: { type: 'integer', minimum: 1900, maximum: 2200 },
-            month: { type: 'integer', minimum: 1, maximum: 12 },
+            month: { type: 'integer', minimum: 0, maximum: 12 },
             amount: { type: 'number', minimum: 0 },
             version: { type: 'integer', minimum: 1 },
           },

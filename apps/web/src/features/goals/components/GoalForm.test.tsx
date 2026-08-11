@@ -3,6 +3,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { GoalForm } from './GoalForm.js';
 
 describe('GoalForm', () => {
+  it('uses an aligned metric toggle and an accent action for key results', () => {
+    render(<GoalForm submitting={false} onSubmit={vi.fn(async () => undefined)} />);
+
+    expect(screen.getByLabelText('这是一个可记录数值的目标').closest('label')).toHaveClass(
+      'goal-metric-toggle',
+    );
+    expect(screen.getByRole('button', { name: '添加关键结果' })).toHaveClass('button--accent');
+  });
+
   it('submits a metric-backed quarterly goal from the user-facing form', async () => {
     const onSubmit = vi.fn(async () => undefined);
     render(<GoalForm submitting={false} onSubmit={onSubmit} />);

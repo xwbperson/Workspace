@@ -132,9 +132,8 @@ export function GoalPage(): React.JSX.Element {
     <div className="feature-shell-page feature-shell-page--goals">
       <header className="feature-hero feature-hero--goals">
         <div>
-          <p className="eyebrow">目标管理</p>
-          <h2>把愿望变成有证据的变化。</h2>
-          <p>年度、季度和月度目标共享一条进度轨迹；数据型目标可以随手记录当前值。</p>
+          <p className="eyebrow">目标与复盘</p>
+          <h2>目标管理</h2>
         </div>
         <button
           type="button"

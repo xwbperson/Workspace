@@ -12,6 +12,7 @@ import { inboxMigration } from './011-inbox.js';
 import { subscriptionsMigration } from './012-subscriptions.js';
 import { financeMigration } from './013-finance.js';
 import { lifeCountdownMigration } from './014-life-countdown.js';
+import { financeUnbilledDebtMigration } from './015-finance-unbilled-debt.js';
 
 export interface Migration {
   id: string;
@@ -33,4 +34,5 @@ export const migrations: readonly Migration[] = [
   subscriptionsMigration,
   financeMigration,
   lifeCountdownMigration,
+  financeUnbilledDebtMigration,
 ];

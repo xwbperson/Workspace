@@ -14,8 +14,8 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { featureCatalog } from '../feature-catalog.js';
-import { getPinnedNavigation } from '../navigation.js';
+import { featureCatalog, featureCategories } from '../feature-catalog.js';
+import { getVisibleFeatureNavigation } from '../navigation.js';
 import { FeatureIcon } from '../../components/ui/FeatureIcon.js';
 import { Modal } from '../../components/ui/Modal.js';
 import { useAuth } from '../../platform/auth/AuthProvider.js';
@@ -28,9 +28,9 @@ function readCollapsedPreference(): boolean {
 
 function pageTitle(pathname: string): { eyebrow?: string; title: string } {
   if (pathname === '/') return { eyebrow: '今天', title: '总览' };
-  if (pathname.startsWith('/features/countdowns'))
-    return { eyebrow: '时间与提醒', title: '倒计时' };
   if (pathname === '/features') return { title: '功能' };
+  const feature = featureCatalog.find((item) => pathname.startsWith(item.route));
+  if (feature) return { eyebrow: featureCategories[feature.category], title: feature.name };
   if (pathname.startsWith('/search')) return { title: '搜索' };
   if (pathname.startsWith('/notifications')) return { title: '通知' };
   if (pathname.startsWith('/settings')) return { title: '我的工作台' };
@@ -46,9 +46,9 @@ export function WorkbenchShell(): React.JSX.Element {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const page = pageTitle(location.pathname);
-  const pinned = useMemo(
-    () => getPinnedNavigation(preferences.pinnedFeatureIds),
-    [preferences.pinnedFeatureIds],
+  const visibleFeatureNavigation = useMemo(
+    () => getVisibleFeatureNavigation(preferences.hiddenFeatureIds),
+    [preferences.hiddenFeatureIds],
   );
   const notifications = useQuery({
     queryKey: ['workbench', 'notifications'],
@@ -126,11 +126,11 @@ export function WorkbenchShell(): React.JSX.Element {
           </NavLink>
         </nav>
 
-        {pinned.length > 0 ? (
+        {visibleFeatureNavigation.length > 0 ? (
           <div className="sidebar__group">
-            <p className="sidebar__group-label sidebar__label">常用功能</p>
+            <p className="sidebar__group-label sidebar__label">功能模块</p>
             <nav>
-              {pinned.slice(0, 6).map((feature) => (
+              {visibleFeatureNavigation.map((feature) => (
                 <NavLink
                   key={feature.featureId}
                   to={feature.route}

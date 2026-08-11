@@ -342,6 +342,17 @@
     background: var(--color-surface-muted);
   }
 
+  .button--accent {
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+    border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  }
+
+  .button--accent:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
+    border-color: var(--color-accent);
+  }
+
   .button--text {
     min-height: 36px;
     padding-inline: 6px;
@@ -3586,18 +3597,40 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
-  .check-field {
-    display: flex;
+  .goal-metric-toggle {
+    display: grid;
+    min-height: 62px;
+    grid-template-columns: 18px minmax(0, 1fr);
     align-items: center;
-    gap: 9px;
+    gap: 12px;
+    padding: 12px 14px;
     color: var(--color-text-secondary);
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
     font-size: 14px;
+    cursor: pointer;
   }
 
-  .check-field input {
+  .goal-metric-toggle input {
     width: 18px;
     height: 18px;
+    margin: 0;
+    align-self: center;
     accent-color: var(--color-accent);
+  }
+
+  .goal-metric-toggle > span {
+    display: grid;
+    gap: 2px;
+  }
+
+  .goal-metric-toggle strong {
+    color: var(--color-text);
+  }
+
+  .goal-metric-toggle small {
+    color: var(--color-text-tertiary);
   }
 
   .key-result-editor {
@@ -4277,6 +4310,140 @@
   .finance-section {
     display: grid;
     gap: 16px;
+  }
+
+  .annual-debt-card {
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .annual-debt-card > header,
+  .finance-subheading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .annual-debt-actions,
+  .annual-debt-year-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .annual-debt-year-picker {
+    min-height: 40px;
+    padding: 4px;
+    background: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+
+  .annual-debt-year-picker strong {
+    min-width: 64px;
+    color: var(--color-text);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .annual-debt-card > header > div > p:last-child {
+    max-width: 68ch;
+    margin-top: 4px;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+  }
+
+  .annual-debt-table-wrap {
+    overflow: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+
+  .annual-debt-table {
+    width: 100%;
+    min-width: 720px;
+    border-spacing: 0;
+    border-collapse: separate;
+    color: var(--color-text-secondary);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+  }
+
+  .annual-debt-table th,
+  .annual-debt-table td {
+    min-width: 132px;
+    padding: 10px 12px;
+    text-align: right;
+    white-space: nowrap;
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .annual-debt-table tr:last-child th,
+  .annual-debt-table tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .annual-debt-table th:last-child,
+  .annual-debt-table td:last-child {
+    border-right: 0;
+  }
+
+  .annual-debt-table thead th {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    color: var(--color-text);
+    background: var(--color-surface-muted);
+  }
+
+  .annual-debt-table th:first-child {
+    position: sticky;
+    z-index: 1;
+    left: 0;
+    min-width: 92px;
+    color: var(--color-text);
+    text-align: left;
+  }
+
+  .annual-debt-table thead th:first-child {
+    z-index: 3;
+  }
+
+  .annual-debt-table input {
+    width: 116px;
+    min-height: 36px;
+    padding: 6px 8px;
+    color: var(--color-text);
+    text-align: right;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-strong);
+    border-radius: 6px;
+  }
+
+  .annual-debt-table input:focus {
+    border-color: var(--color-accent);
+  }
+
+  .annual-debt-table__unbilled th,
+  .annual-debt-table__unbilled td {
+    background: color-mix(in srgb, var(--color-brass-soft) 70%, var(--color-surface));
+  }
+
+  .annual-debt-table__total th,
+  .annual-debt-table__total td {
+    color: var(--color-text);
+    background: var(--color-surface-accent);
+  }
+
+  .annual-debt-table__total td:last-child strong {
+    color: var(--color-accent);
   }
 
   .metric-card-row--finance {
@@ -5116,6 +5283,237 @@
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer pages {
+  .feature-shell-page,
+  .countdown-page {
+    gap: 14px;
+  }
+
+  .feature-hero,
+  .learning-hero,
+  .countdown-hero {
+    display: flex;
+    min-height: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 13px 16px;
+    overflow: visible;
+    color: var(--color-text);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    box-shadow: none;
+  }
+
+  .feature-hero--goals,
+  .feature-hero--tasks,
+  .feature-hero--calendar,
+  .feature-hero--inbox,
+  .feature-hero--subscriptions,
+  .feature-hero--finance,
+  .feature-hero--life,
+  .learning-hero--books,
+  .learning-hero--courses {
+    color: var(--color-text);
+    background: var(--color-surface);
+  }
+
+  .feature-hero--goals::after {
+    display: none;
+  }
+
+  .feature-hero > div:first-child,
+  .learning-hero > div:first-child,
+  .countdown-hero > div:first-child {
+    display: grid;
+    gap: 1px;
+    max-width: none;
+  }
+
+  .feature-hero .eyebrow,
+  .feature-hero--goals .eyebrow,
+  .feature-hero--tasks .eyebrow,
+  .feature-hero--calendar .eyebrow,
+  .feature-hero--inbox .eyebrow,
+  .learning-hero .eyebrow,
+  .countdown-hero .eyebrow {
+    margin: 0;
+    color: var(--color-accent);
+    font-size: 11px;
+  }
+
+  .feature-hero h2,
+  .learning-hero h2,
+  .countdown-hero h2 {
+    max-width: none;
+    margin: 0;
+    color: var(--color-text);
+    font-size: 20px;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+  }
+
+  .feature-hero p:last-child,
+  .learning-hero p:last-child,
+  .countdown-hero p:last-child {
+    display: none;
+  }
+
+  .feature-hero .button,
+  .learning-hero .button,
+  .countdown-hero .button,
+  .life-hero-actions .button {
+    min-height: 38px;
+    padding-block: 7px;
+  }
+
+  .period-picker {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--color-text-secondary);
+  }
+
+  .period-picker input {
+    min-height: 38px;
+    color: var(--color-text);
+    background: var(--color-surface-muted);
+    border-color: var(--color-border);
+  }
+}
+
+@layer responsive {
+  @media (max-width: 599px) {
+    .feature-hero,
+    .learning-hero,
+    .countdown-hero {
+      min-height: 0;
+      flex-flow: row wrap;
+      align-items: center;
+      padding: 11px 12px;
+    }
+
+    .feature-hero h2,
+    .learning-hero h2,
+    .countdown-hero h2 {
+      font-size: 18px;
+    }
+
+    .feature-hero > .button,
+    .learning-hero > .button,
+    .countdown-hero > .button,
+    .life-hero-actions,
+    .life-hero-actions .button,
+    .period-picker,
+    .period-picker input {
+      width: auto;
+    }
+
+    .annual-debt-card > header,
+    .finance-subheading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .annual-debt-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+}
+
+@layer pages {
+  .page-content,
+  .feature-shell-page,
+  .feature-shell-page > *,
+  .finance-overview,
+  .finance-overview > *,
+  .metric-card-row,
+  .finance-section {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .feature-shell-page,
+  .feature-hero,
+  .learning-hero,
+  .countdown-hero,
+  .lifecycle-tabs {
+    width: 100%;
+  }
+
+  .lifecycle-tabs {
+    overflow-x: auto;
+  }
+
+  .settings-card__description {
+    margin: 14px 0;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+  }
+
+  .feature-visibility-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .feature-visibility-row {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: 38px minmax(0, 1fr) auto 18px;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+
+  .feature-visibility-row:hover {
+    border-color: var(--color-border-strong);
+  }
+
+  .feature-visibility-row__icon {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+    border-radius: 9px;
+  }
+
+  .feature-visibility-row > span:nth-child(2) {
+    display: grid;
+    min-width: 0;
+  }
+
+  .feature-visibility-row small,
+  .feature-visibility-row__state {
+    color: var(--color-text-tertiary);
+    font-size: 12px;
+  }
+
+  .feature-visibility-row input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--color-accent);
+  }
+}
+
+@layer responsive {
+  @media (max-width: 699px) {
+    .feature-visibility-list {
+      grid-template-columns: 1fr;
     }
   }
 }

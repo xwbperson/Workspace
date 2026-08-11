@@ -80,7 +80,7 @@ export class WorkbenchService {
 
   public defaultPreferences(): WorkbenchPreferences {
     return {
-      pinnedFeatureIds: ['countdowns'],
+      hiddenFeatureIds: [],
       overviewBlockIds: this.overviewDefinitions()
         .filter((definition) => definition.defaultVisible)
         .map((definition) => definition.blockId),
@@ -102,7 +102,7 @@ export class WorkbenchService {
     );
     const normalized: WorkbenchPreferences = {
       ...input,
-      pinnedFeatureIds: [...new Set(input.pinnedFeatureIds)].filter((id) =>
+      hiddenFeatureIds: [...new Set(input.hiddenFeatureIds)].filter((id) =>
         visibleFeatures.has(id),
       ),
       overviewBlockIds: [...new Set(input.overviewBlockIds)].filter((id) => visibleBlocks.has(id)),

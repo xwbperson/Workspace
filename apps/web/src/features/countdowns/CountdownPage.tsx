@@ -126,9 +126,8 @@ export function CountdownPage(): React.JSX.Element {
     <div className="countdown-page">
       <header className="countdown-hero">
         <div>
-          <p className="eyebrow">参考功能 · 完整纵向切片</p>
-          <h2>把重要日期放上时间轨道。</h2>
-          <p>倒计时通过固定注册点接入总览、搜索、快速创建和通知，可作为后续功能的实现样板。</p>
+          <p className="eyebrow">时间与提醒</p>
+          <h2>倒计时</h2>
         </div>
         <button
           type="button"

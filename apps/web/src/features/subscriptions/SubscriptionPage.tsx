@@ -101,9 +101,8 @@ export function SubscriptionPage(): React.JSX.Element {
     <div className="feature-shell-page feature-shell-page--subscriptions">
       <header className="feature-hero feature-hero--subscriptions">
         <div>
-          <p className="eyebrow">订阅管理</p>
-          <h2>把每一笔续费，换算成看得懂的长期成本。</h2>
-          <p>软件、会员、域名和服务器放在同一处，续费日期会进入工作台提醒。</p>
+          <p className="eyebrow">工具</p>
+          <h2>订阅管理</h2>
         </div>
         <button className="button button--primary" onClick={() => setCreateOpen(true)}>
           <Plus size={18} />

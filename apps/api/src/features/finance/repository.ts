@@ -290,6 +290,13 @@ export class FinanceRepository {
     year: number,
     month: number,
   ): Promise<FinanceDebtRecordRow | null> {
+    if (month === 0) {
+      const result = await this.database.query<RecordDatabaseRow>(
+        `SELECT r.id,r.platform_id,p.name AS platform_name,r.year,0 AS month,r.amount,r.version,r.created_at,r.updated_at FROM finance_unbilled_debt_records r JOIN finance_debt_platforms p ON p.id=r.platform_id WHERE r.platform_id=$1 AND r.year=$2`,
+        [platformId, year],
+      );
+      return result.rows[0] ? mapRecord(result.rows[0]) : null;
+    }
     const result = await this.database.query<RecordDatabaseRow>(
       `SELECT ${RECORD_COLUMNS} FROM finance_debt_records r JOIN finance_debt_platforms p ON p.id=r.platform_id WHERE r.platform_id=$1 AND r.year=$2 AND r.month=$3`,
       [platformId, year, month],
@@ -297,6 +304,13 @@ export class FinanceRepository {
     return result.rows[0] ? mapRecord(result.rows[0]) : null;
   }
   public async createRecord(row: FinanceDebtRecordRow): Promise<FinanceDebtRecordRow> {
+    if (row.month === 0) {
+      await this.database.query(
+        `INSERT INTO finance_unbilled_debt_records (id,platform_id,year,amount,version,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [row.id, row.platformId, row.year, row.amount, row.version, row.createdAt, row.updatedAt],
+      );
+      return (await this.getRecord(row.platformId, row.year, row.month))!;
+    }
     await this.database.query(
       `INSERT INTO finance_debt_records (id,platform_id,year,month,amount,version,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
       [
@@ -316,6 +330,14 @@ export class FinanceRepository {
     row: FinanceDebtRecordRow,
     version: number,
   ): Promise<FinanceDebtRecordRow | null> {
+    if (row.month === 0) {
+      const result = await this.database.query(
+        `UPDATE finance_unbilled_debt_records SET amount=$3,version=version+1,updated_at=$4 WHERE platform_id=$1 AND year=$2 AND version=$5`,
+        [row.platformId, row.year, row.amount, row.updatedAt, version],
+      );
+      if ((result.rowCount ?? 0) !== 1) return null;
+      return this.getRecord(row.platformId, row.year, row.month);
+    }
     const result = await this.database.query(
       `UPDATE finance_debt_records SET amount=$4,version=version+1,updated_at=$5 WHERE platform_id=$1 AND year=$2 AND month=$3 AND version=$6`,
       [row.platformId, row.year, row.month, row.amount, row.updatedAt, version],
@@ -324,18 +346,29 @@ export class FinanceRepository {
     return this.getRecord(row.platformId, row.year, row.month);
   }
   public async listRecords(year: number): Promise<FinanceDebtRecordRow[]> {
-    const result = await this.database.query<RecordDatabaseRow>(
-      `SELECT ${RECORD_COLUMNS} FROM finance_debt_records r JOIN finance_debt_platforms p ON p.id=r.platform_id WHERE r.year=$1 ORDER BY r.month ASC,p.name ASC`,
-      [year],
-    );
-    return result.rows.map(mapRecord);
+    const [monthly, unbilled] = await Promise.all([
+      this.database.query<RecordDatabaseRow>(
+        `SELECT ${RECORD_COLUMNS} FROM finance_debt_records r JOIN finance_debt_platforms p ON p.id=r.platform_id WHERE r.year=$1 ORDER BY r.month ASC,p.name ASC`,
+        [year],
+      ),
+      this.database.query<RecordDatabaseRow>(
+        `SELECT r.id,r.platform_id,p.name AS platform_name,r.year,0 AS month,r.amount,r.version,r.created_at,r.updated_at FROM finance_unbilled_debt_records r JOIN finance_debt_platforms p ON p.id=r.platform_id WHERE r.year=$1 ORDER BY p.name ASC`,
+        [year],
+      ),
+    ]);
+    return [...monthly.rows, ...unbilled.rows].map(mapRecord);
   }
   public async deleteRecord(id: string, version: number): Promise<boolean> {
     const result = await this.database.query(
       `DELETE FROM finance_debt_records WHERE id=$1 AND version=$2`,
       [id, version],
     );
-    return (result.rowCount ?? 0) === 1;
+    if ((result.rowCount ?? 0) === 1) return true;
+    const unbilled = await this.database.query(
+      `DELETE FROM finance_unbilled_debt_records WHERE id=$1 AND version=$2`,
+      [id, version],
+    );
+    return (unbilled.rowCount ?? 0) === 1;
   }
 
   public async searchAccounts(query: string, limit: number): Promise<FinanceAccountRow[]> {

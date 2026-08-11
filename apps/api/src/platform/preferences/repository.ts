@@ -2,7 +2,7 @@ import type { WorkbenchPreferences } from '@workspace/client-sdk';
 import type { Database } from '../database/types.js';
 
 interface PreferenceRow {
-  value: WorkbenchPreferences;
+  value: Partial<WorkbenchPreferences> & { pinnedFeatureIds?: string[] };
 }
 
 export class PreferencesRepository {
@@ -16,7 +16,17 @@ export class PreferencesRepository {
       'SELECT value FROM workbench_preferences WHERE workspace_id = $1',
       [this.workspaceId],
     );
-    return result.rows[0]?.value ?? defaults;
+    const stored = result.rows[0]?.value;
+    if (!stored) return defaults;
+    const current = { ...stored };
+    delete current.pinnedFeatureIds;
+    return {
+      ...defaults,
+      ...current,
+      hiddenFeatureIds: Array.isArray(current.hiddenFeatureIds)
+        ? current.hiddenFeatureIds
+        : defaults.hiddenFeatureIds,
+    };
   }
 
   public async save(value: WorkbenchPreferences): Promise<WorkbenchPreferences> {
@@ -27,6 +37,6 @@ export class PreferencesRepository {
        RETURNING value`,
       [this.workspaceId, JSON.stringify(value)],
     );
-    return result.rows[0]!.value;
+    return result.rows[0]!.value as WorkbenchPreferences;
   }
 }

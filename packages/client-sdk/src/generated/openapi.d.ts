@@ -4046,7 +4046,7 @@ export interface paths {
       requestBody: {
         content: {
           'application/json': {
-            pinnedFeatureIds: string[];
+            hiddenFeatureIds: string[];
             overviewBlockIds: string[];
             /** @enum {string} */
             theme: 'system' | 'light' | 'dark';

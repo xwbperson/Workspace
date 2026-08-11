@@ -39,13 +39,13 @@ function day(value: number | null | undefined, name: string): number | null {
     throw new AppError(400, 'INVALID_FINANCE_DAY', `${name}必须在 1–31 之间。`);
   return value;
 }
-function period(year: number, month: number): void {
+function period(year: number, month: number, allowUnbilled = false): void {
   if (
     !Number.isInteger(year) ||
     year < 1900 ||
     year > 2200 ||
     !Number.isInteger(month) ||
-    month < 1 ||
+    month < (allowUnbilled ? 0 : 1) ||
     month > 12
   )
     throw new AppError(400, 'INVALID_FINANCE_PERIOD', '年月无效。');
@@ -199,7 +199,7 @@ export class FinanceService {
   public async upsertRecord(
     input: FinanceDebtRecordInput & { version?: number },
   ): Promise<FinanceDebtRecord> {
-    period(input.year, input.month);
+    period(input.year, input.month, true);
     const platform = await this.repository.getPlatform(input.platformId);
     if (!platform || platform.archived) throw new NotFoundError('没有找到该负债平台。');
     const existing = await this.repository.getRecord(input.platformId, input.year, input.month);

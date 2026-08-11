@@ -16,7 +16,6 @@ import {
   Plus,
   RotateCcw,
   Trash2,
-  TrendingDown,
   WalletCards,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -30,13 +29,11 @@ import {
   accountTypeLabels,
   FinanceAccountForm,
   FinanceDebtPlatformForm,
-  FinanceDebtRecordForm,
 } from './components/FinanceForms.js';
+import { AnnualDebtTable } from './components/AnnualDebtTable.js';
 type View = 'overview' | 'accounts' | 'debt' | 'archived';
 type Editor =
-  | { kind: 'account'; item?: FinanceAccount }
-  | { kind: 'platform'; item?: FinanceDebtPlatform }
-  | { kind: 'record'; item?: FinanceDebtRecord };
+  { kind: 'account'; item?: FinanceAccount } | { kind: 'platform'; item?: FinanceDebtPlatform };
 type RemoveTarget =
   { kind: 'account'; item: FinanceAccount } | { kind: 'platform'; item: FinanceDebtPlatform };
 function money(value: number): string {
@@ -70,10 +67,7 @@ export function FinancePage(): React.JSX.Element {
     queryKey: financeKeys.platforms(archived),
     queryFn: () => financeApi.platforms(archived),
   });
-  const records = useMemo(
-    () => summary.data?.records.filter((item) => item.month === month) ?? [],
-    [summary.data, month],
-  );
+  const records = useMemo(() => summary.data?.records ?? [], [summary.data]);
   const after = async (message: string): Promise<void> => {
     await invalidateFinanceData();
     setEditor(undefined);
@@ -100,7 +94,7 @@ export function FinancePage(): React.JSX.Element {
   });
   const recordSave = useMutation({
     mutationFn: (input: FinanceDebtRecordInput) => financeApi.upsertRecord(input),
-    onSuccess: () => after('月度负债已保存'),
+    onSuccess: () => after('负债记录已保存'),
   });
   const accountArchive = useMutation({
     mutationFn: (item: FinanceAccount) => financeApi.archiveAccount(item.id, item.version),
@@ -143,9 +137,8 @@ export function FinancePage(): React.JSX.Element {
     <div className="feature-shell-page feature-shell-page--finance">
       <header className="feature-hero feature-hero--finance">
         <div>
-          <p className="eyebrow">财务管理</p>
-          <h2>资产和负债，放进同一张清晰的月度切片。</h2>
-          <p>账户余额、信用额度与每月负债分别记录，汇总只负责帮你看清当前位置。</p>
+          <p className="eyebrow">工具</p>
+          <h2>财务管理</h2>
         </div>
         <label className="period-picker">
           <span>查看月份</span>
@@ -180,13 +173,16 @@ export function FinancePage(): React.JSX.Element {
         />
       ) : view === 'debt' ? (
         <DebtSection
+          year={year}
+          month={month}
+          onYearChange={(nextYear) => setPeriod(`${nextYear}-${String(month).padStart(2, '0')}`)}
           platforms={platforms.data?.items ?? []}
           records={records}
+          savingRecord={recordSave.isPending}
           onCreatePlatform={() => setEditor({ kind: 'platform' })}
           onEditPlatform={(item) => setEditor({ kind: 'platform', item })}
           onArchivePlatform={(item) => platformArchive.mutate(item)}
-          onEditRecord={(item) => setEditor({ kind: 'record', item })}
-          onAddRecord={() => setEditor({ kind: 'record' })}
+          onSaveRecord={(input) => recordSave.mutateAsync(input)}
         />
       ) : (
         <ArchivedSection
@@ -209,9 +205,7 @@ export function FinancePage(): React.JSX.Element {
               ? editor.item
                 ? '编辑负债平台'
                 : '添加负债平台'
-              : editor?.item
-                ? '修改月度负债'
-                : '记录月度负债'
+              : ''
         }
         onClose={() => setEditor(undefined)}
         className="modal--wide"
@@ -240,18 +234,6 @@ export function FinancePage(): React.JSX.Element {
               } else {
                 await platformCreate.mutateAsync(input);
               }
-            }}
-          />
-        ) : editor?.kind === 'record' ? (
-          <FinanceDebtRecordForm
-            key={editor.item?.id ?? `new:${period}`}
-            platforms={platforms.data?.items ?? []}
-            {...(editor.item ? { record: editor.item } : {})}
-            year={year}
-            month={month}
-            submitting={recordSave.isPending}
-            onSubmit={async (input) => {
-              await recordSave.mutateAsync(input);
             }}
           />
         ) : null}
@@ -395,91 +377,106 @@ function AccountSection({
   );
 }
 function DebtSection({
+  year,
+  month,
+  onYearChange,
   platforms,
   records,
+  savingRecord,
   onCreatePlatform,
   onEditPlatform,
   onArchivePlatform,
-  onEditRecord,
-  onAddRecord,
+  onSaveRecord,
 }: {
+  year: number;
+  month: number;
+  onYearChange(year: number): void;
   platforms: FinanceDebtPlatform[];
   records: FinanceDebtRecord[];
+  savingRecord: boolean;
   onCreatePlatform(): void;
   onEditPlatform(item: FinanceDebtPlatform): void;
   onArchivePlatform(item: FinanceDebtPlatform): void;
-  onEditRecord(item: FinanceDebtRecord): void;
-  onAddRecord(): void;
+  onSaveRecord(input: FinanceDebtRecordInput): Promise<unknown>;
 }): React.JSX.Element {
   return (
     <section className="finance-section">
       <header>
         <div>
-          <p className="eyebrow">负债平台</p>
-          <h3>额度与本月负债</h3>
+          <p className="eyebrow">负债管理</p>
+          <h3>年度负债与平台额度</h3>
         </div>
         <div className="finance-heading-actions">
-          <button className="button button--quiet" onClick={onCreatePlatform}>
+          <button className="button button--accent" onClick={onCreatePlatform}>
             <Plus size={17} />
             添加平台
-          </button>
-          <button
-            className="button button--primary"
-            disabled={!platforms.length}
-            onClick={onAddRecord}
-          >
-            <TrendingDown size={17} />
-            记录本月负债
           </button>
         </div>
       </header>
       {platforms.length ? (
-        <div className="debt-table">
-          {platforms.map((item) => {
-            const record = records.find((entry) => entry.platformId === item.id);
-            return (
-              <article key={item.id}>
-                <span className="finance-icon">
-                  <CreditCard />
-                </span>
-                <div>
-                  <small>
-                    {item.billingDay ? `${item.billingDay}日出账` : '未设置账单日'} ·{' '}
-                    {item.repaymentDay ? `${item.repaymentDay}日还款` : '未设置还款日'}
-                  </small>
-                  <strong>{item.name}</strong>
-                  <p>
-                    总额度 {money(item.fixedLimit + item.temporaryLimit)} · 剩余{' '}
-                    {money(item.remainingLimit)}
-                  </p>
-                </div>
-                <button
-                  className="debt-value"
-                  onClick={() => (record ? onEditRecord(record) : onAddRecord())}
-                >
-                  <small>本月负债</small>
-                  <strong>{money(record?.amount ?? 0)}</strong>
-                </button>
-                <div>
-                  <button
-                    className="icon-button"
-                    aria-label={`编辑${item.name}`}
-                    onClick={() => onEditPlatform(item)}
-                  >
-                    <Edit3 />
-                  </button>
-                  <button
-                    className="icon-button"
-                    aria-label={`归档${item.name}`}
-                    onClick={() => onArchivePlatform(item)}
-                  >
-                    <Archive />
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+        <>
+          <AnnualDebtTable
+            year={year}
+            onYearChange={onYearChange}
+            platforms={platforms}
+            records={records}
+            saving={savingRecord}
+            onSave={async (input) => {
+              await onSaveRecord(input);
+            }}
+          />
+          <div className="finance-subheading">
+            <div>
+              <p className="eyebrow">平台设置</p>
+              <h3>额度与当前月份</h3>
+            </div>
+          </div>
+          <div className="debt-table">
+            {platforms.map((item) => {
+              const record = records.find(
+                (entry) => entry.platformId === item.id && entry.month === month,
+              );
+              return (
+                <article key={item.id}>
+                  <span className="finance-icon">
+                    <CreditCard />
+                  </span>
+                  <div>
+                    <small>
+                      {item.billingDay ? `${item.billingDay}日出账` : '未设置账单日'} ·{' '}
+                      {item.repaymentDay ? `${item.repaymentDay}日还款` : '未设置还款日'}
+                    </small>
+                    <strong>{item.name}</strong>
+                    <p>
+                      总额度 {money(item.fixedLimit + item.temporaryLimit)} · 剩余{' '}
+                      {money(item.remainingLimit)}
+                    </p>
+                  </div>
+                  <div className="debt-value">
+                    <small>{month}月负债</small>
+                    <strong>{money(record?.amount ?? 0)}</strong>
+                  </div>
+                  <div>
+                    <button
+                      className="icon-button"
+                      aria-label={`编辑${item.name}`}
+                      onClick={() => onEditPlatform(item)}
+                    >
+                      <Edit3 />
+                    </button>
+                    <button
+                      className="icon-button"
+                      aria-label={`归档${item.name}`}
+                      onClick={() => onArchivePlatform(item)}
+                    >
+                      <Archive />
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </>
       ) : (
         <EmptyState
           title="还没有负债平台"

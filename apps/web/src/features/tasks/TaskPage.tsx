@@ -172,9 +172,8 @@ export function TaskPage(): React.JSX.Element {
     <div className="feature-shell-page feature-shell-page--tasks">
       <header className="feature-hero feature-hero--tasks">
         <div>
-          <p className="eyebrow">任务管理</p>
-          <h2>下一步，应该足够清楚。</h2>
-          <p>待办、进行中和已完成保持分流；子任务可以继续拆分，重复任务会自动滚动到下一次。</p>
+          <p className="eyebrow">计划与执行</p>
+          <h2>任务管理</h2>
         </div>
         <button type="button" className="button button--primary" onClick={() => openCreate()}>
           <Plus size={18} /> 添加任务

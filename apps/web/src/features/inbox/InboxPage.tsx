@@ -133,9 +133,8 @@ export function InboxPage(): React.JSX.Element {
     <div className="feature-shell-page feature-shell-page--inbox">
       <header className="feature-hero feature-hero--inbox">
         <div>
-          <p className="eyebrow">收集箱</p>
-          <h2>先稳稳接住，再决定放到哪里。</h2>
-          <p>想法、网址、文章和文件进入同一条处理队列，也可以作为多设备临时中转站。</p>
+          <p className="eyebrow">文件与收藏</p>
+          <h2>收集箱</h2>
         </div>
         <button
           type="button"

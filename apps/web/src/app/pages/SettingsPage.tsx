@@ -3,6 +3,9 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Check,
   DatabaseBackup,
+  Eye,
+  EyeOff,
+  Grid2X2,
   Laptop,
   LogOut,
   Moon,
@@ -20,6 +23,8 @@ import { usePreferences } from '../../platform/preferences/usePreferences.js';
 import { formatDateTime, formatRelativeTime } from '../../platform/time/format.js';
 import { SectionError } from '../../components/ui/States.js';
 import { useToast } from '../../components/ui/ToastProvider.js';
+import { featureCatalog } from '../feature-catalog.js';
+import { FeatureIcon } from '../../components/ui/FeatureIcon.js';
 
 interface PasswordForm {
   currentPassword: string;
@@ -177,6 +182,52 @@ export function SettingsPage(): React.JSX.Element {
                 </option>
               ))}
             </select>
+          </div>
+        </section>
+
+        <section className="settings-card settings-card--wide">
+          <div className="settings-card__heading">
+            <span>
+              <Grid2X2 aria-hidden="true" />
+            </span>
+            <div>
+              <p className="eyebrow">侧边栏</p>
+              <h2>显示的功能模块</h2>
+            </div>
+          </div>
+          <p className="settings-card__description">
+            功能默认显示在侧边栏。隐藏后仍可从功能目录和搜索进入，数据不会受到影响。
+          </p>
+          <div className="feature-visibility-list">
+            {featureCatalog.map((feature) => {
+              const visible = !preferences.hiddenFeatureIds.includes(feature.featureId);
+              return (
+                <label className="feature-visibility-row" key={feature.featureId}>
+                  <span className="feature-visibility-row__icon">
+                    <FeatureIcon name={feature.icon} size={20} />
+                  </span>
+                  <span>
+                    <strong>{feature.name}</strong>
+                    <small>{visible ? '显示在侧边栏' : '已从侧边栏隐藏'}</small>
+                  </span>
+                  <span className="feature-visibility-row__state" aria-hidden="true">
+                    {visible ? <Eye size={17} /> : <EyeOff size={17} />}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={visible}
+                    disabled={saving}
+                    aria-label={`在侧边栏显示${feature.name}`}
+                    onChange={() => {
+                      const hiddenFeatureIds = visible
+                        ? [...preferences.hiddenFeatureIds, feature.featureId]
+                        : preferences.hiddenFeatureIds.filter((id) => id !== feature.featureId);
+                      void updatePreference('hiddenFeatureIds', hiddenFeatureIds);
+                    }}
+                  />
+                </label>
+              );
+            })}
           </div>
         </section>
 
