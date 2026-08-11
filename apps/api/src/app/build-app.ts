@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import cookie from '@fastify/cookie';
 import helmet from '@fastify/helmet';
+import multipart from '@fastify/multipart';
 import swagger from '@fastify/swagger';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { AppConfig } from '../config.js';
@@ -9,6 +10,8 @@ import { registerAuthenticationHooks, registerAuthRoutes } from '../platform/aut
 import { AuthService } from '../platform/auth/service.js';
 import type { Database } from '../platform/database/types.js';
 import { AppError } from '../platform/errors.js';
+import { registerFileRoutes } from '../platform/files/routes.js';
+import { FileStorageService } from '../platform/files/service.js';
 import { NotificationRepository } from '../platform/notifications/repository.js';
 import { PreferencesRepository } from '../platform/preferences/repository.js';
 import { registerWorkbenchRoutes } from './workbench-routes.js';
@@ -45,6 +48,9 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   await app.register(cookie);
+  await app.register(multipart, {
+    limits: { files: 1, fileSize: 50 * 1024 * 1024, fields: 5 },
+  });
   await app.register(helmet, {
     contentSecurityPolicy: {
       directives: {
@@ -77,8 +83,9 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const authRepository = new AuthRepository(database);
   const authService = new AuthService(authRepository, config);
   const notifications = new NotificationRepository(database, config.workspaceId);
+  const files = new FileStorageService(database, config);
   const preferences = new PreferencesRepository(database, config.workspaceId);
-  const features = createFeatureRegistry(database, notifications);
+  const features = createFeatureRegistry(database, notifications, files);
   const contributions = features.map((feature) => feature.contribution);
   const workbench = new WorkbenchService(contributions, preferences);
 
@@ -102,6 +109,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   await registerAuthRoutes(app, config, authService);
+  await registerFileRoutes(app, files);
   for (const feature of features) await feature.registerRoutes(app);
   await registerWorkbenchRoutes(app, {
     config,

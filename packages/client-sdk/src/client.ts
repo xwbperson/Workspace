@@ -1,9 +1,29 @@
 import type {
   ApiErrorBody,
+  Book,
+  BookChapter,
+  BookChapterInput,
+  BookChapterUpdateInput,
+  BookInput,
+  BookListResponse,
+  BookReadingStatus,
+  BookUpdateInput,
   Countdown,
   CountdownInput,
   CountdownUpdateInput,
   CurrentSessionResponse,
+  Course,
+  CourseAssignment,
+  CourseAssignmentInput,
+  CourseAssignmentUpdateInput,
+  CourseClassRecord,
+  CourseClassRecordInput,
+  CourseClassRecordUpdateInput,
+  CourseInput,
+  CourseListResponse,
+  CourseMaterial,
+  CourseMaterialGroup,
+  CourseUpdateInput,
   FeatureRuntimeState,
   LoginInput,
   LoginResponse,
@@ -13,6 +33,7 @@ import type {
   QuickCreateActionDefinition,
   SearchResponse,
   SessionView,
+  StoredFile,
   SystemStatus,
   WorkbenchNotification,
   WorkbenchPreferences,
@@ -238,5 +259,257 @@ export class WorkbenchClient {
       method: 'DELETE',
       body: { version },
     });
+  }
+
+  public async uploadFile(file: File): Promise<StoredFile> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    const response = await fetch(`${this.baseUrl}/files`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'X-CSRF-Token': await this.ensureCsrfToken(),
+      },
+      credentials: 'same-origin',
+      body: form,
+    });
+    if (!response.ok) {
+      let body: Partial<ApiErrorBody> | undefined;
+      try {
+        body = (await response.json()) as Partial<ApiErrorBody>;
+      } catch {
+        body = undefined;
+      }
+      throw new ApiClientError(response.status, body);
+    }
+    return (await response.json()) as StoredFile;
+  }
+
+  public getBooks(
+    options: {
+      archived?: boolean;
+      readingStatus?: BookReadingStatus;
+      limit?: number;
+    } = {},
+  ): Promise<BookListResponse> {
+    const query = new URLSearchParams();
+    if (options.archived !== undefined) query.set('archived', String(options.archived));
+    if (options.readingStatus) query.set('readingStatus', options.readingStatus);
+    if (options.limit) query.set('limit', String(options.limit));
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return this.request(`/books${suffix}`);
+  }
+
+  public getBook(id: string): Promise<Book> {
+    return this.request(`/books/${encodeURIComponent(id)}`);
+  }
+
+  public createBook(input: BookInput): Promise<Book> {
+    return this.request('/books', { method: 'POST', body: input });
+  }
+
+  public updateBook(id: string, input: BookUpdateInput): Promise<Book> {
+    return this.request(`/books/${encodeURIComponent(id)}`, { method: 'PUT', body: input });
+  }
+
+  public archiveBook(id: string, version: number): Promise<void> {
+    return this.request(`/books/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public restoreBook(id: string, version: number): Promise<Book> {
+    return this.request(`/books/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public deleteBookPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/books/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public createBookChapter(bookId: string, input: BookChapterInput): Promise<BookChapter> {
+    return this.request(`/books/${encodeURIComponent(bookId)}/chapters`, {
+      method: 'POST',
+      body: input,
+    });
+  }
+
+  public getBookChapter(bookId: string, chapterId: string): Promise<BookChapter> {
+    return this.request(
+      `/books/${encodeURIComponent(bookId)}/chapters/${encodeURIComponent(chapterId)}`,
+    );
+  }
+
+  public updateBookChapter(
+    bookId: string,
+    chapterId: string,
+    input: BookChapterUpdateInput,
+  ): Promise<BookChapter> {
+    return this.request(
+      `/books/${encodeURIComponent(bookId)}/chapters/${encodeURIComponent(chapterId)}`,
+      { method: 'PUT', body: input },
+    );
+  }
+
+  public deleteBookChapter(bookId: string, chapterId: string, version: number): Promise<void> {
+    return this.request(
+      `/books/${encodeURIComponent(bookId)}/chapters/${encodeURIComponent(chapterId)}`,
+      { method: 'DELETE', body: { version } },
+    );
+  }
+
+  public getCourses(
+    options: { archived?: boolean; limit?: number } = {},
+  ): Promise<CourseListResponse> {
+    const query = new URLSearchParams();
+    if (options.archived !== undefined) query.set('archived', String(options.archived));
+    if (options.limit) query.set('limit', String(options.limit));
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return this.request(`/courses${suffix}`);
+  }
+
+  public getCourse(id: string): Promise<Course> {
+    return this.request(`/courses/${encodeURIComponent(id)}`);
+  }
+
+  public createCourse(input: CourseInput): Promise<Course> {
+    return this.request('/courses', { method: 'POST', body: input });
+  }
+
+  public updateCourse(id: string, input: CourseUpdateInput): Promise<Course> {
+    return this.request(`/courses/${encodeURIComponent(id)}`, { method: 'PUT', body: input });
+  }
+
+  public archiveCourse(id: string, version: number): Promise<void> {
+    return this.request(`/courses/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public restoreCourse(id: string, version: number): Promise<Course> {
+    return this.request(`/courses/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public deleteCoursePermanently(id: string, version: number): Promise<void> {
+    return this.request(`/courses/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public createCourseClassRecord(
+    courseId: string,
+    input: CourseClassRecordInput,
+  ): Promise<CourseClassRecord> {
+    return this.request(`/courses/${encodeURIComponent(courseId)}/class-records`, {
+      method: 'POST',
+      body: input,
+    });
+  }
+
+  public updateCourseClassRecord(
+    courseId: string,
+    recordId: string,
+    input: CourseClassRecordUpdateInput,
+  ): Promise<CourseClassRecord> {
+    return this.request(
+      `/courses/${encodeURIComponent(courseId)}/class-records/${encodeURIComponent(recordId)}`,
+      { method: 'PUT', body: input },
+    );
+  }
+
+  public deleteCourseClassRecord(
+    courseId: string,
+    recordId: string,
+    version: number,
+  ): Promise<void> {
+    return this.request(
+      `/courses/${encodeURIComponent(courseId)}/class-records/${encodeURIComponent(recordId)}`,
+      { method: 'DELETE', body: { version } },
+    );
+  }
+
+  public createCourseAssignment(
+    courseId: string,
+    input: CourseAssignmentInput,
+  ): Promise<CourseAssignment> {
+    return this.request(`/courses/${encodeURIComponent(courseId)}/assignments`, {
+      method: 'POST',
+      body: input,
+    });
+  }
+
+  public updateCourseAssignment(
+    courseId: string,
+    assignmentId: string,
+    input: CourseAssignmentUpdateInput,
+  ): Promise<CourseAssignment> {
+    return this.request(
+      `/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}`,
+      { method: 'PUT', body: input },
+    );
+  }
+
+  public deleteCourseAssignment(
+    courseId: string,
+    assignmentId: string,
+    version: number,
+  ): Promise<void> {
+    return this.request(
+      `/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}`,
+      { method: 'DELETE', body: { version } },
+    );
+  }
+
+  public createCourseMaterialGroup(
+    courseId: string,
+    input: { name: string; position?: number },
+  ): Promise<CourseMaterialGroup> {
+    return this.request(`/courses/${encodeURIComponent(courseId)}/material-groups`, {
+      method: 'POST',
+      body: input,
+    });
+  }
+
+  public deleteCourseMaterialGroup(
+    courseId: string,
+    groupId: string,
+    version: number,
+  ): Promise<void> {
+    return this.request(
+      `/courses/${encodeURIComponent(courseId)}/material-groups/${encodeURIComponent(groupId)}`,
+      { method: 'DELETE', body: { version } },
+    );
+  }
+
+  public createCourseMaterial(
+    courseId: string,
+    input: { fileId: string; groupId?: string | null; label?: string; position?: number },
+  ): Promise<CourseMaterial> {
+    return this.request(`/courses/${encodeURIComponent(courseId)}/materials`, {
+      method: 'POST',
+      body: input,
+    });
+  }
+
+  public deleteCourseMaterial(
+    courseId: string,
+    materialId: string,
+    version: number,
+  ): Promise<void> {
+    return this.request(
+      `/courses/${encodeURIComponent(courseId)}/materials/${encodeURIComponent(materialId)}`,
+      { method: 'DELETE', body: { version } },
+    );
   }
 }

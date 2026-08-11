@@ -1,4 +1,4 @@
-export type IconName = 'timer';
+export type IconName = 'timer' | 'book-open' | 'graduation-cap';
 export type FeatureCategory =
   | 'planning-execution'
   | 'notes-knowledge'
@@ -51,6 +51,46 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
       search: true,
       quickCreate: true,
       notifications: true,
+    },
+  },
+  {
+    featureId: 'books',
+    name: '书籍管理',
+    description: '管理书目、章节页码与阅读进度。',
+    icon: 'book-open',
+    route: '/features/books',
+    category: 'notes-knowledge',
+    keywords: ['书籍', '阅读', '章节', 'ISBN', '进度', '参考书'],
+    order: 20,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    canPin: true,
+    capabilities: {
+      recent: true,
+      overviewBlocks: true,
+      search: true,
+      quickCreate: true,
+    },
+  },
+  {
+    featureId: 'courses',
+    name: '课程管理',
+    description: '管理课程、上课记录、作业、资料和大纲。',
+    icon: 'graduation-cap',
+    route: '/features/courses',
+    category: 'planning-execution',
+    keywords: ['课程', '教师', '学分', '学时', '作业', '教学大纲', '资料'],
+    order: 30,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    canPin: true,
+    capabilities: {
+      focusCandidates: true,
+      upcoming: true,
+      recent: true,
+      overviewBlocks: true,
+      search: true,
+      quickCreate: true,
     },
   },
 ] as const;

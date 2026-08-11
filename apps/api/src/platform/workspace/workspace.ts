@@ -66,7 +66,11 @@ export async function initializeWorkspace(config: AppConfig): Promise<WorkspaceM
       stringifyYaml({
         workspaceId: config.workspaceId,
         formatVersion: 1,
-        features: { countdowns: { enabled: true } },
+        features: {
+          countdowns: { enabled: true },
+          books: { enabled: true },
+          courses: { enabled: true },
+        },
       }),
       { encoding: 'utf8', flag: 'wx' },
     );

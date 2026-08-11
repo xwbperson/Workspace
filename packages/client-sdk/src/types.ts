@@ -229,3 +229,224 @@ export interface PaginatedCountdowns {
   items: Countdown[];
   nextCursor?: string;
 }
+
+export interface StoredFile {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  createdAt: string;
+  contentUrl: string;
+}
+
+export type BookReadingStatus = 'to-read' | 'reading' | 'read' | 'abandoned';
+
+export interface ReadingProgress {
+  readPages: number;
+  totalPages: number;
+  percentage: number;
+}
+
+export interface BookChapter extends ReadingProgress {
+  id: string;
+  bookId: string;
+  title: string;
+  startPage: number;
+  endPage: number;
+  currentPage: number;
+  notes: string;
+  position: number;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  subtitle: string;
+  originalTitle: string;
+  author: string;
+  translator: string;
+  isbn: string;
+  publisher: string;
+  publishDate: string | null;
+  edition: string;
+  series: string;
+  language: string;
+  format: string;
+  pageCount: number;
+  description: string;
+  notes: string;
+  readingStatus: BookReadingStatus;
+  startedAt: string | null;
+  finishedAt: string | null;
+  cover?: StoredFile;
+  archived: boolean;
+  progress: ReadingProgress;
+  chapterCount: number;
+  chapters?: BookChapter[];
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BookInput {
+  title: string;
+  subtitle?: string;
+  originalTitle?: string;
+  author?: string;
+  translator?: string;
+  isbn?: string;
+  publisher?: string;
+  publishDate?: string | null;
+  edition?: string;
+  series?: string;
+  language?: string;
+  format?: string;
+  pageCount?: number;
+  description?: string;
+  notes?: string;
+  readingStatus?: BookReadingStatus;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  coverFileId?: string | null;
+}
+
+export interface BookUpdateInput extends Partial<BookInput> {
+  version: number;
+}
+
+export interface BookChapterInput {
+  title: string;
+  startPage: number;
+  endPage: number;
+  currentPage?: number;
+  notes?: string;
+  position?: number;
+}
+
+export interface BookChapterUpdateInput extends Partial<BookChapterInput> {
+  version: number;
+}
+
+export interface BookListResponse {
+  items: Book[];
+}
+
+export type AssignmentStatus = 'pending' | 'in-progress' | 'completed' | 'abandoned';
+
+export interface CourseReferenceBook {
+  id: string;
+  title: string;
+  author: string;
+  edition: string;
+  isbn: string;
+  readingStatus: BookReadingStatus;
+  archived: boolean;
+  progress: ReadingProgress;
+  targetRoute: string;
+}
+
+export interface CourseClassRecord {
+  id: string;
+  courseId: string;
+  occurredAt: string;
+  content: string;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CourseAssignment {
+  id: string;
+  courseId: string;
+  title: string;
+  description: string;
+  dueAt?: string;
+  status: AssignmentStatus;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CourseMaterialGroup {
+  id: string;
+  courseId: string;
+  name: string;
+  position: number;
+  version: number;
+}
+
+export interface CourseMaterial {
+  id: string;
+  courseId: string;
+  groupId: string | null;
+  label: string;
+  position: number;
+  version: number;
+  file: StoredFile;
+}
+
+export interface Course {
+  id: string;
+  name: string;
+  instructor: string;
+  courseCode: string;
+  credits: number;
+  totalHours: number;
+  objectives: string;
+  description: string;
+  schedule: string;
+  syllabus?: StoredFile;
+  archived: boolean;
+  referenceBooks?: CourseReferenceBook[];
+  classRecords?: CourseClassRecord[];
+  assignments?: CourseAssignment[];
+  materialGroups?: CourseMaterialGroup[];
+  materials?: CourseMaterial[];
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CourseInput {
+  name: string;
+  instructor?: string;
+  courseCode?: string;
+  credits?: number;
+  totalHours?: number;
+  objectives?: string;
+  description?: string;
+  schedule?: string;
+  syllabusFileId?: string | null;
+  referenceBookIds?: string[];
+}
+
+export interface CourseUpdateInput extends Partial<CourseInput> {
+  version: number;
+}
+
+export interface CourseClassRecordInput {
+  occurredAt: string;
+  content: string;
+}
+
+export interface CourseClassRecordUpdateInput extends Partial<CourseClassRecordInput> {
+  version: number;
+}
+
+export interface CourseAssignmentInput {
+  title: string;
+  description?: string;
+  dueAt?: string | null;
+  status?: AssignmentStatus;
+}
+
+export interface CourseAssignmentUpdateInput extends Partial<CourseAssignmentInput> {
+  version: number;
+}
+
+export interface CourseListResponse {
+  items: Course[];
+}
