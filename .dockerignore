@@ -1,0 +1,14 @@
+.git
+.github
+.workbench
+workbench-data
+node_modules
+**/dist
+**/coverage
+**/*.tsbuildinfo
+.env
+.env.*
+!.env.example
+infra/secrets
+test-results
+playwright-report

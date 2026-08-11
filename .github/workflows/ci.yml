@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run openapi:generate
+      - name: Generated contracts are current
+        run: git diff --exit-code -- contracts/openapi.json packages/client-sdk/src/generated/openapi.d.ts
+      - run: npm run check
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org
+
+  real-postgres-restore:
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_DB: workbench_ci
+          POSTGRES_USER: workbench
+          POSTGRES_PASSWORD: workbench_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U workbench -d workbench_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI_POSTGRES_VALIDATION: 'true'
+      DATABASE_URL: postgres://workbench:workbench_ci_password@127.0.0.1:5432/workbench_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: npm ci
+      - run: npm run validate:postgres
+
+  containers:
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose model
+        env:
+          DOMAIN: workbench.example.com
+        run: |
+          mkdir -p infra/secrets
+          printf '%s\n' 'ci-compose-secret' > infra/secrets/postgres_password.txt
+          docker compose -f infra/compose.yaml config --quiet
+      - run: docker build --file infra/Dockerfile.api --tag workbench-api:ci .
+      - run: docker build --file infra/Dockerfile.web --tag workbench-web:ci .

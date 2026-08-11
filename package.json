@@ -1,0 +1,49 @@
+{
+  "name": "personal-workbench",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @workspace/client-sdk && npm run build -w @workspace/api && npm run build -w @workspace/web",
+    "typecheck": "npm run typecheck -w @workspace/client-sdk && npm run build -w @workspace/client-sdk && npm run typecheck -w @workspace/api && npm run typecheck -w @workspace/web",
+    "lint": "eslint . --max-warnings=0",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
+    "test": "npm run test --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "predev": "npm run build -w @workspace/client-sdk",
+    "dev": "concurrently -n api,web -c green,cyan \"npm run dev -w @workspace/api\" \"npm run dev -w @workspace/web\"",
+    "predev:test": "npm run build -w @workspace/client-sdk",
+    "dev:test": "concurrently -n api,web -c green,cyan \"npm run dev:test -w @workspace/api\" \"npm run dev -w @workspace/web\"",
+    "db:migrate": "npm run cli -w @workspace/api -- db migrate",
+    "workspace:init": "npm run cli -w @workspace/api -- workspace init",
+    "auth:init": "npm run cli -w @workspace/api -- auth init-owner",
+    "auth:reset": "npm run cli -w @workspace/api -- auth reset-owner-password",
+    "backup:create": "npm run cli -w @workspace/api -- backup create",
+    "backup:verify": "npm run cli -w @workspace/api -- backup verify",
+    "backup:restore": "npm run cli -w @workspace/api -- backup restore",
+    "openapi:generate": "npm run openapi:generate -w @workspace/api && npm run generate -w @workspace/client-sdk && prettier --write contracts/openapi.json packages/client-sdk/src/generated/openapi.d.ts",
+    "validate:postgres": "tsx scripts/validate-real-postgres.ts",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^22.19.1",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-import-x": "^4.16.1",
+    "prettier": "^3.7.4",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.52.0",
+    "vitest": "^4.1.10"
+  }
+}
