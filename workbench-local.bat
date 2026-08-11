@@ -108,12 +108,23 @@ exit /b 0
 
 :controller_running
 powershell -NoLogo -NoProfile -Command ^
-  "$path=$env:PW_LOCAL_PID_FILE; if(-not (Test-Path -LiteralPath $path)){exit 1}; $raw=(Get-Content -Raw -LiteralPath $path).Trim(); $id=0; if(-not [int]::TryParse($raw,[ref]$id)){exit 1}; if(Get-Process -Id $id -ErrorAction SilentlyContinue){exit 0}; exit 1"
+  "$path=$env:PW_LOCAL_PID_FILE; if(-not (Test-Path -LiteralPath $path)){exit 1}; $raw=(Get-Content -Raw -LiteralPath $path).Trim(); $id=0; if(-not [int]::TryParse($raw,[ref]$id)){exit 1}; $process=Get-CimInstance Win32_Process -Filter ('ProcessId = '+$id) -ErrorAction SilentlyContinue; if(-not $process -or $process.Name -ne 'cmd.exe' -or -not $process.CommandLine){exit 1}; $expected=$env:PW_LOCAL_SCRIPT; if($process.CommandLine.IndexOf($expected,[StringComparison]::OrdinalIgnoreCase) -lt 0 -or $process.CommandLine -notmatch '(?i)\sserve(?:\s|$)'){exit 1}; exit 0"
 exit /b %errorlevel%
 
 :ports_available
 powershell -NoLogo -NoProfile -Command ^
-  "$ports=@(%API_PORT%,%WEB_PORT%); $used=@(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue ^| Where-Object LocalPort -In $ports); if($used.Count -gt 0){exit 1}; exit 0"
+  "foreach($port in @(%API_PORT%,%WEB_PORT%)){if(Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue){exit 1}}; exit 0"
+exit /b %errorlevel%
+
+:wait_until_ready
+powershell -NoLogo -NoProfile -Command ^
+  "$deadline=(Get-Date).AddSeconds(60); do { $api=Get-NetTCPConnection -State Listen -LocalPort %API_PORT% -ErrorAction SilentlyContinue; $web=Get-NetTCPConnection -State Listen -LocalPort %WEB_PORT% -ErrorAction SilentlyContinue; if($api -and $web){exit 0}; Start-Sleep -Milliseconds 500 } while((Get-Date) -lt $deadline); exit 1"
+exit /b %errorlevel%
+
+:login_password_valid
+if not exist "%PASSWORD_FILE%" exit /b 1
+powershell -NoLogo -NoProfile -Command ^
+  "$ErrorActionPreference='Stop'; try { $password=(Get-Content -Raw -LiteralPath $env:PW_LOCAL_PASSWORD_FILE).Trim(); if(-not $password){exit 1}; $origin='%APP_URL%'; $session=New-Object Microsoft.PowerShell.Commands.WebRequestSession; $csrf=Invoke-RestMethod -UseBasicParsing -Uri 'http://127.0.0.1:%API_PORT%/api/v1/auth/csrf' -Headers @{Origin=$origin} -WebSession $session; $body=@{username='owner';password=$password;remember=$false} | ConvertTo-Json -Compress; $null=Invoke-RestMethod -UseBasicParsing -Uri 'http://127.0.0.1:%API_PORT%/api/v1/auth/login' -Method Post -ContentType 'application/json' -Headers @{Origin=$origin;'x-csrf-token'=$csrf.csrfToken} -Body $body -WebSession $session; try {$null=Invoke-RestMethod -UseBasicParsing -Uri 'http://127.0.0.1:%API_PORT%/api/v1/auth/logout' -Method Post -Headers @{Origin=$origin;'x-csrf-token'=$csrf.csrfToken} -WebSession $session} catch {}; exit 0 } catch { exit 1 }"
 exit /b %errorlevel%
 
 :clear_temporary_data
@@ -140,13 +151,21 @@ if errorlevel 1 exit /b 1
 
 call :controller_running
 if not errorlevel 1 (
-  echo [INFO] The workbench is already running.
-  call :show_status
-  start "" "%APP_URL%"
-  exit /b 0
+  call :wait_until_ready
+  if not errorlevel 1 call :login_password_valid
+  if not errorlevel 1 (
+    echo [INFO] The workbench is already running.
+    call :show_status
+    start "" "%APP_URL%"
+    exit /b 0
+  )
+  echo [WARNING] The recorded local server does not accept its saved password. Restarting it...
+  call :stop_workbench
+  if errorlevel 1 exit /b 1
 )
 
 if exist "%PID_FILE%" del /q "%PID_FILE%" >nul 2>&1
+if exist "%PASSWORD_FILE%" del /q "%PASSWORD_FILE%" >nul 2>&1
 call :ports_available
 if errorlevel 1 (
   echo [ERROR] Port %API_PORT% or %WEB_PORT% is already in use. Startup was cancelled.
@@ -185,11 +204,17 @@ if errorlevel 1 (
   exit /b 1
 )
 
-powershell -NoLogo -NoProfile -Command ^
-  "$deadline=(Get-Date).AddSeconds(60); do { $api=Get-NetTCPConnection -State Listen -LocalPort %API_PORT% -ErrorAction SilentlyContinue; $web=Get-NetTCPConnection -State Listen -LocalPort %WEB_PORT% -ErrorAction SilentlyContinue; if($api -and $web){exit 0}; Start-Sleep -Milliseconds 500 } while((Get-Date) -lt $deadline); exit 1"
+call :wait_until_ready
 if errorlevel 1 (
   echo [ERROR] Startup timed out. Open the minimized "Personal Workbench Local Server" window for details.
   call :show_status
+  exit /b 1
+)
+
+call :login_password_valid
+if errorlevel 1 (
+  echo [ERROR] The API did not accept the generated temporary password. Startup was cancelled.
+  call :stop_workbench
   exit /b 1
 )
 
@@ -236,8 +261,10 @@ exit /b 0
 :show_status
 echo.
 echo ---------------- Current status ----------------
+call :controller_running
+set "PW_LOCAL_CONTROLLER_VALID=%errorlevel%"
 powershell -NoLogo -NoProfile -Command ^
-  "$pidPath=$env:PW_LOCAL_PID_FILE; $controller=$null; if(Test-Path -LiteralPath $pidPath){$raw=(Get-Content -Raw -LiteralPath $pidPath).Trim(); $id=0; if([int]::TryParse($raw,[ref]$id)){$controller=Get-Process -Id $id -ErrorAction SilentlyContinue}}; if($controller){Write-Host ('Controller: running (PID {0})' -f $controller.Id)}else{Write-Host 'Controller: not running'}; foreach($item in @(@(%API_PORT%,'API'),@(%WEB_PORT%,'Web'))){$port=[int]$item[0]; $label=$item[1]; $listeners=@(Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue); if($listeners.Count -eq 0){Write-Host ('{0} port {1}: not listening' -f $label,$port)}else{foreach($listener in $listeners){$name=(Get-Process -Id $listener.OwningProcess -ErrorAction SilentlyContinue).ProcessName; if(-not $name){$name='unknown process'}; Write-Host ('{0} port {1}: listening (PID {2}, {3})' -f $label,$port,$listener.OwningProcess,$name)}}}; if($controller -and (Test-Path -LiteralPath $env:PW_LOCAL_PASSWORD_FILE)){Write-Host ('Login: owner / '+(Get-Content -Raw -LiteralPath $env:PW_LOCAL_PASSWORD_FILE).Trim())}"
+  "$pidPath=$env:PW_LOCAL_PID_FILE; $controller=$null; if($env:PW_LOCAL_CONTROLLER_VALID -eq '0' -and (Test-Path -LiteralPath $pidPath)){$raw=(Get-Content -Raw -LiteralPath $pidPath).Trim(); $id=0; if([int]::TryParse($raw,[ref]$id)){$controller=Get-Process -Id $id -ErrorAction SilentlyContinue}}; if($controller){Write-Host ('Controller: running (PID {0})' -f $controller.Id)}else{Write-Host 'Controller: not running'}; foreach($item in @(@(%API_PORT%,'API'),@(%WEB_PORT%,'Web'))){$port=[int]$item[0]; $label=$item[1]; $listeners=@(Get-NetTCPConnection -State Listen -LocalPort $port -ErrorAction SilentlyContinue); if($listeners.Count -eq 0){Write-Host ('{0} port {1}: not listening' -f $label,$port)}else{foreach($listener in $listeners){$name=(Get-Process -Id $listener.OwningProcess -ErrorAction SilentlyContinue).ProcessName; if(-not $name){$name='unknown process'}; Write-Host ('{0} port {1}: listening (PID {2}, {3})' -f $label,$port,$listener.OwningProcess,$name)}}}; if($controller -and (Test-Path -LiteralPath $env:PW_LOCAL_PASSWORD_FILE)){Write-Host ('Login: owner / '+(Get-Content -Raw -LiteralPath $env:PW_LOCAL_PASSWORD_FILE).Trim())}"
 echo ------------------------------------------
 exit /b 0
 
