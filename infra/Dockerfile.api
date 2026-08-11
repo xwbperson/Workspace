@@ -29,7 +29,9 @@ WORKDIR /app
 ENV NODE_ENV=production \
     API_HOST=0.0.0.0 \
     API_PORT=3000 \
-    WORKBENCH_ROOT=/srv/workbench
+    WORKBENCH_ROOT=/srv/workbench \
+    PG_DUMP_BIN=/usr/lib/postgresql/17/bin/pg_dump \
+    PG_RESTORE_BIN=/usr/lib/postgresql/17/bin/pg_restore
 
 COPY --from=build --chown=node:node /app/package.json /app/package-lock.json ./
 COPY --from=build --chown=node:node /app/node_modules ./node_modules

@@ -51,6 +51,8 @@ jobs:
     env:
       CI_POSTGRES_VALIDATION: 'true'
       DATABASE_URL: postgres://workbench:workbench_ci_password@127.0.0.1:5432/workbench_ci
+      PG_DUMP_BIN: /usr/lib/postgresql/17/bin/pg_dump
+      PG_RESTORE_BIN: /usr/lib/postgresql/17/bin/pg_restore
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -68,7 +70,7 @@ jobs:
             | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17
-          pg_dump --version
+          "$PG_DUMP_BIN" --version
       - run: npm ci
       - run: npm run validate:postgres
 
