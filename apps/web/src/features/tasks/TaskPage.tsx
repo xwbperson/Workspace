@@ -437,8 +437,8 @@ function TaskDetail({
 }): React.JSX.Element {
   return (
     <div className="entity-detail task-detail">
-      <button type="button" className="mobile-back" onClick={onBack}>
-        <ArrowLeft size={17} /> 返回任务
+      <button type="button" className="button button--quiet mobile-back" onClick={onBack}>
+        <ArrowLeft aria-hidden="true" size={17} /> 返回任务
       </button>
       <header className="entity-detail__header">
         <div>

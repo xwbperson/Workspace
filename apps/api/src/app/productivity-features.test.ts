@@ -540,6 +540,21 @@ describe('productivity feature vertical slices', () => {
     ).toBe(204);
   });
 
+  it('collects information and other inbox content types', async () => {
+    for (const [type, title] of [
+      ['information', '课程调整信息'],
+      ['other', '暂未分类内容'],
+    ] as const) {
+      const response = await inject({
+        method: 'POST',
+        url: '/api/v1/inbox-items',
+        payload: { type, title },
+      });
+      expect(response.statusCode, response.body).toBe(201);
+      expect(response.json()).toMatchObject({ type, title });
+    }
+  });
+
   it('tracks subscription cost, billing cycle and renewal lifecycle', async () => {
     const created = await inject({
       method: 'POST',

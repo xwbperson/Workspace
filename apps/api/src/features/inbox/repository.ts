@@ -37,7 +37,7 @@ interface InboxItemDatabaseRow {
   updated_at: Date;
 }
 
-const COLUMNS = `i.id,i.type,i.title,i.content,i.url,i.file_id,
+const COLUMNS = `i.id,i.content_type AS type,i.title,i.content,i.url,i.file_id,
   f.original_name AS file_original_name,f.mime_type AS file_mime_type,
   f.size_bytes AS file_size,f.created_at AS file_created_at,
   i.status,i.archived_from_status,i.version,i.created_at,i.updated_at`;
@@ -117,10 +117,11 @@ export class InboxRepository {
   public async create(row: InboxItemRow): Promise<InboxItemRow> {
     await this.database.query(
       `INSERT INTO inbox_items
-         (id,type,title,content,url,file_id,status,archived_from_status,version,created_at,updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+         (id,type,content_type,title,content,url,file_id,status,archived_from_status,version,created_at,updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
       [
         row.id,
+        legacyInboxType(row.type),
         row.type,
         row.title,
         row.content,
@@ -138,11 +139,12 @@ export class InboxRepository {
 
   public async update(row: InboxItemRow, version: number): Promise<InboxItemRow | null> {
     const result = await this.database.query(
-      `UPDATE inbox_items SET type=$2,title=$3,content=$4,url=$5,file_id=$6,status=$7,
-         archived_from_status=NULL,version=version+1,updated_at=$8
-       WHERE id=$1 AND version=$9 AND status<>'archived'`,
+      `UPDATE inbox_items SET type=$2,content_type=$3,title=$4,content=$5,url=$6,file_id=$7,status=$8,
+         archived_from_status=NULL,version=version+1,updated_at=$9
+       WHERE id=$1 AND version=$10 AND status<>'archived'`,
       [
         row.id,
+        legacyInboxType(row.type),
         row.type,
         row.title,
         row.content,
@@ -198,4 +200,10 @@ export class InboxRepository {
     );
     return result.rows.map(mapRow);
   }
+}
+
+function legacyInboxType(type: InboxItemType): Exclude<InboxItemType, 'information' | 'other'> {
+  if (type === 'information') return 'snippet';
+  if (type === 'other') return 'idea';
+  return type;
 }

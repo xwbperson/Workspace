@@ -3166,7 +3166,16 @@
                 "properties": {
                   "type": {
                     "type": "string",
-                    "enum": ["idea", "inspiration", "snippet", "article", "link", "file"]
+                    "enum": [
+                      "idea",
+                      "inspiration",
+                      "snippet",
+                      "article",
+                      "link",
+                      "file",
+                      "information",
+                      "other"
+                    ]
                   },
                   "title": {
                     "type": "string",
@@ -3239,7 +3248,16 @@
                 "properties": {
                   "type": {
                     "type": "string",
-                    "enum": ["idea", "inspiration", "snippet", "article", "link", "file"]
+                    "enum": [
+                      "idea",
+                      "inspiration",
+                      "snippet",
+                      "article",
+                      "link",
+                      "file",
+                      "information",
+                      "other"
+                    ]
                   },
                   "title": {
                     "type": "string",

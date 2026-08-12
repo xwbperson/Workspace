@@ -278,8 +278,8 @@ function SubscriptionDetail({
 }): React.JSX.Element {
   return (
     <article className="entity-detail subscription-detail">
-      <button className="mobile-back" onClick={onBack}>
-        <ArrowLeft size={17} />
+      <button type="button" className="button button--quiet mobile-back" onClick={onBack}>
+        <ArrowLeft aria-hidden="true" size={17} />
         返回订阅
       </button>
       <header className="entity-detail__header">

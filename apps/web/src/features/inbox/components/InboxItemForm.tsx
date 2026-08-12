@@ -9,6 +9,8 @@ export const inboxTypeLabels: Record<InboxItemType, string> = {
   article: '文章',
   link: '网址',
   file: '文件',
+  information: '信息',
+  other: '其他',
 };
 export function InboxItemForm({
   item,

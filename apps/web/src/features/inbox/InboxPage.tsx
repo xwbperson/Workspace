@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   Check,
   FileText,
+  Info,
   Inbox,
   Lightbulb,
   Link2,
@@ -19,6 +20,7 @@ import {
   Plus,
   RotateCcw,
   Sparkles,
+  Shapes,
   Trash2,
   Edit3,
 } from 'lucide-react';
@@ -43,6 +45,8 @@ function TypeIcon({ type, size = 19 }: { type: InboxItemType; size?: number }): 
   if (type === 'snippet') return <MessageSquareQuote size={size} />;
   if (type === 'article') return <Newspaper size={size} />;
   if (type === 'link') return <Link2 size={size} />;
+  if (type === 'information') return <Info size={size} />;
+  if (type === 'other') return <Shapes size={size} />;
   return <FileText size={size} />;
 }
 
@@ -350,8 +354,8 @@ function InboxDetail({
 }): React.JSX.Element {
   return (
     <div className="entity-detail inbox-detail">
-      <button type="button" className="mobile-back" onClick={onBack}>
-        <ArrowLeft size={17} /> 返回收集箱
+      <button type="button" className="button button--quiet mobile-back" onClick={onBack}>
+        <ArrowLeft aria-hidden="true" size={17} /> 返回收集箱
       </button>
       <header className="entity-detail__header">
         <div>

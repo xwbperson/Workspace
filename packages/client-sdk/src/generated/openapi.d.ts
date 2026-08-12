@@ -2632,7 +2632,15 @@ export interface paths {
         content: {
           'application/json': {
             /** @enum {string} */
-            type: 'idea' | 'inspiration' | 'snippet' | 'article' | 'link' | 'file';
+            type:
+              | 'idea'
+              | 'inspiration'
+              | 'snippet'
+              | 'article'
+              | 'link'
+              | 'file'
+              | 'information'
+              | 'other';
             title: string;
             content?: string;
             url?: string;
@@ -2698,7 +2706,15 @@ export interface paths {
         content: {
           'application/json': {
             /** @enum {string} */
-            type?: 'idea' | 'inspiration' | 'snippet' | 'article' | 'link' | 'file';
+            type?:
+              | 'idea'
+              | 'inspiration'
+              | 'snippet'
+              | 'article'
+              | 'link'
+              | 'file'
+              | 'information'
+              | 'other';
             title?: string;
             content?: string;
             url?: string;

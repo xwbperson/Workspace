@@ -15,7 +15,10 @@ const versionBody = {
 } as const;
 const nullableUuid = { anyOf: [{ type: 'string', format: 'uuid' }, { type: 'null' }] } as const;
 const properties = {
-  type: { type: 'string', enum: ['idea', 'inspiration', 'snippet', 'article', 'link', 'file'] },
+  type: {
+    type: 'string',
+    enum: ['idea', 'inspiration', 'snippet', 'article', 'link', 'file', 'information', 'other'],
+  },
   title: { type: 'string', minLength: 1, maxLength: 240 },
   content: { type: 'string', maxLength: 50_000 },
   url: { type: 'string', maxLength: 4000 },

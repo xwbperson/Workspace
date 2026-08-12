@@ -6,6 +6,8 @@ describe('InboxItemForm', () => {
   it('submits a link with its URL into the unprocessed inbox', async () => {
     const onSubmit = vi.fn(async () => undefined);
     render(<InboxItemForm submitting={false} onUpload={vi.fn()} onSubmit={onSubmit} />);
+    expect(screen.getByRole('option', { name: '信息' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '其他' })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('内容类型'), { target: { value: 'link' } });
     fireEvent.change(screen.getByLabelText('标题'), { target: { value: 'PostgreSQL 文档' } });
     fireEvent.change(screen.getByLabelText('网址'), {

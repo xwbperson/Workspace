@@ -1652,6 +1652,23 @@
     background: var(--color-surface-muted);
   }
 
+  .mobile-back {
+    width: fit-content;
+    min-height: 38px;
+    justify-self: start;
+    padding: 8px 12px;
+    color: var(--color-text-secondary);
+    background: var(--color-surface-raised);
+    border-radius: 999px;
+    line-height: 1;
+  }
+
+  .mobile-back:hover:not(:disabled) {
+    color: var(--color-text);
+    background: var(--color-accent-soft);
+    border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  }
+
   .button--accent {
     color: var(--color-accent);
     background: var(--color-accent-soft);
@@ -3734,7 +3751,7 @@
 
   .book-card-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
   }
 

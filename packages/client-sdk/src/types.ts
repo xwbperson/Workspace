@@ -783,7 +783,8 @@ export interface TimetableOccurrenceListResponse {
   items: TimetableOccurrence[];
 }
 
-export type InboxItemType = 'idea' | 'inspiration' | 'snippet' | 'article' | 'link' | 'file';
+export type InboxItemType =
+  'idea' | 'inspiration' | 'snippet' | 'article' | 'link' | 'file' | 'information' | 'other';
 export type InboxItemStatus = 'inbox' | 'processed' | 'archived';
 
 export interface InboxItem {
