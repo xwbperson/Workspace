@@ -3159,9 +3159,12 @@ export interface paths {
         content: {
           'application/json': {
             /** @enum {string} */
-            type: 'cash' | 'alipay' | 'wechat' | 'bank' | 'digital-cny' | 'other';
-            name: string;
-            balance: number;
+            type: 'cash' | 'alipay' | 'wechat' | 'bank' | 'credit' | 'digital-cny' | 'other';
+            name?: string;
+            balance?: number;
+            cardNumber?: string;
+            phone?: string;
+            creditLimit?: number;
             note?: string;
           };
         };
@@ -3203,9 +3206,12 @@ export interface paths {
         content: {
           'application/json': {
             /** @enum {string} */
-            type?: 'cash' | 'alipay' | 'wechat' | 'bank' | 'digital-cny' | 'other';
+            type?: 'cash' | 'alipay' | 'wechat' | 'bank' | 'credit' | 'digital-cny' | 'other';
             name?: string;
             balance?: number;
+            cardNumber?: string;
+            phone?: string;
+            creditLimit?: number;
             note?: string;
             version: number;
           };

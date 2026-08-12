@@ -205,11 +205,12 @@ try {
     },
     '订阅',
   );
-  await createApiRecord(
+  const financeAccount = await createApiRecord<{ id: string }>(
     '/api/v1/finance/accounts',
     {
       type: 'bank',
       name: '真实 PostgreSQL 资金账户',
+      cardNumber: '6217000012345678',
       balance: 10000,
     },
     '资金账户',
@@ -478,6 +479,16 @@ try {
         value.owners !== 1
       ) {
         throw new Error(`恢复数据验收失败：${JSON.stringify(value)}`);
+      }
+      const restoredFinanceAccount = await restoredDatabase.query<{
+        card_number: string | null;
+        balance: string;
+      }>('SELECT card_number,balance FROM finance_accounts WHERE id=$1', [financeAccount.id]);
+      if (
+        restoredFinanceAccount.rows[0]?.card_number !== '6217000012345678' ||
+        Number(restoredFinanceAccount.rows[0]?.balance) !== 10000
+      ) {
+        throw new Error('恢复后的资金账户卡号或余额不一致。');
       }
       const storedFile = await restoredDatabase.query<{ storage_key: string }>(
         'SELECT storage_key FROM stored_files WHERE id=$1',

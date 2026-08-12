@@ -20,9 +20,15 @@ const versionBody = {
   properties: { version: { type: 'integer', minimum: 1 } },
 } as const;
 const accountProperties = {
-  type: { type: 'string', enum: ['cash', 'alipay', 'wechat', 'bank', 'digital-cny', 'other'] },
+  type: {
+    type: 'string',
+    enum: ['cash', 'alipay', 'wechat', 'bank', 'credit', 'digital-cny', 'other'],
+  },
   name: { type: 'string', minLength: 1, maxLength: 200 },
   balance: { type: 'number' },
+  cardNumber: { type: 'string', minLength: 1, maxLength: 100 },
+  phone: { type: 'string', minLength: 1, maxLength: 50 },
+  creditLimit: { type: 'number', minimum: 0 },
   note: { type: 'string', maxLength: 5000 },
 } as const;
 const platformProperties = {
@@ -79,7 +85,7 @@ export async function registerFinanceRoutes(
         body: {
           type: 'object',
           additionalProperties: false,
-          required: ['type', 'name', 'balance'],
+          required: ['type'],
           properties: accountProperties,
         },
       },

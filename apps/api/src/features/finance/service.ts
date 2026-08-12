@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type {
   FinanceAccount,
   FinanceAccountInput,
+  FinanceAccountType,
   FinanceAccountUpdateInput,
   FinanceDebtPlatform,
   FinanceDebtPlatformInput,
@@ -28,10 +29,75 @@ function text(value: string | undefined, name: string, max: number, required = f
     );
   return normalized;
 }
-function money(value: number, name: string, nonnegative = false): number {
-  if (!Number.isFinite(value) || (nonnegative && value < 0))
+function money(value: number | undefined, name: string, nonnegative = false): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || (nonnegative && value < 0))
     throw new AppError(400, 'INVALID_FINANCE_AMOUNT', `${name}无效。`);
   return Math.round(value * 100) / 100;
+}
+
+interface NormalizedAccountDetails {
+  type: FinanceAccountType;
+  name: string;
+  balance: number;
+  cardNumber: string | null;
+  phone: string | null;
+  creditLimit: number | null;
+  note: string;
+}
+
+function accountDetails(input: FinanceAccountInput): NormalizedAccountDetails {
+  const common = {
+    type: input.type,
+    note: text(input.note, '备注', 5000),
+  };
+  if (input.type === 'cash') {
+    return {
+      ...common,
+      name: '现金',
+      balance: money(input.balance, '余额'),
+      cardNumber: null,
+      phone: null,
+      creditLimit: null,
+    };
+  }
+  if (input.type === 'alipay' || input.type === 'wechat') {
+    return {
+      ...common,
+      name: input.type === 'alipay' ? '支付宝' : '微信',
+      balance: money(input.balance, '余额'),
+      cardNumber: null,
+      phone: text(input.phone, '手机号', 50, true),
+      creditLimit: null,
+    };
+  }
+  if (input.type === 'bank' || input.type === 'digital-cny') {
+    return {
+      ...common,
+      name: text(input.name, '名称', 200, true),
+      balance: money(input.balance, '余额'),
+      cardNumber: text(input.cardNumber, '卡号', 100, true),
+      phone: null,
+      creditLimit: null,
+    };
+  }
+  if (input.type === 'credit') {
+    return {
+      ...common,
+      name: text(input.name, '名称', 200, true),
+      balance: 0,
+      cardNumber: null,
+      phone: null,
+      creditLimit: money(input.creditLimit, '额度', true),
+    };
+  }
+  return {
+    ...common,
+    name: text(input.name, '名称', 200, true),
+    balance: money(input.balance, '余额'),
+    cardNumber: null,
+    phone: null,
+    creditLimit: null,
+  };
 }
 function day(value: number | null | undefined, name: string): number | null {
   if (value == null) return null;
@@ -62,13 +128,11 @@ export class FinanceService {
   }
   public async createAccount(input: FinanceAccountInput): Promise<FinanceAccount> {
     const now = this.now();
+    const details = accountDetails(input);
     return toFinanceAccount(
       await this.repository.createAccount({
         id: randomUUID(),
-        type: input.type,
-        name: text(input.name, '账户名称', 200, true),
-        balance: money(input.balance, '余额'),
-        note: text(input.note, '备注', 5000),
+        ...details,
         archived: false,
         version: 1,
         createdAt: now,
@@ -82,13 +146,32 @@ export class FinanceService {
   ): Promise<FinanceAccount> {
     const existing = await this.repository.getAccount(id);
     if (!existing || existing.archived) throw new NotFoundError('没有找到该资金账户。');
+    const mergedInput: FinanceAccountInput = {
+      type: input.type ?? existing.type,
+      name: input.name ?? existing.name,
+      balance: input.balance ?? existing.balance,
+      note: input.note ?? existing.note,
+      ...(input.cardNumber !== undefined
+        ? { cardNumber: input.cardNumber }
+        : existing.cardNumber !== null
+          ? { cardNumber: existing.cardNumber }
+          : {}),
+      ...(input.phone !== undefined
+        ? { phone: input.phone }
+        : existing.phone !== null
+          ? { phone: existing.phone }
+          : {}),
+      ...(input.creditLimit !== undefined
+        ? { creditLimit: input.creditLimit }
+        : existing.creditLimit !== null
+          ? { creditLimit: existing.creditLimit }
+          : {}),
+    };
+    const details = accountDetails(mergedInput);
     const updated = await this.repository.updateAccount(
       {
         ...existing,
-        type: input.type ?? existing.type,
-        name: input.name === undefined ? existing.name : text(input.name, '账户名称', 200, true),
-        balance: input.balance === undefined ? existing.balance : money(input.balance, '余额'),
-        note: input.note === undefined ? existing.note : text(input.note, '备注', 5000),
+        ...details,
         updatedAt: this.now(),
       },
       input.version,

@@ -5935,6 +5935,11 @@
     font-size: 24px;
   }
 
+  .finance-account-reference {
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+
   .finance-card-grid > article > div {
     position: absolute;
     top: 12px;

@@ -3758,11 +3758,11 @@
               "schema": {
                 "type": "object",
                 "additionalProperties": false,
-                "required": ["type", "name", "balance"],
+                "required": ["type"],
                 "properties": {
                   "type": {
                     "type": "string",
-                    "enum": ["cash", "alipay", "wechat", "bank", "digital-cny", "other"]
+                    "enum": ["cash", "alipay", "wechat", "bank", "credit", "digital-cny", "other"]
                   },
                   "name": {
                     "type": "string",
@@ -3771,6 +3771,20 @@
                   },
                   "balance": {
                     "type": "number"
+                  },
+                  "cardNumber": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "phone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "creditLimit": {
+                    "type": "number",
+                    "minimum": 0
                   },
                   "note": {
                     "type": "string",
@@ -3801,7 +3815,7 @@
                 "properties": {
                   "type": {
                     "type": "string",
-                    "enum": ["cash", "alipay", "wechat", "bank", "digital-cny", "other"]
+                    "enum": ["cash", "alipay", "wechat", "bank", "credit", "digital-cny", "other"]
                   },
                   "name": {
                     "type": "string",
@@ -3810,6 +3824,20 @@
                   },
                   "balance": {
                     "type": "number"
+                  },
+                  "cardNumber": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "phone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 50
+                  },
+                  "creditLimit": {
+                    "type": "number",
+                    "minimum": 0
                   },
                   "note": {
                     "type": "string",

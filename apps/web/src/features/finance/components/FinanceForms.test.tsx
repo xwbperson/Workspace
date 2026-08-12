@@ -7,15 +7,52 @@ import {
 } from './FinanceForms.js';
 
 describe('Finance forms', () => {
+  it('shows only the fields required by each account type', () => {
+    const onSubmit = vi.fn(async () => undefined);
+    render(<FinanceAccountForm submitting={false} onSubmit={onSubmit} />);
+
+    expect(screen.getByLabelText('名称')).toBeInTheDocument();
+    expect(screen.getByLabelText('卡号')).toBeInTheDocument();
+    expect(screen.getByLabelText('余额')).toBeInTheDocument();
+    expect(screen.queryByLabelText('手机号')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('额度')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('账户类型'), { target: { value: 'credit' } });
+    expect(screen.getByLabelText('名称')).toBeInTheDocument();
+    expect(screen.getByLabelText('额度')).toBeInTheDocument();
+    expect(screen.queryByLabelText('卡号')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('手机号')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('余额')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('账户类型'), { target: { value: 'wechat' } });
+    expect(screen.getByLabelText('手机号')).toBeInTheDocument();
+    expect(screen.getByLabelText('余额')).toBeInTheDocument();
+    expect(screen.queryByLabelText('名称')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('卡号')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('账户类型'), { target: { value: 'cash' } });
+    expect(screen.getByLabelText('余额')).toBeInTheDocument();
+    expect(screen.queryByLabelText('名称')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('手机号')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('卡号')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('额度')).not.toBeInTheDocument();
+  });
+
   it('submits an account, platform, and monthly debt record', async () => {
     const accountSubmit = vi.fn(async () => undefined);
     const { unmount } = render(<FinanceAccountForm submitting={false} onSubmit={accountSubmit} />);
-    fireEvent.change(screen.getByLabelText('账户名称'), { target: { value: '工资卡' } });
-    fireEvent.change(screen.getByLabelText('账户余额'), { target: { value: '10000' } });
+    fireEvent.change(screen.getByLabelText('名称'), { target: { value: '工资卡' } });
+    fireEvent.change(screen.getByLabelText('卡号'), { target: { value: '6217000012345678' } });
+    fireEvent.change(screen.getByLabelText('余额'), { target: { value: '10000' } });
     fireEvent.click(screen.getByRole('button', { name: '添加账户' }));
     await waitFor(() =>
       expect(accountSubmit).toHaveBeenCalledWith(
-        expect.objectContaining({ name: '工资卡', balance: 10000 }),
+        expect.objectContaining({
+          type: 'bank',
+          name: '工资卡',
+          cardNumber: '6217000012345678',
+          balance: 10000,
+        }),
       ),
     );
     unmount();

@@ -610,7 +610,12 @@ describe('productivity feature vertical slices', () => {
     const accountResponse = await inject({
       method: 'POST',
       url: '/api/v1/finance/accounts',
-      payload: { type: 'bank', name: '工资卡', balance: 10000 },
+      payload: {
+        type: 'bank',
+        name: '工资卡',
+        cardNumber: '6217000012345678',
+        balance: 10000,
+      },
     });
     expect(accountResponse.statusCode, accountResponse.body).toBe(201);
     const account = accountResponse.json<{ id: string; version: number }>();
@@ -738,6 +743,118 @@ describe('productivity feature vertical slices', () => {
         })
       ).statusCode,
     ).toBe(204);
+  });
+
+  it('stores type-specific finance account details', async () => {
+    const cash = await inject({
+      method: 'POST',
+      url: '/api/v1/finance/accounts',
+      payload: { type: 'cash', balance: 300 },
+    });
+    expect(cash.statusCode, cash.body).toBe(201);
+    expect(cash.json()).toMatchObject({
+      type: 'cash',
+      name: '现金',
+      balance: 300,
+      cardNumber: null,
+      phone: null,
+      creditLimit: null,
+    });
+
+    const wechat = await inject({
+      method: 'POST',
+      url: '/api/v1/finance/accounts',
+      payload: { type: 'wechat', phone: '19900001111', balance: 88.6 },
+    });
+    expect(wechat.statusCode, wechat.body).toBe(201);
+    expect(wechat.json()).toMatchObject({
+      type: 'wechat',
+      name: '微信',
+      phone: '19900001111',
+      balance: 88.6,
+    });
+
+    const digitalCny = await inject({
+      method: 'POST',
+      url: '/api/v1/finance/accounts',
+      payload: {
+        type: 'digital-cny',
+        name: '建行钱包',
+        cardNumber: '0051000012345678',
+        balance: 20,
+      },
+    });
+    expect(digitalCny.statusCode, digitalCny.body).toBe(201);
+    expect(digitalCny.json()).toMatchObject({
+      type: 'digital-cny',
+      name: '建行钱包',
+      cardNumber: '0051000012345678',
+      balance: 20,
+    });
+
+    const credit = await inject({
+      method: 'POST',
+      url: '/api/v1/finance/accounts',
+      payload: { type: 'credit', name: '日常信用卡', creditLimit: 15000 },
+    });
+    expect(credit.statusCode, credit.body).toBe(201);
+    expect(credit.json()).toMatchObject({
+      type: 'credit',
+      name: '日常信用卡',
+      balance: 0,
+      creditLimit: 15000,
+    });
+    const updatedCredit = await inject({
+      method: 'PUT',
+      url: `/api/v1/finance/accounts/${credit.json<{ id: string }>().id}`,
+      payload: { name: '大额信用卡', creditLimit: 18000, version: 1 },
+    });
+    expect(updatedCredit.statusCode, updatedCredit.body).toBe(200);
+    expect(updatedCredit.json()).toMatchObject({
+      type: 'credit',
+      name: '大额信用卡',
+      balance: 0,
+      creditLimit: 18000,
+      version: 2,
+    });
+
+    const incompleteBank = await inject({
+      method: 'POST',
+      url: '/api/v1/finance/accounts',
+      payload: { type: 'bank', name: '缺少卡号', balance: 1 },
+    });
+    expect(incompleteBank.statusCode).toBe(400);
+  });
+
+  it('keeps debt platforms in creation order after later platforms are added', async () => {
+    const first = await inject({
+      method: 'POST',
+      url: '/api/v1/finance/debt-platforms',
+      payload: { name: '先添加的平台' },
+    });
+    const second = await inject({
+      method: 'POST',
+      url: '/api/v1/finance/debt-platforms',
+      payload: { name: '后添加的平台' },
+    });
+    expect(first.statusCode).toBe(201);
+    expect(second.statusCode).toBe(201);
+    const firstId = first.json<{ id: string }>().id;
+    const secondId = second.json<{ id: string }>().id;
+    await database.query(
+      `UPDATE finance_debt_platforms
+       SET created_at=CASE WHEN id=$1 THEN $3::timestamptz ELSE $4::timestamptz END,
+           updated_at=CASE WHEN id=$1 THEN $3::timestamptz ELSE $4::timestamptz END
+       WHERE id IN ($1,$2)`,
+      [firstId, secondId, '2026-01-01T00:00:00.000Z', '2026-02-01T00:00:00.000Z'],
+    );
+
+    const list = await inject({ method: 'GET', url: '/api/v1/finance/debt-platforms' });
+    expect(list.statusCode).toBe(200);
+    expect(list.json<{ items: Array<{ id: string }> }>().items.map((item) => item.id)).toEqual([
+      firstId,
+      secondId,
+    ]);
   });
 
   it('calculates a life profile and manages important life events', async () => {

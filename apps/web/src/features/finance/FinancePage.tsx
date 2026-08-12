@@ -39,6 +39,18 @@ type RemoveTarget =
 function money(value: number): string {
   return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(value);
 }
+function accountTitle(account: FinanceAccount): string {
+  if (account.type === 'alipay' || account.type === 'wechat') {
+    return account.phone ?? accountTypeLabels[account.type];
+  }
+  return account.name;
+}
+function accountReference(account: FinanceAccount): string | null {
+  if (account.type === 'bank' || account.type === 'digital-cny') {
+    return account.cardNumber ? `卡号 ${account.cardNumber}` : '尚未补充卡号';
+  }
+  return null;
+}
 export function FinancePage(): React.JSX.Element {
   const now = new Date();
   const [params] = useSearchParams();
@@ -342,8 +354,15 @@ function AccountSection({
                 <Landmark />
               </span>
               <small>{accountTypeLabels[item.type]}</small>
-              <h3>{item.name}</h3>
-              <strong>{money(item.balance)}</strong>
+              <h3>{accountTitle(item)}</h3>
+              {accountReference(item) ? (
+                <p className="finance-account-reference">{accountReference(item)}</p>
+              ) : null}
+              <strong>
+                {item.type === 'credit'
+                  ? `额度 ${money(item.creditLimit ?? 0)}`
+                  : money(item.balance)}
+              </strong>
               {item.note ? <p>{item.note}</p> : null}
               <div>
                 <button
@@ -513,7 +532,7 @@ function ArchivedSection({
               <WalletCards />
               <div>
                 <small>资金账户</small>
-                <strong>{item.name}</strong>
+                <strong>{accountTitle(item)}</strong>
               </div>
               <button className="button button--quiet" onClick={() => onRestoreAccount(item)}>
                 <RotateCcw />

@@ -11,6 +11,9 @@ export interface FinanceAccountRow {
   type: FinanceAccountType;
   name: string;
   balance: number;
+  cardNumber: string | null;
+  phone: string | null;
+  creditLimit: number | null;
   note: string;
   archived: boolean;
   version: number;
@@ -48,6 +51,9 @@ interface AccountDatabaseRow {
   type: FinanceAccountType;
   name: string;
   balance: number | string;
+  card_number: string | null;
+  phone: string | null;
+  credit_limit: number | string | null;
   note: string;
   archived: boolean;
   version: number;
@@ -80,7 +86,7 @@ interface RecordDatabaseRow {
   updated_at: Date;
 }
 
-const ACCOUNT_COLUMNS = `id,type,name,balance,note,archived,version,created_at,updated_at`;
+const ACCOUNT_COLUMNS = `id,account_type AS type,name,balance,card_number,phone,credit_limit,note,archived,version,created_at,updated_at`;
 const PLATFORM_COLUMNS = `id,name,billing_day,repayment_day,fixed_limit,temporary_limit,remaining_limit,note,archived,version,created_at,updated_at`;
 const RECORD_COLUMNS = `r.id,r.platform_id,p.name AS platform_name,r.year,r.month,r.amount,r.version,r.created_at,r.updated_at`;
 
@@ -90,6 +96,9 @@ function mapAccount(row: AccountDatabaseRow): FinanceAccountRow {
     type: row.type,
     name: row.name,
     balance: Number(row.balance),
+    cardNumber: row.card_number,
+    phone: row.phone,
+    creditLimit: row.credit_limit === null ? null : Number(row.credit_limit),
     note: row.note,
     archived: row.archived,
     version: row.version,
@@ -165,12 +174,16 @@ export class FinanceRepository {
   }
   public async createAccount(row: FinanceAccountRow): Promise<FinanceAccountRow> {
     const result = await this.database.query<AccountDatabaseRow>(
-      `INSERT INTO finance_accounts (id,type,name,balance,note,archived,version,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING ${ACCOUNT_COLUMNS}`,
+      `INSERT INTO finance_accounts (id,type,account_type,name,balance,card_number,phone,credit_limit,note,archived,version,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING ${ACCOUNT_COLUMNS}`,
       [
         row.id,
+        row.type === 'credit' ? 'other' : row.type,
         row.type,
         row.name,
         row.balance,
+        row.cardNumber,
+        row.phone,
+        row.creditLimit,
         row.note,
         row.archived,
         row.version,
@@ -185,8 +198,20 @@ export class FinanceRepository {
     version: number,
   ): Promise<FinanceAccountRow | null> {
     const result = await this.database.query<AccountDatabaseRow>(
-      `UPDATE finance_accounts SET type=$2,name=$3,balance=$4,note=$5,version=version+1,updated_at=$6 WHERE id=$1 AND version=$7 AND archived=false RETURNING ${ACCOUNT_COLUMNS}`,
-      [row.id, row.type, row.name, row.balance, row.note, row.updatedAt, version],
+      `UPDATE finance_accounts SET type=$2,account_type=$3,name=$4,balance=$5,card_number=$6,phone=$7,credit_limit=$8,note=$9,version=version+1,updated_at=$10 WHERE id=$1 AND version=$11 AND archived=false RETURNING ${ACCOUNT_COLUMNS}`,
+      [
+        row.id,
+        row.type === 'credit' ? 'other' : row.type,
+        row.type,
+        row.name,
+        row.balance,
+        row.cardNumber,
+        row.phone,
+        row.creditLimit,
+        row.note,
+        row.updatedAt,
+        version,
+      ],
     );
     return result.rows[0] ? mapAccount(result.rows[0]) : null;
   }
@@ -212,7 +237,7 @@ export class FinanceRepository {
 
   public async listPlatforms(archived: boolean): Promise<FinanceDebtPlatformRow[]> {
     const result = await this.database.query<PlatformDatabaseRow>(
-      `SELECT ${PLATFORM_COLUMNS} FROM finance_debt_platforms WHERE archived=$1 ORDER BY updated_at DESC,id ASC`,
+      `SELECT ${PLATFORM_COLUMNS} FROM finance_debt_platforms WHERE archived=$1 ORDER BY created_at ASC,id ASC`,
       [archived],
     );
     return result.rows.map(mapPlatform);
@@ -373,7 +398,7 @@ export class FinanceRepository {
 
   public async searchAccounts(query: string, limit: number): Promise<FinanceAccountRow[]> {
     const result = await this.database.query<AccountDatabaseRow>(
-      `SELECT ${ACCOUNT_COLUMNS} FROM finance_accounts WHERE archived=false AND (LOWER(name) LIKE $1 OR LOWER(note) LIKE $1) ORDER BY updated_at DESC LIMIT $2`,
+      `SELECT ${ACCOUNT_COLUMNS} FROM finance_accounts WHERE archived=false AND (LOWER(name) LIKE $1 OR LOWER(note) LIKE $1 OR LOWER(COALESCE(card_number,'')) LIKE $1 OR LOWER(COALESCE(phone,'')) LIKE $1) ORDER BY updated_at DESC LIMIT $2`,
       [`%${query.toLocaleLowerCase('zh-CN')}%`, limit],
     );
     return result.rows.map(mapAccount);

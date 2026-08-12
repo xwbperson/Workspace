@@ -857,12 +857,16 @@ export interface SubscriptionListResponse {
   items: Subscription[];
 }
 
-export type FinanceAccountType = 'cash' | 'alipay' | 'wechat' | 'bank' | 'digital-cny' | 'other';
+export type FinanceAccountType =
+  'cash' | 'alipay' | 'wechat' | 'bank' | 'credit' | 'digital-cny' | 'other';
 export interface FinanceAccount {
   id: string;
   type: FinanceAccountType;
   name: string;
   balance: number;
+  cardNumber: string | null;
+  phone: string | null;
+  creditLimit: number | null;
   note: string;
   archived: boolean;
   version: number;
@@ -871,8 +875,11 @@ export interface FinanceAccount {
 }
 export interface FinanceAccountInput {
   type: FinanceAccountType;
-  name: string;
-  balance: number;
+  name?: string;
+  balance?: number;
+  cardNumber?: string;
+  phone?: string;
+  creditLimit?: number;
   note?: string;
 }
 export interface FinanceAccountUpdateInput extends Partial<FinanceAccountInput> {
