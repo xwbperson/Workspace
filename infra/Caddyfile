@@ -2,16 +2,21 @@
   encode zstd gzip
 
   @api path /api/* /health/*
-  reverse_proxy @api api:3000
+  handle @api {
+    reverse_proxy api:3000
+  }
 
-  root * /srv/web
-  try_files {path} /index.html
-  file_server
+  handle {
+    root * /srv/web
 
-  @immutable path /assets/*
-  header @immutable Cache-Control "public, max-age=31536000, immutable"
-  @serviceWorker path /sw.js /manifest.webmanifest
-  header @serviceWorker Cache-Control "no-cache, no-store, must-revalidate"
+    @immutable path /assets/*
+    header @immutable Cache-Control "public, max-age=31536000, immutable"
+    @serviceWorker path /sw.js /manifest.webmanifest
+    header @serviceWorker Cache-Control "no-cache, no-store, must-revalidate"
+
+    try_files {path} /index.html
+    file_server
+  }
 
   header {
     Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
