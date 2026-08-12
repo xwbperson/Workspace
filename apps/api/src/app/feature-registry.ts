@@ -39,6 +39,10 @@ import { createTaskContributions } from '../features/tasks/contributions.js';
 import { TaskRepository } from '../features/tasks/repository.js';
 import { registerTaskRoutes } from '../features/tasks/routes.js';
 import { TaskService } from '../features/tasks/service.js';
+import { createTimetableContributions } from '../features/timetable/contributions.js';
+import { TimetableRepository } from '../features/timetable/repository.js';
+import { registerTimetableRoutes } from '../features/timetable/routes.js';
+import { TimetableService } from '../features/timetable/service.js';
 import {
   startCountdownNotificationScheduler,
   syncReachedCountdownNotifications,
@@ -81,6 +85,8 @@ export function createFeatureRegistry(
   const financeService = new FinanceService(finance);
   const lifeCountdown = new LifeCountdownRepository(database);
   const lifeCountdownService = new LifeCountdownService(lifeCountdown);
+  const timetable = new TimetableRepository(database);
+  const timetableService = new TimetableService(timetable);
 
   return [
     {
@@ -153,6 +159,13 @@ export function createFeatureRegistry(
       featureId: 'life-countdown',
       contribution: createLifeCountdownContributions(lifeCountdown),
       registerRoutes: async (app) => registerLifeCountdownRoutes(app, lifeCountdownService),
+      syncNotifications: async () => {},
+      startScheduler: () => () => {},
+    },
+    {
+      featureId: 'timetable',
+      contribution: createTimetableContributions(timetable, timetableService),
+      registerRoutes: async (app) => registerTimetableRoutes(app, timetableService),
       syncNotifications: async () => {},
       startScheduler: () => () => {},
     },

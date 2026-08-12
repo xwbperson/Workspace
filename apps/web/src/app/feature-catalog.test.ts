@@ -3,7 +3,7 @@ import { featureCatalog } from './feature-catalog.js';
 
 describe('static feature catalog', () => {
   it('publishes countdowns, books and courses as released features', () => {
-    expect(featureCatalog).toHaveLength(10);
+    expect(featureCatalog).toHaveLength(11);
     expect(featureCatalog[0]).toMatchObject({
       featureId: 'countdowns',
       route: '/features/countdowns',
@@ -76,6 +76,18 @@ describe('static feature catalog', () => {
       },
     });
     expect(featureCatalog[6]).toMatchObject({
+      featureId: 'timetable',
+      route: '/features/timetable',
+      lifecycle: 'released',
+      capabilities: {
+        upcoming: true,
+        recent: true,
+        overviewBlocks: true,
+        search: true,
+        quickCreate: true,
+      },
+    });
+    expect(featureCatalog[7]).toMatchObject({
       featureId: 'inbox',
       route: '/features/inbox',
       lifecycle: 'released',

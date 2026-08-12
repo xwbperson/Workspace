@@ -245,6 +245,59 @@ try {
     '人生事件',
   );
 
+  const timetableSemester = await createApiRecord<{
+    id: string;
+    timeBlocks: Array<{ id: string }>;
+  }>(
+    '/api/v1/timetable/semesters',
+    {
+      name: '2031—2032 学年秋季学期',
+      shortName: '恢复课表',
+      firstWeekMonday: '2031-09-01',
+      totalWeeks: 20,
+      showWeekend: true,
+      makeCurrent: true,
+    },
+    '课表学期',
+  );
+  if (timetableSemester.timeBlocks.length !== 5) {
+    throw new Error('真实数据库课表默认课段数量不正确。');
+  }
+  const timetableCourse = await createApiRecord<{
+    id: string;
+    meetings: Array<{ id: string }>;
+  }>(
+    '/api/v1/timetable/courses',
+    {
+      semesterId: timetableSemester.id,
+      name: '真实 PostgreSQL 课表课程',
+      instructors: ['CI 教师'],
+      meetings: [
+        {
+          weekday: 6,
+          timeBlockId: timetableSemester.timeBlocks[0].id,
+          room: 'CI-101',
+          weekNumbers: [1, 3],
+        },
+      ],
+    },
+    '课表课程',
+  );
+  if (timetableCourse.meetings.length !== 1) {
+    throw new Error('真实数据库课表上课安排数量不正确。');
+  }
+  await createApiRecord(
+    `/api/v1/timetable/courses/${timetableCourse.id}/adjustments`,
+    {
+      meetingId: timetableCourse.meetings[0].id,
+      originalDate: '2031-09-06',
+      type: 'override',
+      room: 'CI-102',
+      note: '恢复验收临时调整',
+    },
+    '课表临时调整',
+  );
+
   const boundary = '----workbench-real-postgres-validation';
   const attachmentBytes = Buffer.from('%PDF-1.7\nreal-postgres-portable-attachment\n');
   const uploadResponse = await app.inject({
@@ -345,6 +398,12 @@ try {
         financeRecords: number;
         lifeProfiles: number;
         lifeEvents: number;
+        timetableSemesters: number;
+        timetableTimeBlocks: number;
+        timetableCourses: number;
+        timetableMeetings: number;
+        timetableMeetingWeeks: number;
+        timetableAdjustments: number;
         storedFiles: number;
         sessions: number;
         attempts: number;
@@ -372,6 +431,12 @@ try {
            (SELECT count(*)::int FROM finance_debt_records) AS "financeRecords",
            (SELECT count(*)::int FROM life_profiles) AS "lifeProfiles",
            (SELECT count(*)::int FROM life_events) AS "lifeEvents",
+           (SELECT count(*)::int FROM timetable_semesters) AS "timetableSemesters",
+           (SELECT count(*)::int FROM timetable_time_blocks) AS "timetableTimeBlocks",
+           (SELECT count(*)::int FROM timetable_courses) AS "timetableCourses",
+           (SELECT count(*)::int FROM timetable_meetings) AS "timetableMeetings",
+           (SELECT count(*)::int FROM timetable_meeting_weeks) AS "timetableMeetingWeeks",
+           (SELECT count(*)::int FROM timetable_adjustments) AS "timetableAdjustments",
            (SELECT count(*)::int FROM stored_files) AS "storedFiles",
            (SELECT count(*)::int FROM auth_sessions) AS sessions,
            (SELECT count(*)::int FROM auth_login_attempts) AS attempts,
@@ -401,6 +466,12 @@ try {
         value.financeRecords !== 1 ||
         value.lifeProfiles !== 1 ||
         value.lifeEvents !== 1 ||
+        value.timetableSemesters !== 1 ||
+        value.timetableTimeBlocks !== 5 ||
+        value.timetableCourses !== 1 ||
+        value.timetableMeetings !== 1 ||
+        value.timetableMeetingWeeks !== 2 ||
+        value.timetableAdjustments !== 1 ||
         value.storedFiles !== 1 ||
         value.sessions !== 0 ||
         value.attempts !== 0 ||

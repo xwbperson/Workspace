@@ -46,7 +46,7 @@ describe('portable backup package', () => {
     const manifest = await service.verify(backupPath);
 
     expect(manifest.status).toBe('complete');
-    expect(manifest.databaseMigrationVersion).toBe('015-finance-unbilled-debt');
+    expect(manifest.databaseMigrationVersion).toBe('016-timetable');
     expect(commandArgs).toContain('--format=custom');
     expect(commandArgs).toContain('--exclude-table-data=public.auth_sessions');
     expect(commandArgs).toContain('--exclude-table-data=public.auth_login_attempts');

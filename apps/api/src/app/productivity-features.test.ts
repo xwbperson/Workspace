@@ -802,4 +802,320 @@ describe('productivity feature vertical slices', () => {
       ).statusCode,
     ).toBe(204);
   });
+
+  it('creates an independent timetable semester and expands selected teaching weeks', async () => {
+    const semesterResponse = await inject({
+      method: 'POST',
+      url: '/api/v1/timetable/semesters',
+      payload: {
+        name: '2026—2027 学年秋季学期',
+        shortName: '研一上',
+        firstWeekMonday: '2026-09-07',
+        totalWeeks: 20,
+        makeCurrent: true,
+      },
+    });
+    expect(semesterResponse.statusCode, semesterResponse.body).toBe(201);
+    const semester = semesterResponse.json<{
+      id: string;
+      version: number;
+      isCurrent: boolean;
+      showWeekend: boolean;
+      timeBlocks: Array<{
+        id: string;
+        label: string;
+        sourceLabel: string;
+        startTime: string;
+        endTime: string;
+        position: number;
+        version: number;
+      }>;
+    }>();
+    expect(semester.isCurrent).toBe(true);
+    expect(semester.showWeekend).toBe(true);
+    expect(semester.timeBlocks).toMatchObject([
+      { label: '课 1', startTime: '08:30', endTime: '10:05' },
+      { label: '课 2', startTime: '10:25', endTime: '12:00' },
+      { label: '课 3', startTime: '14:00', endTime: '15:35' },
+      { label: '课 4', startTime: '15:55', endTime: '17:30' },
+      { label: '课 5', startTime: '19:00', endTime: '21:25' },
+    ]);
+
+    const courseResponse = await inject({
+      method: 'POST',
+      url: '/api/v1/timetable/courses',
+      payload: {
+        semesterId: semester.id,
+        name: '网络空间安全数学原理',
+        shortName: '网安数学',
+        instructors: ['张老师'],
+        color: 'teal',
+        notes: '研究生课程',
+        meetings: [
+          {
+            weekday: 3,
+            timeBlockId: semester.timeBlocks[0]!.id,
+            room: '南校区 G-101',
+            instructorOverride: [],
+            weekNumbers: [1, 3, 5],
+          },
+        ],
+      },
+    });
+    expect(courseResponse.statusCode, courseResponse.body).toBe(201);
+    expect(courseResponse.json()).toMatchObject({
+      name: '网络空间安全数学原理',
+      status: 'active',
+      meetings: [{ room: '南校区 G-101', weekNumbers: [1, 3, 5] }],
+    });
+
+    const firstWeek = await inject({
+      method: 'GET',
+      url: `/api/v1/timetable/occurrences?semesterId=${semester.id}&week=1`,
+    });
+    expect(firstWeek.statusCode, firstWeek.body).toBe(200);
+    expect(firstWeek.json().items).toMatchObject([
+      {
+        date: '2026-09-09',
+        weekNumber: 1,
+        weekday: 3,
+        courseName: '网络空间安全数学原理',
+        room: '南校区 G-101',
+        instructors: ['张老师'],
+        timeBlock: { label: '课 1', startTime: '08:30', endTime: '10:05' },
+      },
+    ]);
+
+    const secondWeek = await inject({
+      method: 'GET',
+      url: `/api/v1/timetable/occurrences?semesterId=${semester.id}&week=2`,
+    });
+    expect(secondWeek.statusCode).toBe(200);
+    expect(secondWeek.json().items).toEqual([]);
+
+    const movedSemester = await inject({
+      method: 'PUT',
+      url: `/api/v1/timetable/semesters/${semester.id}`,
+      payload: { firstWeekMonday: '2026-09-14', version: semester.version },
+    });
+    expect(movedSemester.statusCode, movedSemester.body).toBe(200);
+    expect(movedSemester.json()).toMatchObject({ firstWeekMonday: '2026-09-14', version: 2 });
+    const changedBlocks = semester.timeBlocks.map((block, index) => ({
+      ...block,
+      ...(index === 0 ? { startTime: '08:45', endTime: '10:15' } : {}),
+    }));
+    const updatedSchedule = await inject({
+      method: 'PUT',
+      url: `/api/v1/timetable/semesters/${semester.id}/time-blocks`,
+      payload: { semesterVersion: 2, blocks: changedBlocks },
+    });
+    expect(updatedSchedule.statusCode, updatedSchedule.body).toBe(200);
+    expect(updatedSchedule.json()).toMatchObject({ version: 3 });
+    expect(updatedSchedule.json().timeBlocks[0]).toMatchObject({
+      startTime: '08:45',
+      endTime: '10:15',
+      version: 2,
+    });
+    const recalculated = await inject({
+      method: 'GET',
+      url: `/api/v1/timetable/occurrences?semesterId=${semester.id}&week=1`,
+    });
+    expect(recalculated.json().items).toMatchObject([
+      { date: '2026-09-16', timeBlock: { startTime: '08:45', endTime: '10:15' } },
+    ]);
+  });
+
+  it('requires explicit confirmation for timetable conflicts and keeps archive deletion safe', async () => {
+    const semesterResponse = await inject({
+      method: 'POST',
+      url: '/api/v1/timetable/semesters',
+      payload: {
+        name: '2026 秋季学期',
+        shortName: '研一上',
+        firstWeekMonday: '2026-09-07',
+        totalWeeks: 20,
+      },
+    });
+    const semester = semesterResponse.json<{
+      id: string;
+      timeBlocks: Array<{ id: string }>;
+    }>();
+    const course = (name: string, allowConflicts = false) => ({
+      semesterId: semester.id,
+      name,
+      instructors: ['王老师'],
+      meetings: [
+        {
+          weekday: 1,
+          timeBlockId: semester.timeBlocks[0]!.id,
+          room: 'A-101',
+          weekNumbers: [1, 2, 3],
+        },
+      ],
+      allowConflicts,
+    });
+    expect(
+      (
+        await inject({
+          method: 'POST',
+          url: '/api/v1/timetable/courses',
+          payload: course('课程 A'),
+        })
+      ).statusCode,
+    ).toBe(201);
+    const conflict = await inject({
+      method: 'POST',
+      url: '/api/v1/timetable/courses',
+      payload: course('课程 B'),
+    });
+    expect(conflict.statusCode).toBe(409);
+    expect(conflict.json().error.details).toMatchObject({
+      code: 'TIMETABLE_CONFLICT_CONFIRMATION_REQUIRED',
+    });
+
+    const confirmed = await inject({
+      method: 'POST',
+      url: '/api/v1/timetable/courses',
+      payload: course('课程 B', true),
+    });
+    expect(confirmed.statusCode, confirmed.body).toBe(201);
+    const second = confirmed.json<{ id: string; version: number }>();
+
+    const unrelated = await inject({
+      method: 'POST',
+      url: '/api/v1/timetable/courses',
+      payload: {
+        ...course('课程 C'),
+        meetings: [
+          {
+            weekday: 2,
+            timeBlockId: semester.timeBlocks[0]!.id,
+            room: 'A-102',
+            weekNumbers: [1, 2, 3],
+          },
+        ],
+      },
+    });
+    expect(unrelated.statusCode, unrelated.body).toBe(201);
+
+    expect(
+      (
+        await inject({
+          method: 'POST',
+          url: `/api/v1/timetable/courses/${second.id}/archive`,
+          payload: { version: second.version },
+        })
+      ).statusCode,
+    ).toBe(204);
+    const restored = await inject({
+      method: 'POST',
+      url: `/api/v1/timetable/courses/${second.id}/restore`,
+      payload: { version: 2 },
+    });
+    expect(restored.json()).toMatchObject({ status: 'active', version: 3 });
+    await inject({
+      method: 'POST',
+      url: `/api/v1/timetable/courses/${second.id}/archive`,
+      payload: { version: 3 },
+    });
+    expect(
+      (
+        await inject({
+          method: 'DELETE',
+          url: `/api/v1/timetable/courses/${second.id}`,
+          payload: { version: 4 },
+        })
+      ).statusCode,
+    ).toBe(204);
+  });
+
+  it('reschedules and cancels one timetable occurrence without changing the recurring course', async () => {
+    const semesterResponse = await inject({
+      method: 'POST',
+      url: '/api/v1/timetable/semesters',
+      payload: {
+        name: '2026 秋季学期',
+        shortName: '研一上',
+        firstWeekMonday: '2026-09-07',
+        totalWeeks: 20,
+      },
+    });
+    const semester = semesterResponse.json<{
+      id: string;
+      timeBlocks: Array<{ id: string }>;
+    }>();
+    const courseResponse = await inject({
+      method: 'POST',
+      url: '/api/v1/timetable/courses',
+      payload: {
+        semesterId: semester.id,
+        name: '无线网络安全',
+        instructors: ['李老师'],
+        meetings: [
+          {
+            weekday: 3,
+            timeBlockId: semester.timeBlocks[0]!.id,
+            room: 'G-201',
+            weekNumbers: [1, 2],
+          },
+        ],
+      },
+    });
+    const course = courseResponse.json<{
+      id: string;
+      version: number;
+      meetings: Array<{ id: string }>;
+    }>();
+    const adjusted = await inject({
+      method: 'POST',
+      url: `/api/v1/timetable/courses/${course.id}/adjustments`,
+      payload: {
+        meetingId: course.meetings[0]!.id,
+        originalDate: '2026-09-09',
+        type: 'reschedule',
+        newDate: '2026-09-10',
+        newTimeBlockId: semester.timeBlocks[1]!.id,
+        room: 'G-305',
+        note: '学院临时调课',
+      },
+    });
+    expect(adjusted.statusCode, adjusted.body).toBe(201);
+    const adjustment = adjusted.json<{ id: string; version: number }>();
+
+    const moved = await inject({
+      method: 'GET',
+      url: `/api/v1/timetable/occurrences?semesterId=${semester.id}&week=1`,
+    });
+    expect(moved.json().items).toMatchObject([
+      {
+        date: '2026-09-10',
+        originalDate: '2026-09-09',
+        room: 'G-305',
+        cancelled: false,
+        timeBlock: { label: '课 2' },
+        adjustment: { type: 'reschedule' },
+      },
+    ]);
+
+    const cancelled = await inject({
+      method: 'PUT',
+      url: `/api/v1/timetable/adjustments/${adjustment.id}`,
+      payload: {
+        type: 'cancel',
+        newDate: null,
+        newTimeBlockId: null,
+        room: null,
+        version: adjustment.version,
+      },
+    });
+    expect(cancelled.statusCode, cancelled.body).toBe(200);
+    expect(cancelled.json()).toMatchObject({ type: 'cancel', version: 2 });
+    const week = await inject({
+      method: 'GET',
+      url: `/api/v1/timetable/occurrences?semesterId=${semester.id}&week=1`,
+    });
+    expect(week.json().items).toMatchObject([
+      { date: '2026-09-09', originalDate: '2026-09-09', cancelled: true },
+    ]);
+  });
 });

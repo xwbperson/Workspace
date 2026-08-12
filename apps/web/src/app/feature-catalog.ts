@@ -5,6 +5,7 @@ export type IconName =
   | 'target'
   | 'list-checks'
   | 'calendar-days'
+  | 'calendar-clock'
   | 'inbox'
   | 'credit-card'
   | 'wallet-cards'
@@ -147,6 +148,25 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     category: 'time-reminders',
     keywords: ['日程', '日历', '行程', '日记', '总结', '日期'],
     order: 60,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    capabilities: {
+      upcoming: true,
+      recent: true,
+      overviewBlocks: true,
+      search: true,
+      quickCreate: true,
+    },
+  },
+  {
+    featureId: 'timetable',
+    name: '课程表',
+    description: '按教学周查看课程、教师、教室和临时调课。',
+    icon: 'calendar-clock',
+    route: '/features/timetable',
+    category: 'time-reminders',
+    keywords: ['课表', '课程', '上课', '教师', '教室', '周次', '调课'],
+    order: 65,
     lifecycle: 'released',
     discoverableInProduction: true,
     capabilities: {

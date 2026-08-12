@@ -524,6 +524,945 @@
   }
 }
 
+@layer pages {
+  .feature-shell-page--timetable {
+    gap: 14px;
+  }
+
+  .timetable-toolbar {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.8fr) minmax(360px, 1.4fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--surface-panel-shadow);
+  }
+
+  .timetable-toolbar__semester {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .timetable-toolbar__semester .eyebrow {
+    margin: 0 0 0 2px;
+    color: var(--color-text-tertiary);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .timetable-toolbar__semester select {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    padding: 7px 34px 7px 10px;
+    background-color: var(--color-surface-muted);
+    border: 0;
+    border-radius: var(--radius-sm);
+    font-weight: 750;
+  }
+
+  .timetable-week-switcher,
+  .timetable-toolbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .timetable-week-switcher {
+    justify-content: center;
+  }
+
+  .timetable-week-switcher > div {
+    display: grid;
+    min-width: 190px;
+    text-align: center;
+  }
+
+  .timetable-week-switcher strong {
+    font-size: 17px;
+  }
+
+  .timetable-week-switcher span {
+    color: var(--color-text-tertiary);
+    font-size: 12px;
+  }
+
+  .timetable-toolbar__actions {
+    justify-content: flex-end;
+  }
+
+  .timetable-toolbar__actions .active {
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+
+  .timetable-grid {
+    display: grid;
+    grid-template-columns: 112px repeat(5, minmax(132px, 1fr));
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--surface-panel-shadow);
+  }
+
+  .timetable-grid.has-weekend {
+    grid-template-columns: 112px repeat(7, minmax(116px, 1fr));
+    overflow-x: auto;
+  }
+
+  .timetable-grid__corner,
+  .timetable-day-heading,
+  .timetable-time-label,
+  .timetable-cell {
+    min-width: 0;
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .timetable-grid__corner,
+  .timetable-day-heading {
+    position: sticky;
+    z-index: 4;
+    top: 0;
+    min-height: 64px;
+    background: var(--color-surface-raised);
+  }
+
+  .timetable-grid__corner {
+    left: 0;
+    display: grid;
+    place-content: center;
+    gap: 2px;
+    color: var(--color-text-tertiary);
+    text-align: center;
+  }
+
+  .timetable-grid__corner span {
+    font-size: 11px;
+  }
+
+  .timetable-grid__corner strong {
+    color: var(--color-text);
+    font-size: 15px;
+  }
+
+  .timetable-day-heading {
+    display: grid;
+    place-content: center;
+    gap: 2px;
+    text-align: center;
+  }
+
+  .timetable-day-heading span {
+    color: var(--color-text-secondary);
+    font-size: 12px;
+  }
+
+  .timetable-day-heading strong {
+    font-size: 15px;
+  }
+
+  .timetable-day-heading.is-today {
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+  }
+
+  .timetable-time-label {
+    position: sticky;
+    z-index: 3;
+    left: 0;
+    display: grid;
+    align-content: start;
+    min-height: 148px;
+    padding: 14px 12px;
+    background: var(--color-surface-raised);
+  }
+
+  .timetable-time-label strong {
+    font-size: 17px;
+  }
+
+  .timetable-time-label > span {
+    margin-top: 2px;
+    color: var(--color-text-tertiary);
+    font-size: 11px;
+  }
+
+  .timetable-time-label time {
+    margin-top: 15px;
+    color: var(--color-text-secondary);
+    font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .timetable-cell {
+    position: relative;
+    display: grid;
+    align-content: start;
+    min-height: 148px;
+    gap: 7px;
+    padding: 7px;
+    background: var(--color-surface);
+  }
+
+  .timetable-cell.is-today {
+    background: color-mix(in srgb, var(--color-accent-soft) 38%, var(--color-surface));
+  }
+
+  .timetable-empty-cell {
+    display: grid;
+    min-height: 132px;
+    place-content: center;
+    grid-auto-flow: column;
+    align-items: center;
+    gap: 4px;
+    color: transparent;
+    background: transparent;
+    border: 1px dashed transparent;
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition:
+      color 140ms ease,
+      background 140ms ease,
+      border-color 140ms ease;
+  }
+
+  .timetable-empty-cell:hover,
+  .timetable-empty-cell:focus-visible {
+    color: var(--color-text-tertiary);
+    background: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+  }
+
+  .timetable-now-line {
+    position: absolute;
+    z-index: 3;
+    right: 4px;
+    left: 4px;
+    height: 2px;
+    pointer-events: none;
+    background: var(--color-brass);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-brass) 16%, transparent);
+  }
+
+  .timetable-now-line::before {
+    position: absolute;
+    top: -4px;
+    left: -1px;
+    width: 9px;
+    height: 9px;
+    background: var(--color-brass);
+    border: 2px solid var(--color-surface);
+    border-radius: 50%;
+    content: '';
+  }
+
+  .timetable-course-card {
+    --timetable-card-color: var(--color-accent);
+    position: relative;
+    z-index: 2;
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    gap: 3px;
+    padding: 10px 9px 9px 12px;
+    overflow: hidden;
+    color: var(--color-text);
+    text-align: left;
+    background: color-mix(in srgb, var(--timetable-card-color) 11%, var(--color-surface-raised));
+    border: 1px solid color-mix(in srgb, var(--timetable-card-color) 48%, var(--color-border));
+    border-radius: 10px;
+    box-shadow: var(--shadow-card);
+    cursor: pointer;
+  }
+
+  .timetable-course-card::before {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 4px;
+    background: var(--timetable-card-color);
+    content: '';
+  }
+
+  .timetable-course-card:hover {
+    border-color: var(--timetable-card-color);
+    transform: translateY(-1px);
+  }
+
+  .timetable-course-card.color-blue,
+  .timetable-color-dot.color-blue {
+    --timetable-card-color: var(--color-info);
+  }
+
+  .timetable-course-card.color-violet,
+  .timetable-color-dot.color-violet {
+    --timetable-card-color: color-mix(in srgb, var(--color-info) 58%, var(--color-danger));
+  }
+
+  .timetable-course-card.color-amber,
+  .timetable-color-dot.color-amber {
+    --timetable-card-color: var(--color-brass);
+  }
+
+  .timetable-course-card.color-rose,
+  .timetable-color-dot.color-rose {
+    --timetable-card-color: var(--color-danger);
+  }
+
+  .timetable-course-card.color-slate,
+  .timetable-color-dot.color-slate {
+    --timetable-card-color: var(--color-text-tertiary);
+  }
+
+  .timetable-course-card.is-cancelled {
+    opacity: 0.66;
+  }
+
+  .timetable-course-card.is-cancelled .timetable-course-card__title {
+    text-decoration: line-through;
+  }
+
+  .timetable-course-card__title {
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 850;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .timetable-course-card__meta {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 4px;
+    overflow: hidden;
+    color: var(--color-text-secondary);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .timetable-course-card__weeks {
+    margin-top: 2px;
+    overflow: hidden;
+    color: var(--color-text-tertiary);
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .timetable-course-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .timetable-badge {
+    display: inline-flex;
+    width: max-content;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 5px;
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+  }
+
+  .timetable-badge--warning {
+    color: var(--color-warning);
+    background: var(--color-brass-soft);
+  }
+
+  .timetable-mobile {
+    display: none;
+  }
+
+  .timetable-archive-panel {
+    min-height: 540px;
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .timetable-archive-panel > header,
+  .timetable-form-section > header,
+  .timetable-semester-manager > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .timetable-archive-panel h2,
+  .timetable-form-section h3,
+  .timetable-settings-section h3,
+  .timetable-semester-manager h3 {
+    margin: 2px 0 0;
+  }
+
+  .timetable-archive-panel .eyebrow,
+  .timetable-form-section .eyebrow,
+  .timetable-settings-section .eyebrow,
+  .timetable-semester-manager .eyebrow {
+    margin: 0;
+    color: var(--color-accent);
+    font-size: 11px;
+    font-weight: 850;
+  }
+
+  .timetable-archive-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin-top: 18px;
+  }
+
+  .timetable-archive-list > button {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 14px;
+    color: inherit;
+    text-align: left;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+
+  .timetable-archive-list > button > span:nth-child(2) {
+    display: grid;
+    min-width: 0;
+  }
+
+  .timetable-archive-list small {
+    color: var(--color-text-tertiary);
+  }
+
+  .timetable-color-dot {
+    --timetable-card-color: var(--color-accent);
+    width: 10px;
+    height: 28px;
+    background: var(--timetable-card-color);
+    border-radius: 999px;
+  }
+
+  .modal--timetable-course,
+  .modal--timetable-settings {
+    width: min(1040px, calc(100vw - 32px));
+    max-height: min(900px, calc(100dvh - 24px));
+  }
+
+  .modal-footer-spacer {
+    flex: 1;
+  }
+
+  .button--danger-quiet {
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+  }
+
+  .timetable-form-note,
+  .timetable-adjustment-context {
+    display: grid;
+    gap: 3px;
+    padding: 13px 14px;
+    color: var(--color-text-secondary);
+    background: var(--color-accent-soft);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--color-border));
+    border-radius: var(--radius-md);
+  }
+
+  .timetable-form-note strong,
+  .timetable-adjustment-context strong {
+    color: var(--color-text);
+  }
+
+  .timetable-form-note span,
+  .timetable-adjustment-context span {
+    font-size: 13px;
+  }
+
+  .timetable-semester-form,
+  .timetable-settings-form,
+  .timetable-course-form,
+  .timetable-adjustment-form {
+    gap: 20px;
+  }
+
+  .timetable-form-checks {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 24px;
+  }
+
+  .timetable-settings-section,
+  .timetable-form-section,
+  .timetable-semester-manager {
+    display: grid;
+    gap: 15px;
+    padding: 18px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+  }
+
+  .timetable-settings-section > div:first-child > p:last-child {
+    margin: 5px 0 0;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+  }
+
+  .timetable-block-editor,
+  .timetable-meeting-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .timetable-block-editor__row {
+    display: grid;
+    grid-template-columns: 34px 1fr 1fr 0.75fr 0.75fr;
+    align-items: end;
+    gap: 9px;
+    padding: 11px;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .timetable-block-editor__index {
+    display: grid;
+    width: 28px;
+    height: 38px;
+    place-items: center;
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+    border-radius: var(--radius-sm);
+    font-weight: 850;
+  }
+
+  .timetable-meeting-editor {
+    display: grid;
+    gap: 13px;
+    padding: 14px;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .timetable-meeting-editor > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .week-selector {
+    display: grid;
+    gap: 9px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .week-selector__heading,
+  .week-selector__heading > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 9px;
+  }
+
+  .week-selector__heading > div:first-child {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .week-selector__heading span {
+    color: var(--color-text-tertiary);
+    font-size: 11px;
+  }
+
+  .week-selector__shortcuts button {
+    padding: 4px 7px;
+    color: var(--color-text-secondary);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .week-selector__grid {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(34px, 1fr));
+    gap: 6px;
+  }
+
+  .week-selector__grid button {
+    min-height: 36px;
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 7px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    cursor: pointer;
+  }
+
+  .week-selector__grid button.selected {
+    color: var(--button-primary-foreground);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  .timetable-conflict-note {
+    align-items: center;
+  }
+
+  .timetable-semester-manager {
+    margin-top: 20px;
+  }
+
+  .timetable-semester-manager > p {
+    margin: 0;
+    color: var(--color-text-tertiary);
+  }
+
+  .timetable-semester-manager > div {
+    display: grid;
+    gap: 7px;
+  }
+
+  .timetable-semester-manager article {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: var(--color-surface-raised);
+    border-radius: var(--radius-sm);
+  }
+
+  .timetable-semester-manager article > span {
+    display: grid;
+  }
+
+  .timetable-semester-manager small {
+    color: var(--color-text-tertiary);
+  }
+
+  .timetable-course-detail,
+  .timetable-course-detail__meetings {
+    display: grid;
+    gap: 12px;
+  }
+
+  .timetable-course-detail__summary {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 8px 12px;
+    padding: 14px;
+    background: var(--color-surface-muted);
+    border-radius: var(--radius-md);
+  }
+
+  .timetable-course-detail__summary p {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .timetable-course-detail__summary p:last-child {
+    grid-column: 2;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+  }
+
+  .timetable-course-detail__meetings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .timetable-course-detail__meetings article {
+    display: grid;
+    gap: 4px;
+    padding: 13px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .timetable-course-detail__meetings span,
+  .timetable-course-detail__meetings small {
+    color: var(--color-text-secondary);
+  }
+
+  .timetable-occurrence-detail {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .timetable-occurrence-detail > div {
+    display: grid;
+    gap: 3px;
+    padding: 14px;
+    background: var(--color-surface-muted);
+    border-radius: var(--radius-md);
+  }
+
+  .timetable-occurrence-detail > div span {
+    color: var(--color-text-tertiary);
+    font-size: 11px;
+  }
+
+  .timetable-adjustment-note {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 12px;
+    color: var(--color-warning);
+    background: var(--color-brass-soft);
+    border-radius: var(--radius-sm);
+  }
+}
+
+@layer responsive {
+  @media (max-width: 1199px) {
+    .timetable-toolbar {
+      grid-template-columns: minmax(210px, 0.8fr) minmax(340px, 1.2fr);
+    }
+
+    .timetable-toolbar__actions {
+      grid-column: 1 / -1;
+      justify-content: flex-end;
+      padding-top: 8px;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .timetable-grid.has-weekend {
+      min-width: 1040px;
+    }
+  }
+
+  @media (max-width: 899px) {
+    .timetable-toolbar {
+      grid-template-columns: 1fr;
+    }
+
+    .timetable-toolbar__actions {
+      grid-column: auto;
+    }
+
+    .timetable-week-switcher {
+      justify-content: space-between;
+    }
+
+    .timetable-week-switcher > div {
+      min-width: 0;
+    }
+
+    .timetable-grid {
+      display: none;
+    }
+
+    .timetable-mobile {
+      display: grid;
+      gap: 10px;
+    }
+
+    .timetable-mobile__days {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(42px, 1fr));
+      gap: 4px;
+      padding: 6px;
+      overflow-x: auto;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+    }
+
+    .timetable-mobile__days button {
+      display: grid;
+      min-width: 42px;
+      min-height: 48px;
+      place-content: center;
+      gap: 1px;
+      color: var(--color-text-secondary);
+      background: transparent;
+      border: 0;
+      border-radius: var(--radius-sm);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .timetable-mobile__days button.active {
+      color: var(--button-primary-foreground);
+      background: var(--color-accent);
+    }
+
+    .timetable-mobile__days button.is-today:not(.active) {
+      color: var(--color-accent);
+      background: var(--color-accent-soft);
+    }
+
+    .timetable-mobile__days span {
+      font-size: 11px;
+    }
+
+    .timetable-mobile__list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .timetable-mobile-slot {
+      display: grid;
+      grid-template-columns: 126px minmax(0, 1fr);
+      align-items: start;
+      gap: 8px;
+      min-width: 0;
+      padding: 10px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+    }
+
+    .timetable-mobile-slot > header {
+      display: grid;
+      gap: 7px;
+      padding: 4px;
+    }
+
+    .timetable-mobile-slot > header > div {
+      display: grid;
+    }
+
+    .timetable-mobile-slot > header span,
+    .timetable-mobile-slot > header time {
+      color: var(--color-text-tertiary);
+      font-size: 11px;
+    }
+
+    .timetable-mobile-slot .timetable-course-card,
+    .timetable-mobile-slot__empty {
+      grid-column: 2;
+    }
+
+    .timetable-mobile-slot__empty {
+      min-height: 72px;
+      color: var(--color-text-tertiary);
+      background: var(--color-surface-muted);
+      border: 1px dashed var(--color-border-strong);
+      border-radius: var(--radius-sm);
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .timetable-block-editor__row {
+      grid-template-columns: 32px 1fr 1fr;
+    }
+
+    .timetable-block-editor__row .field:nth-of-type(3),
+    .timetable-block-editor__row .field:nth-of-type(4) {
+      grid-column: span 1;
+    }
+
+    .week-selector__grid {
+      grid-template-columns: repeat(5, minmax(36px, 1fr));
+    }
+  }
+
+  @media (max-width: 599px) {
+    .timetable-toolbar {
+      padding: 9px;
+    }
+
+    .timetable-toolbar__actions {
+      justify-content: stretch;
+    }
+
+    .timetable-toolbar__actions .button {
+      flex: 1;
+    }
+
+    .timetable-week-switcher .button {
+      padding-right: 10px;
+      padding-left: 10px;
+    }
+
+    .timetable-mobile-slot {
+      grid-template-columns: 92px minmax(0, 1fr);
+      padding: 8px;
+    }
+
+    .timetable-archive-list,
+    .timetable-course-detail__meetings,
+    .timetable-occurrence-detail {
+      grid-template-columns: 1fr;
+    }
+
+    .timetable-block-editor__row {
+      grid-template-columns: 28px 1fr;
+    }
+
+    .timetable-block-editor__row .field {
+      grid-column: 2;
+    }
+
+    .timetable-form-section,
+    .timetable-settings-section,
+    .timetable-semester-manager {
+      padding: 13px;
+    }
+
+    .timetable-form-section > header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .week-selector__heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .week-selector__shortcuts {
+      width: 100%;
+      flex-wrap: wrap;
+      justify-content: flex-start !important;
+    }
+
+    .modal--timetable-course .modal__footer,
+    .modal--timetable-settings .modal__footer {
+      flex-wrap: wrap;
+    }
+
+    .modal-footer-spacer {
+      display: none;
+    }
+  }
+}
+
 @layer reset {
   *,
   *::before,

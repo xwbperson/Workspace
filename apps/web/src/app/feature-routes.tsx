@@ -38,6 +38,9 @@ const LifeCountdownPage = lazy(() =>
     default: module.LifeCountdownPage,
   })),
 );
+const TimetablePage = lazy(() =>
+  import('../features/timetable/index.js').then((module) => ({ default: module.TimetablePage })),
+);
 
 function featurePage(page: React.JSX.Element): React.JSX.Element {
   return <Suspense fallback={<PageLoader label="正在加载功能" />}>{page}</Suspense>;
@@ -60,6 +63,7 @@ export const featureRoutes = [
   { path: 'features/tasks/:taskId', element: featurePage(<TaskPage />) },
   { path: 'features/calendar', element: featurePage(<CalendarPage />) },
   { path: 'features/calendar/:entryId', element: featurePage(<CalendarPage />) },
+  { path: 'features/timetable', element: featurePage(<TimetablePage />) },
   { path: 'features/inbox', element: featurePage(<InboxPage />) },
   { path: 'features/inbox/:itemId', element: featurePage(<InboxPage />) },
   { path: 'features/subscriptions', element: featurePage(<SubscriptionPage />) },

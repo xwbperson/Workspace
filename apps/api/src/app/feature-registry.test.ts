@@ -15,6 +15,7 @@ const expectedFeatureIds = [
   'subscriptions',
   'finance',
   'life-countdown',
+  'timetable',
 ] as const;
 
 describe('feature registry search contract', () => {

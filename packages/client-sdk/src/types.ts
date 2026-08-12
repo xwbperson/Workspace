@@ -604,6 +604,184 @@ export interface CalendarEntryListResponse {
   items: CalendarEntry[];
 }
 
+export type TimetableEntityStatus = 'active' | 'archived';
+export type TimetableColor = 'teal' | 'blue' | 'violet' | 'amber' | 'rose' | 'slate';
+export type TimetableAdjustmentType = 'cancel' | 'reschedule' | 'override';
+
+export interface TimetableTimeBlock {
+  id: string;
+  semesterId: string;
+  label: string;
+  sourceLabel: string;
+  startTime: string;
+  endTime: string;
+  position: number;
+  version: number;
+}
+
+export interface TimetableSemester {
+  id: string;
+  name: string;
+  shortName: string;
+  firstWeekMonday: string;
+  totalWeeks: number;
+  isCurrent: boolean;
+  showWeekend: boolean;
+  status: TimetableEntityStatus;
+  timeBlocks: TimetableTimeBlock[];
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TimetableSemesterInput {
+  name: string;
+  shortName: string;
+  firstWeekMonday: string;
+  totalWeeks: number;
+  showWeekend?: boolean;
+  makeCurrent?: boolean;
+}
+
+export interface TimetableSemesterUpdateInput extends Partial<TimetableSemesterInput> {
+  version: number;
+}
+
+export interface TimetableTimeBlockInput {
+  id: string;
+  label: string;
+  sourceLabel?: string;
+  startTime: string;
+  endTime: string;
+  position: number;
+  version: number;
+}
+
+export interface TimetableTimeBlocksUpdateInput {
+  semesterVersion: number;
+  blocks: TimetableTimeBlockInput[];
+}
+
+export interface TimetableMeeting {
+  id: string;
+  courseId: string;
+  timeBlockId: string;
+  weekday: number;
+  room: string;
+  instructorOverride: string[];
+  weekNumbers: number[];
+  position: number;
+  version: number;
+}
+
+export interface TimetableMeetingInput {
+  id?: string;
+  timeBlockId: string;
+  weekday: number;
+  room?: string;
+  instructorOverride?: string[];
+  weekNumbers: number[];
+}
+
+export interface TimetableCourse {
+  id: string;
+  semesterId: string;
+  name: string;
+  shortName: string;
+  instructors: string[];
+  color: TimetableColor;
+  notes: string;
+  status: TimetableEntityStatus;
+  meetings: TimetableMeeting[];
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TimetableCourseInput {
+  semesterId: string;
+  name: string;
+  shortName?: string;
+  instructors?: string[];
+  color?: TimetableColor;
+  notes?: string;
+  meetings: TimetableMeetingInput[];
+  allowConflicts?: boolean;
+}
+
+export interface TimetableCourseUpdateInput extends Partial<TimetableCourseInput> {
+  version: number;
+}
+
+export interface TimetableAdjustment {
+  id: string;
+  courseId: string;
+  meetingId: string;
+  originalDate: string;
+  type: TimetableAdjustmentType;
+  newDate?: string;
+  newTimeBlockId?: string;
+  room?: string;
+  instructors?: string[];
+  note: string;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TimetableAdjustmentInput {
+  meetingId: string;
+  originalDate: string;
+  type: TimetableAdjustmentType;
+  newDate?: string | null;
+  newTimeBlockId?: string | null;
+  room?: string | null;
+  instructors?: string[] | null;
+  note?: string;
+}
+
+export interface TimetableAdjustmentUpdateInput extends Partial<TimetableAdjustmentInput> {
+  version: number;
+}
+
+export interface TimetableOccurrence {
+  occurrenceId: string;
+  courseId: string;
+  meetingId: string;
+  semesterId: string;
+  date: string;
+  originalDate: string;
+  weekNumber: number;
+  weekday: number;
+  courseName: string;
+  courseShortName: string;
+  instructors: string[];
+  room: string;
+  color: TimetableColor;
+  notes: string;
+  weekLabel: string;
+  timeBlock: TimetableTimeBlock;
+  conflict: boolean;
+  cancelled: boolean;
+  adjustment?: TimetableAdjustment;
+}
+
+export interface TimetableSemesterListResponse {
+  items: TimetableSemester[];
+}
+
+export interface TimetableCourseListResponse {
+  items: TimetableCourse[];
+}
+
+export interface TimetableOccurrenceListResponse {
+  semester: TimetableSemester;
+  weekNumber: number;
+  weekStart: string;
+  weekEnd: string;
+  items: TimetableOccurrence[];
+}
+
 export type InboxItemType = 'idea' | 'inspiration' | 'snippet' | 'article' | 'link' | 'file';
 export type InboxItemStatus = 'inbox' | 'processed' | 'archived';
 

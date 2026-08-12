@@ -78,6 +78,20 @@ import type {
   TaskListResponse,
   TaskStatus,
   TaskUpdateInput,
+  TimetableAdjustment,
+  TimetableAdjustmentInput,
+  TimetableAdjustmentUpdateInput,
+  TimetableCourse,
+  TimetableCourseInput,
+  TimetableCourseListResponse,
+  TimetableCourseUpdateInput,
+  TimetableEntityStatus,
+  TimetableOccurrenceListResponse,
+  TimetableSemester,
+  TimetableSemesterInput,
+  TimetableSemesterListResponse,
+  TimetableSemesterUpdateInput,
+  TimetableTimeBlocksUpdateInput,
   WorkbenchNotification,
   WorkbenchPreferences,
 } from './types.js';
@@ -695,6 +709,126 @@ export class WorkbenchClient {
   }
   public deleteCalendarEntryPermanently(id: string, version: number): Promise<void> {
     return this.request(`/calendar-entries/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public getTimetableSemesters(
+    status: TimetableEntityStatus = 'active',
+  ): Promise<TimetableSemesterListResponse> {
+    return this.request(`/timetable/semesters?status=${encodeURIComponent(status)}`);
+  }
+  public getTimetableSemester(id: string): Promise<TimetableSemester> {
+    return this.request(`/timetable/semesters/${encodeURIComponent(id)}`);
+  }
+  public createTimetableSemester(input: TimetableSemesterInput): Promise<TimetableSemester> {
+    return this.request('/timetable/semesters', { method: 'POST', body: input });
+  }
+  public updateTimetableSemester(
+    id: string,
+    input: TimetableSemesterUpdateInput,
+  ): Promise<TimetableSemester> {
+    return this.request(`/timetable/semesters/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: input,
+    });
+  }
+  public updateTimetableTimeBlocks(
+    semesterId: string,
+    input: TimetableTimeBlocksUpdateInput,
+  ): Promise<TimetableSemester> {
+    return this.request(`/timetable/semesters/${encodeURIComponent(semesterId)}/time-blocks`, {
+      method: 'PUT',
+      body: input,
+    });
+  }
+  public archiveTimetableSemester(id: string, version: number): Promise<void> {
+    return this.request(`/timetable/semesters/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public restoreTimetableSemester(id: string, version: number): Promise<TimetableSemester> {
+    return this.request(`/timetable/semesters/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public deleteTimetableSemesterPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/timetable/semesters/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+  public getTimetableCourses(
+    semesterId: string,
+    status: TimetableEntityStatus = 'active',
+  ): Promise<TimetableCourseListResponse> {
+    const query = new URLSearchParams({ semesterId, status });
+    return this.request(`/timetable/courses?${query.toString()}`);
+  }
+  public getTimetableCourse(id: string): Promise<TimetableCourse> {
+    return this.request(`/timetable/courses/${encodeURIComponent(id)}`);
+  }
+  public createTimetableCourse(input: TimetableCourseInput): Promise<TimetableCourse> {
+    return this.request('/timetable/courses', { method: 'POST', body: input });
+  }
+  public updateTimetableCourse(
+    id: string,
+    input: TimetableCourseUpdateInput,
+  ): Promise<TimetableCourse> {
+    return this.request(`/timetable/courses/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: input,
+    });
+  }
+  public archiveTimetableCourse(id: string, version: number): Promise<void> {
+    return this.request(`/timetable/courses/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public restoreTimetableCourse(id: string, version: number): Promise<TimetableCourse> {
+    return this.request(`/timetable/courses/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public deleteTimetableCoursePermanently(id: string, version: number): Promise<void> {
+    return this.request(`/timetable/courses/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+  public getTimetableOccurrences(
+    week: number,
+    semesterId?: string,
+  ): Promise<TimetableOccurrenceListResponse> {
+    const query = new URLSearchParams({ week: String(week) });
+    if (semesterId) query.set('semesterId', semesterId);
+    return this.request(`/timetable/occurrences?${query.toString()}`);
+  }
+  public createTimetableAdjustment(
+    courseId: string,
+    input: TimetableAdjustmentInput,
+  ): Promise<TimetableAdjustment> {
+    return this.request(`/timetable/courses/${encodeURIComponent(courseId)}/adjustments`, {
+      method: 'POST',
+      body: input,
+    });
+  }
+  public updateTimetableAdjustment(
+    id: string,
+    input: TimetableAdjustmentUpdateInput,
+  ): Promise<TimetableAdjustment> {
+    return this.request(`/timetable/adjustments/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: input,
+    });
+  }
+  public deleteTimetableAdjustment(id: string, version: number): Promise<void> {
+    return this.request(`/timetable/adjustments/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       body: { version },
     });

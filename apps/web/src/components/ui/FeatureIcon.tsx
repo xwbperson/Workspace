@@ -1,6 +1,7 @@
 import {
   BookOpen,
   CalendarDays,
+  CalendarClock,
   CreditCard,
   GraduationCap,
   Hourglass,
@@ -25,6 +26,7 @@ export function FeatureIcon({
   if (name === 'target') return <Target aria-hidden="true" size={size} />;
   if (name === 'list-checks') return <ListChecks aria-hidden="true" size={size} />;
   if (name === 'calendar-days') return <CalendarDays aria-hidden="true" size={size} />;
+  if (name === 'calendar-clock') return <CalendarClock aria-hidden="true" size={size} />;
   if (name === 'inbox') return <Inbox aria-hidden="true" size={size} />;
   if (name === 'credit-card') return <CreditCard aria-hidden="true" size={size} />;
   if (name === 'wallet-cards') return <WalletCards aria-hidden="true" size={size} />;
