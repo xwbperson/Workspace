@@ -4763,6 +4763,7 @@ export interface paths {
         content: {
           'application/json': {
             hiddenFeatureIds: string[];
+            sidebarFeatureOrder?: string[];
             overviewBlockIds: string[];
             /** @enum {string} */
             theme: 'light' | 'dark' | 'glass';

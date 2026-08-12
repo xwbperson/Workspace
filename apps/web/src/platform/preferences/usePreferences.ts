@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthProvider.js';
 
 const fallbackPreferences: WorkbenchPreferences = {
   hiddenFeatureIds: [],
+  sidebarFeatureOrder: [],
   overviewBlockIds: ['countdowns:nearest'],
   theme: 'dark',
   dateDisplay: 'relative',

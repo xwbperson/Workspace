@@ -133,6 +133,7 @@ export interface OverviewResponse {
 
 export interface WorkbenchPreferences {
   hiddenFeatureIds: string[];
+  sidebarFeatureOrder: string[];
   overviewBlockIds: string[];
   theme: 'light' | 'dark' | 'glass';
   dateDisplay: 'relative' | 'absolute';

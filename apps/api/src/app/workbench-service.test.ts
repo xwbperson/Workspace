@@ -20,7 +20,10 @@ describe('WorkbenchService preferences', () => {
   it('shows every feature in navigation by default', () => {
     const { service } = createService();
 
-    expect(service.defaultPreferences()).toMatchObject({ hiddenFeatureIds: [] });
+    expect(service.defaultPreferences()).toMatchObject({
+      hiddenFeatureIds: [],
+      sidebarFeatureOrder: [],
+    });
     expect(service.defaultPreferences()).not.toHaveProperty('pinnedFeatureIds');
   });
 
@@ -34,5 +37,19 @@ describe('WorkbenchService preferences', () => {
     await service.savePreferences(input);
 
     expect(save).toHaveBeenCalledWith(expect.objectContaining({ hiddenFeatureIds: ['books'] }));
+  });
+
+  it('stores only unique sidebar order ids that belong to registered features', async () => {
+    const { service, save } = createService();
+    const input = {
+      ...service.defaultPreferences(),
+      sidebarFeatureOrder: ['books', 'unknown', 'books', 'countdowns'],
+    };
+
+    await service.savePreferences(input);
+
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({ sidebarFeatureOrder: ['books', 'countdowns'] }),
+    );
   });
 });

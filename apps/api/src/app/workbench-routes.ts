@@ -72,6 +72,7 @@ export async function registerWorkbenchRoutes(
           ],
           properties: {
             hiddenFeatureIds: { type: 'array', maxItems: 100, items: { type: 'string' } },
+            sidebarFeatureOrder: { type: 'array', maxItems: 100, items: { type: 'string' } },
             overviewBlockIds: { type: 'array', maxItems: 100, items: { type: 'string' } },
             theme: { type: 'string', enum: ['light', 'dark', 'glass'] },
             dateDisplay: { type: 'string', enum: ['relative', 'absolute'] },

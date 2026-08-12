@@ -52,8 +52,9 @@ export function WorkbenchShell(): React.JSX.Element {
   }, []);
   const page = pageTitle(location.pathname);
   const visibleFeatureNavigation = useMemo(
-    () => getVisibleFeatureNavigation(preferences.hiddenFeatureIds),
-    [preferences.hiddenFeatureIds],
+    () =>
+      getVisibleFeatureNavigation(preferences.hiddenFeatureIds, preferences.sidebarFeatureOrder),
+    [preferences.hiddenFeatureIds, preferences.sidebarFeatureOrder],
   );
   const notifications = useQuery({
     queryKey: ['workbench', 'notifications'],

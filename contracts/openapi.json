@@ -5637,6 +5637,13 @@
                       "type": "string"
                     }
                   },
+                  "sidebarFeatureOrder": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
                   "overviewBlockIds": {
                     "type": "array",
                     "maxItems": 100,

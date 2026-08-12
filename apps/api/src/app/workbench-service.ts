@@ -81,6 +81,7 @@ export class WorkbenchService {
   public defaultPreferences(): WorkbenchPreferences {
     return {
       hiddenFeatureIds: [],
+      sidebarFeatureOrder: [],
       overviewBlockIds: this.overviewDefinitions()
         .filter((definition) => definition.defaultVisible)
         .map((definition) => definition.blockId),
@@ -103,6 +104,9 @@ export class WorkbenchService {
     const normalized: WorkbenchPreferences = {
       ...input,
       hiddenFeatureIds: [...new Set(input.hiddenFeatureIds)].filter((id) =>
+        visibleFeatures.has(id),
+      ),
+      sidebarFeatureOrder: [...new Set(input.sidebarFeatureOrder ?? [])].filter((id) =>
         visibleFeatures.has(id),
       ),
       overviewBlockIds: [...new Set(input.overviewBlockIds)].filter((id) => visibleBlocks.has(id)),

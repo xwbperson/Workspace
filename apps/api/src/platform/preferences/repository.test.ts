@@ -5,6 +5,7 @@ import { PreferencesRepository } from './repository.js';
 
 const defaults: WorkbenchPreferences = {
   hiddenFeatureIds: [],
+  sidebarFeatureOrder: [],
   overviewBlockIds: ['countdowns:nearest'],
   theme: 'dark',
   dateDisplay: 'relative',
@@ -35,6 +36,7 @@ describe('PreferencesRepository', () => {
     const result = await repository.get(defaults);
 
     expect(result.hiddenFeatureIds).toEqual([]);
+    expect(result.sidebarFeatureOrder).toEqual([]);
     expect(result.theme).toBe('dark');
     expect(result).not.toHaveProperty('pinnedFeatureIds');
   });

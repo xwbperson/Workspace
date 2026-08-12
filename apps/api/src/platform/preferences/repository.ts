@@ -31,6 +31,9 @@ export class PreferencesRepository {
       hiddenFeatureIds: Array.isArray(current.hiddenFeatureIds)
         ? current.hiddenFeatureIds
         : defaults.hiddenFeatureIds,
+      sidebarFeatureOrder: Array.isArray(current.sidebarFeatureOrder)
+        ? current.sidebarFeatureOrder
+        : defaults.sidebarFeatureOrder,
     };
   }
 
