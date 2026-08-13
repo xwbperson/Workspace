@@ -696,7 +696,7 @@
 
   .checklist-item-form__primary {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
   }
 
@@ -709,14 +709,6 @@
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
-  }
-
-  .checklist-details-toggle svg {
-    transition: transform 150ms ease;
-  }
-
-  .checklist-details-toggle.active svg {
-    transform: rotate(180deg);
   }
 
   .checklist-item-form__details {
