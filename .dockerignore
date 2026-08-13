@@ -10,5 +10,7 @@ node_modules
 .env.*
 !.env.example
 infra/secrets
+.local-private
+.workbuddy
 test-results
 playwright-report
