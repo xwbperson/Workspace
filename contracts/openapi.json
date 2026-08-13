@@ -5613,6 +5613,569 @@
         }
       }
     },
+    "/checklists": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["active", "archived"]
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 20000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/checklists/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "put": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["version"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 20000
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "delete": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["version"],
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/checklists/{id}/archive": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["version"],
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/checklists/{id}/restore": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["version"],
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/checklists/{id}/items": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "quantity": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 999999
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "unit": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "price": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 10000000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/checklists/{id}/items/{itemId}/check": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["checked", "version"],
+                "properties": {
+                  "checked": {
+                    "type": "boolean"
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "itemId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/checklists/{id}/items/{itemId}": {
+      "put": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["version"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "quantity": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 999999
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "unit": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "price": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 10000000
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "itemId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "delete": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["version"],
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "itemId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/checklists/{id}/reset": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["version"],
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/checklists/{id}/clear-checked": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["version"],
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/workbench/features": {
       "get": {
         "responses": {

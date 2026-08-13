@@ -571,6 +571,61 @@ export interface TaskListResponse {
   items: Task[];
 }
 
+export type ChecklistStatus = 'active' | 'archived';
+
+export interface ChecklistItem {
+  id: string;
+  checklistId: string;
+  name: string;
+  note: string;
+  quantity: number | null;
+  unit: string;
+  price: number | null;
+  checked: boolean;
+  checkedAt?: string;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Checklist {
+  id: string;
+  name: string;
+  note: string;
+  status: ChecklistStatus;
+  progress: { checked: number; total: number; percentage: number };
+  amounts: { checked: number; total: number };
+  items: ChecklistItem[];
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChecklistInput {
+  name: string;
+  note?: string;
+}
+
+export interface ChecklistUpdateInput extends Partial<ChecklistInput> {
+  version: number;
+}
+
+export interface ChecklistItemInput {
+  name: string;
+  note?: string;
+  quantity?: number | null;
+  unit?: string;
+  price?: number | null;
+}
+
+export interface ChecklistItemUpdateInput extends Partial<ChecklistItemInput> {
+  version: number;
+}
+
+export interface ChecklistListResponse {
+  items: Checklist[];
+}
+
 export type CalendarEntryType = 'schedule' | 'journal' | 'summary';
 export type CalendarEntryStatus = 'active' | 'archived';
 

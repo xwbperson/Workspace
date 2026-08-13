@@ -9,7 +9,8 @@ export type IconName =
   | 'inbox'
   | 'credit-card'
   | 'wallet-cards'
-  | 'hourglass';
+  | 'hourglass'
+  | 'clipboard-list';
 export type FeatureCategory =
   | 'planning-execution'
   | 'notes-knowledge'
@@ -240,6 +241,19 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
       search: true,
       quickCreate: true,
     },
+  },
+  {
+    featureId: 'checklists',
+    name: '清单',
+    description: '创建购物、观影、旅行等可重复核对的通用清单。',
+    icon: 'clipboard-list',
+    route: '/features/checklists',
+    category: 'tools',
+    keywords: ['清单', '购物', '观影', '行李', '勾选', '检查', '列表'],
+    order: 110,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    capabilities: { recent: true, overviewBlocks: true, search: true, quickCreate: true },
   },
 ] as const;
 

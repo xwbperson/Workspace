@@ -3,7 +3,7 @@ import { featureCatalog } from './feature-catalog.js';
 
 describe('static feature catalog', () => {
   it('publishes countdowns, books and courses as released features', () => {
-    expect(featureCatalog).toHaveLength(11);
+    expect(featureCatalog).toHaveLength(12);
     expect(featureCatalog[0]).toMatchObject({
       featureId: 'countdowns',
       route: '/features/countdowns',
@@ -91,6 +91,13 @@ describe('static feature catalog', () => {
       featureId: 'inbox',
       route: '/features/inbox',
       lifecycle: 'released',
+      capabilities: { recent: true, overviewBlocks: true, search: true, quickCreate: true },
+    });
+    expect(featureCatalog[11]).toMatchObject({
+      featureId: 'checklists',
+      route: '/features/checklists',
+      lifecycle: 'released',
+      discoverableInProduction: true,
       capabilities: { recent: true, overviewBlocks: true, search: true, quickCreate: true },
     });
   });

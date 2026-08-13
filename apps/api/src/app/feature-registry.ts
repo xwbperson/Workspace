@@ -11,6 +11,12 @@ import { createCourseContributions } from '../features/courses/contributions.js'
 import { CourseRepository } from '../features/courses/repository.js';
 import { registerCourseRoutes } from '../features/courses/routes.js';
 import { CourseService } from '../features/courses/service.js';
+import {
+  ChecklistRepository,
+  ChecklistService,
+  createChecklistContributions,
+  registerChecklistRoutes,
+} from '../features/checklists/index.js';
 import { createCountdownContributions } from '../features/countdowns/contributions.js';
 import { CountdownRepository } from '../features/countdowns/repository.js';
 import { registerCountdownRoutes } from '../features/countdowns/routes.js';
@@ -87,6 +93,8 @@ export function createFeatureRegistry(
   const lifeCountdownService = new LifeCountdownService(lifeCountdown);
   const timetable = new TimetableRepository(database);
   const timetableService = new TimetableService(timetable);
+  const checklists = new ChecklistRepository(database);
+  const checklistService = new ChecklistService(checklists);
 
   return [
     {
@@ -166,6 +174,13 @@ export function createFeatureRegistry(
       featureId: 'timetable',
       contribution: createTimetableContributions(timetable, timetableService),
       registerRoutes: async (app) => registerTimetableRoutes(app, timetableService),
+      syncNotifications: async () => {},
+      startScheduler: () => () => {},
+    },
+    {
+      featureId: 'checklists',
+      contribution: createChecklistContributions(checklistService),
+      registerRoutes: async (app) => registerChecklistRoutes(app, checklistService),
       syncNotifications: async () => {},
       startScheduler: () => () => {},
     },

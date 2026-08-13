@@ -2,6 +2,7 @@ import {
   BookOpen,
   CalendarDays,
   CalendarClock,
+  ClipboardList,
   CreditCard,
   GraduationCap,
   Hourglass,
@@ -31,5 +32,6 @@ export function FeatureIcon({
   if (name === 'credit-card') return <CreditCard aria-hidden="true" size={size} />;
   if (name === 'wallet-cards') return <WalletCards aria-hidden="true" size={size} />;
   if (name === 'hourglass') return <Hourglass aria-hidden="true" size={size} />;
+  if (name === 'clipboard-list') return <ClipboardList aria-hidden="true" size={size} />;
   return <Timer aria-hidden="true" size={size} />;
 }

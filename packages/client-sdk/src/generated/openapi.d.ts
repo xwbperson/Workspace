@@ -4648,6 +4648,478 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/checklists': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: {
+          status?: 'active' | 'archived';
+          limit?: number;
+        };
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            name: string;
+            note?: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/checklists/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody?: never;
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            name?: string;
+            note?: string;
+            version: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    post?: never;
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            version: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/checklists/{id}/archive': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            version: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/checklists/{id}/restore': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            version: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/checklists/{id}/items': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            name: string;
+            note?: string;
+            quantity?: number | null;
+            unit?: string;
+            price?: number | null;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/checklists/{id}/items/{itemId}/check': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+          itemId: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            checked: boolean;
+            version: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/checklists/{id}/items/{itemId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+          itemId: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            name?: string;
+            note?: string;
+            quantity?: number | null;
+            unit?: string;
+            price?: number | null;
+            version: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    post?: never;
+    delete: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+          itemId: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            version: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/checklists/{id}/reset': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            version: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/checklists/{id}/clear-checked': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path: {
+          id: string;
+        };
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            version: number;
+          };
+        };
+      };
+      responses: {
+        /** @description Default Response */
+        200: {
+          headers: {
+            [name: string]: unknown;
+          };
+          content?: never;
+        };
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/workbench/features': {
     parameters: {
       query?: never;

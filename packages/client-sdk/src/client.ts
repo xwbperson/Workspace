@@ -13,6 +13,14 @@ import type {
   CalendarEntryListResponse,
   CalendarEntryStatus,
   CalendarEntryUpdateInput,
+  Checklist,
+  ChecklistInput,
+  ChecklistItem,
+  ChecklistItemInput,
+  ChecklistItemUpdateInput,
+  ChecklistListResponse,
+  ChecklistStatus,
+  ChecklistUpdateInput,
   Countdown,
   CountdownInput,
   CountdownUpdateInput,
@@ -667,6 +675,103 @@ export class WorkbenchClient {
   public deleteTaskPermanently(id: string, version: number): Promise<void> {
     return this.request(`/tasks/${encodeURIComponent(id)}`, {
       method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public getChecklists(
+    options: { status?: ChecklistStatus; limit?: number } = {},
+  ): Promise<ChecklistListResponse> {
+    const query = new URLSearchParams();
+    if (options.status) query.set('status', options.status);
+    if (options.limit) query.set('limit', String(options.limit));
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return this.request(`/checklists${suffix}`);
+  }
+
+  public getChecklist(id: string): Promise<Checklist> {
+    return this.request(`/checklists/${encodeURIComponent(id)}`);
+  }
+
+  public createChecklist(input: ChecklistInput): Promise<Checklist> {
+    return this.request('/checklists', { method: 'POST', body: input });
+  }
+
+  public updateChecklist(id: string, input: ChecklistUpdateInput): Promise<Checklist> {
+    return this.request(`/checklists/${encodeURIComponent(id)}`, { method: 'PUT', body: input });
+  }
+
+  public archiveChecklist(id: string, version: number): Promise<void> {
+    return this.request(`/checklists/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public restoreChecklist(id: string, version: number): Promise<Checklist> {
+    return this.request(`/checklists/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public deleteChecklistPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/checklists/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public createChecklistItem(
+    checklistId: string,
+    input: ChecklistItemInput,
+  ): Promise<ChecklistItem> {
+    return this.request(`/checklists/${encodeURIComponent(checklistId)}/items`, {
+      method: 'POST',
+      body: input,
+    });
+  }
+
+  public updateChecklistItem(
+    checklistId: string,
+    itemId: string,
+    input: ChecklistItemUpdateInput,
+  ): Promise<ChecklistItem> {
+    return this.request(
+      `/checklists/${encodeURIComponent(checklistId)}/items/${encodeURIComponent(itemId)}`,
+      { method: 'PUT', body: input },
+    );
+  }
+
+  public checkChecklistItem(
+    checklistId: string,
+    itemId: string,
+    checked: boolean,
+    version: number,
+  ): Promise<ChecklistItem> {
+    return this.request(
+      `/checklists/${encodeURIComponent(checklistId)}/items/${encodeURIComponent(itemId)}/check`,
+      { method: 'POST', body: { checked, version } },
+    );
+  }
+
+  public deleteChecklistItem(checklistId: string, itemId: string, version: number): Promise<void> {
+    return this.request(
+      `/checklists/${encodeURIComponent(checklistId)}/items/${encodeURIComponent(itemId)}`,
+      { method: 'DELETE', body: { version } },
+    );
+  }
+
+  public resetChecklist(id: string, version: number): Promise<Checklist> {
+    return this.request(`/checklists/${encodeURIComponent(id)}/reset`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public clearCheckedChecklistItems(id: string, version: number): Promise<Checklist> {
+    return this.request(`/checklists/${encodeURIComponent(id)}/clear-checked`, {
+      method: 'POST',
       body: { version },
     });
   }
