@@ -5947,32 +5947,18 @@
                     "maxLength": 2000
                   },
                   "quantity": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "exclusiveMinimum": 0,
-                        "maximum": 999999
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
+                    "type": ["number", "null"],
+                    "exclusiveMinimum": 0,
+                    "maximum": 999999
                   },
                   "unit": {
                     "type": "string",
                     "maxLength": 20
                   },
                   "price": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 10000000
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
+                    "type": ["number", "null"],
+                    "minimum": 0,
+                    "maximum": 10000000
                   }
                 }
               }
@@ -6068,32 +6054,18 @@
                     "maxLength": 2000
                   },
                   "quantity": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "exclusiveMinimum": 0,
-                        "maximum": 999999
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
+                    "type": ["number", "null"],
+                    "exclusiveMinimum": 0,
+                    "maximum": 999999
                   },
                   "unit": {
                     "type": "string",
                     "maxLength": 20
                   },
                   "price": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 10000000
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
+                    "type": ["number", "null"],
+                    "minimum": 0,
+                    "maximum": 10000000
                   },
                   "version": {
                     "type": "integer",

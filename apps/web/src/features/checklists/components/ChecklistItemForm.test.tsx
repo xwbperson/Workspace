@@ -10,7 +10,15 @@ describe('ChecklistItemForm', () => {
     fireEvent.change(name, { target: { value: '牛奶' } });
     fireEvent.submit(name.closest('form')!);
 
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith({ name: '牛奶' }));
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({
+        name: '牛奶',
+        note: '',
+        quantity: null,
+        unit: '',
+        price: null,
+      }),
+    );
     expect(name).toHaveValue('');
     expect(name).toHaveFocus();
   });
@@ -19,7 +27,6 @@ describe('ChecklistItemForm', () => {
     const onSubmit = vi.fn(async () => undefined);
     render(<ChecklistItemForm submitting={false} onSubmit={onSubmit} />);
     fireEvent.change(screen.getByLabelText('条目名称'), { target: { value: '苹果' } });
-    fireEvent.click(screen.getByRole('button', { name: '补充数量、价格或备注' }));
     fireEvent.change(screen.getByLabelText('数量'), { target: { value: '2.5' } });
     fireEvent.change(screen.getByLabelText('单位'), { target: { value: 'kg' } });
     fireEvent.change(screen.getByLabelText('单价'), { target: { value: '8.8' } });

@@ -31,10 +31,12 @@ const itemProperties = {
   name: { type: 'string', minLength: 1, maxLength: 240 },
   note: { type: 'string', maxLength: 2_000 },
   quantity: {
-    anyOf: [{ type: 'number', exclusiveMinimum: 0, maximum: 999_999 }, { type: 'null' }],
+    type: ['number', 'null'],
+    exclusiveMinimum: 0,
+    maximum: 999_999,
   },
   unit: { type: 'string', maxLength: 20 },
-  price: { anyOf: [{ type: 'number', minimum: 0, maximum: 10_000_000 }, { type: 'null' }] },
+  price: { type: ['number', 'null'], minimum: 0, maximum: 10_000_000 },
 } as const;
 
 const versionBody = {

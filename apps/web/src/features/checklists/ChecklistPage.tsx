@@ -42,7 +42,7 @@ function formatMoney(value: number): string {
 function itemMeta(item: ChecklistItem): string {
   const parts: string[] = [];
   if (item.quantity !== null) parts.push(`${item.quantity}${item.unit ? ` ${item.unit}` : ''}`);
-  if (item.price !== null) {
+  if (item.price !== null && item.price > 0) {
     parts.push(
       item.quantity !== null ? `${formatMoney(item.price)} / 单位` : formatMoney(item.price),
     );
@@ -599,7 +599,7 @@ function ChecklistDetail({
                     {item.note ? <p>{item.note}</p> : null}
                     {meta ? <small>{meta}</small> : null}
                   </div>
-                  {item.price !== null ? (
+                  {item.price !== null && item.price > 0 ? (
                     <b>{formatMoney(item.price * (item.quantity ?? 1))}</b>
                   ) : null}
                   {editable ? (

@@ -152,6 +152,29 @@ describe('checklists feature vertical slice', () => {
     });
   });
 
+  it('keeps an explicitly empty item price absent', async () => {
+    const created = await inject({
+      method: 'POST',
+      url: '/api/v1/checklists',
+      payload: { name: '无金额清单' },
+    });
+    const checklist = created.json<{ id: string }>();
+
+    const item = await inject({
+      method: 'POST',
+      url: `/api/v1/checklists/${checklist.id}/items`,
+      payload: { name: '不涉及价格', note: '', quantity: null, unit: '', price: null },
+    });
+    expect(item.statusCode, item.body).toBe(201);
+    expect(item.json()).toMatchObject({ name: '不涉及价格', quantity: null, price: null });
+
+    const detail = await inject({ method: 'GET', url: `/api/v1/checklists/${checklist.id}` });
+    expect(detail.json()).toMatchObject({
+      amounts: { checked: 0, total: 0 },
+      items: [{ name: '不涉及价格', quantity: null, price: null }],
+    });
+  });
+
   it('automatically completes a fully checked checklist and supports manual lifecycle changes', async () => {
     const automaticResponse = await inject({
       method: 'POST',
