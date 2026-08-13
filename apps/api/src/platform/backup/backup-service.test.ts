@@ -46,7 +46,7 @@ describe('portable backup package', () => {
     const manifest = await service.verify(backupPath);
 
     expect(manifest.status).toBe('complete');
-    expect(manifest.databaseMigrationVersion).toBe('019-checklists');
+    expect(manifest.databaseMigrationVersion).toBe('020-checklist-lifecycle');
     expect(commandArgs).toContain('--format=custom');
     expect(commandArgs).toContain('--exclude-table-data=public.auth_sessions');
     expect(commandArgs).toContain('--exclude-table-data=public.auth_login_attempts');

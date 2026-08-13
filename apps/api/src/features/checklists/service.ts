@@ -89,6 +89,7 @@ export class ChecklistService {
       name: text(input.name, '清单名称', 120, true),
       note: text(input.note, '清单备注', 20_000),
       status: 'active',
+      archivedFromStatus: null,
       position: 0,
       version: 1,
       createdAt: now,
@@ -98,7 +99,7 @@ export class ChecklistService {
   }
 
   public async update(id: string, input: ChecklistUpdateInput): Promise<Checklist> {
-    const existing = await this.activeChecklist(id);
+    const existing = await this.editableChecklist(id);
     const updated = await this.repository.update(
       {
         ...existing,
@@ -113,10 +114,34 @@ export class ChecklistService {
   }
 
   public async archive(id: string, version: number): Promise<void> {
-    await this.activeChecklist(id);
+    await this.editableChecklist(id);
     if (!(await this.repository.archive(id, version, this.now()))) {
       throw await this.checklistConflict(id);
     }
+  }
+
+  public async complete(id: string, version: number): Promise<Checklist> {
+    const existing = await this.repository.get(id);
+    if (!existing || existing.status !== 'active') {
+      throw new ConflictError('只有使用中的清单可以标记为已完成。', {
+        currentVersion: existing?.version,
+      });
+    }
+    const completed = await this.repository.complete(id, version, this.now());
+    if (!completed) throw await this.checklistConflict(id);
+    return this.hydrate(completed);
+  }
+
+  public async reopen(id: string, version: number): Promise<Checklist> {
+    const existing = await this.repository.get(id);
+    if (!existing || existing.status !== 'completed') {
+      throw new ConflictError('只有已完成的清单可以重新标记为使用中。', {
+        currentVersion: existing?.version,
+      });
+    }
+    const reopened = await this.repository.reopen(id, version, this.now());
+    if (!reopened) throw await this.checklistConflict(id);
+    return this.hydrate(reopened);
   }
 
   public async restore(id: string, version: number): Promise<Checklist> {
@@ -146,7 +171,7 @@ export class ChecklistService {
   }
 
   public async addItem(checklistId: string, input: ChecklistItemInput): Promise<ChecklistItem> {
-    await this.activeChecklist(checklistId);
+    await this.editableChecklist(checklistId);
     const now = this.now();
     return toChecklistItem(
       await this.repository.createItem({
@@ -172,7 +197,7 @@ export class ChecklistService {
     checked: boolean,
     version: number,
   ): Promise<ChecklistItem> {
-    await this.activeChecklist(checklistId);
+    await this.editableChecklist(checklistId);
     const existing = await this.repository.getItem(checklistId, itemId);
     if (!existing) throw new NotFoundError('没有找到该清单条目。');
     const now = this.now();
@@ -196,7 +221,7 @@ export class ChecklistService {
     itemId: string,
     input: ChecklistItemUpdateInput,
   ): Promise<ChecklistItem> {
-    await this.activeChecklist(checklistId);
+    await this.editableChecklist(checklistId);
     const existing = await this.repository.getItem(checklistId, itemId);
     if (!existing) throw new NotFoundError('没有找到该清单条目。');
     const updated = await this.repository.updateItem(
@@ -216,14 +241,14 @@ export class ChecklistService {
   }
 
   public async reset(id: string, version: number): Promise<Checklist> {
-    await this.activeChecklist(id);
+    await this.editableChecklist(id);
     const updated = await this.repository.reset(id, version, this.now());
     if (!updated) throw await this.checklistConflict(id);
     return this.hydrate(updated);
   }
 
   public async deleteItem(checklistId: string, itemId: string, version: number): Promise<void> {
-    await this.activeChecklist(checklistId);
+    await this.editableChecklist(checklistId);
     const existing = await this.repository.getItem(checklistId, itemId);
     if (!existing) throw new NotFoundError('没有找到该清单条目。');
     if (!(await this.repository.deleteItem(checklistId, itemId, version, this.now()))) {
@@ -232,15 +257,15 @@ export class ChecklistService {
   }
 
   public async clearChecked(id: string, version: number): Promise<Checklist> {
-    await this.activeChecklist(id);
+    await this.editableChecklist(id);
     const updated = await this.repository.clearChecked(id, version, this.now());
     if (!updated) throw await this.checklistConflict(id);
     return this.hydrate(updated);
   }
 
-  private async activeChecklist(id: string): Promise<ChecklistRow> {
+  private async editableChecklist(id: string): Promise<ChecklistRow> {
     const row = await this.repository.get(id);
-    if (!row || row.status !== 'active') throw new NotFoundError('没有找到可编辑的清单。');
+    if (!row || row.status === 'archived') throw new NotFoundError('没有找到可编辑的清单。');
     return row;
   }
 

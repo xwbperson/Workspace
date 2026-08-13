@@ -48,7 +48,7 @@ export async function registerChecklistRoutes(
   app: FastifyInstance,
   service: ChecklistService,
 ): Promise<void> {
-  app.get<{ Querystring: { status?: 'active' | 'archived'; limit?: number } }>(
+  app.get<{ Querystring: { status?: 'active' | 'completed' | 'archived'; limit?: number } }>(
     '/api/v1/checklists',
     {
       config: { authenticated: true },
@@ -57,7 +57,7 @@ export async function registerChecklistRoutes(
           type: 'object',
           additionalProperties: false,
           properties: {
-            status: { type: 'string', enum: ['active', 'archived'] },
+            status: { type: 'string', enum: ['active', 'completed', 'archived'] },
             limit: { type: 'integer', minimum: 1, maximum: 500 },
           },
         },
@@ -103,6 +103,18 @@ export async function registerChecklistRoutes(
       },
     },
     async (request) => service.update(request.params.id, request.body),
+  );
+
+  app.post<{ Params: { id: string }; Body: { version: number } }>(
+    '/api/v1/checklists/:id/complete',
+    { config: { authenticated: true }, schema: { params: idParams, body: versionBody } },
+    async (request) => service.complete(request.params.id, request.body.version),
+  );
+
+  app.post<{ Params: { id: string }; Body: { version: number } }>(
+    '/api/v1/checklists/:id/reopen',
+    { config: { authenticated: true }, schema: { params: idParams, body: versionBody } },
+    async (request) => service.reopen(request.params.id, request.body.version),
   );
 
   app.post<{ Params: { id: string }; Body: { version: number } }>(

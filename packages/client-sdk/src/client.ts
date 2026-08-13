@@ -701,6 +701,20 @@ export class WorkbenchClient {
     return this.request(`/checklists/${encodeURIComponent(id)}`, { method: 'PUT', body: input });
   }
 
+  public completeChecklist(id: string, version: number): Promise<Checklist> {
+    return this.request(`/checklists/${encodeURIComponent(id)}/complete`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
+  public reopenChecklist(id: string, version: number): Promise<Checklist> {
+    return this.request(`/checklists/${encodeURIComponent(id)}/reopen`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+
   public archiveChecklist(id: string, version: number): Promise<void> {
     return this.request(`/checklists/${encodeURIComponent(id)}/archive`, {
       method: 'POST',

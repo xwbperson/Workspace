@@ -17,6 +17,7 @@ import { timetableMigration } from './016-timetable.js';
 import { financeAccountDetailsMigration } from './017-finance-account-details.js';
 import { inboxContentTypesMigration } from './018-inbox-content-types.js';
 import { checklistsMigration } from './019-checklists.js';
+import { checklistLifecycleMigration } from './020-checklist-lifecycle.js';
 
 export interface Migration {
   id: string;
@@ -43,4 +44,5 @@ export const migrations: readonly Migration[] = [
   financeAccountDetailsMigration,
   inboxContentTypesMigration,
   checklistsMigration,
+  checklistLifecycleMigration,
 ];

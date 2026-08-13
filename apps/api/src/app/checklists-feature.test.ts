@@ -152,6 +152,128 @@ describe('checklists feature vertical slice', () => {
     });
   });
 
+  it('automatically completes a fully checked checklist and supports manual lifecycle changes', async () => {
+    const automaticResponse = await inject({
+      method: 'POST',
+      url: '/api/v1/checklists',
+      payload: { name: '自动完成清单' },
+    });
+    const automatic = automaticResponse.json<{ id: string; version: number }>();
+    const automaticItemResponse = await inject({
+      method: 'POST',
+      url: `/api/v1/checklists/${automatic.id}/items`,
+      payload: { name: '唯一条目' },
+    });
+    const automaticItem = automaticItemResponse.json<{ id: string; version: number }>();
+
+    const checked = await inject({
+      method: 'POST',
+      url: `/api/v1/checklists/${automatic.id}/items/${automaticItem.id}/check`,
+      payload: { checked: true, version: automaticItem.version },
+    });
+    expect(checked.statusCode, checked.body).toBe(200);
+    const automaticallyCompleted = await inject({
+      method: 'GET',
+      url: `/api/v1/checklists/${automatic.id}`,
+    });
+    expect(automaticallyCompleted.json()).toMatchObject({
+      status: 'completed',
+      version: 2,
+      progress: { checked: 1, total: 1, percentage: 100 },
+    });
+
+    const manualResponse = await inject({
+      method: 'POST',
+      url: '/api/v1/checklists',
+      payload: { name: '手动完成清单' },
+    });
+    const manual = manualResponse.json<{ id: string; version: number }>();
+    await inject({
+      method: 'POST',
+      url: `/api/v1/checklists/${manual.id}/items`,
+      payload: { name: '尚未完成的条目' },
+    });
+    const completed = await inject({
+      method: 'POST',
+      url: `/api/v1/checklists/${manual.id}/complete`,
+      payload: { version: manual.version },
+    });
+    expect(completed.statusCode, completed.body).toBe(200);
+    expect(completed.json()).toMatchObject({
+      status: 'completed',
+      version: 2,
+      progress: { checked: 0, total: 1, percentage: 0 },
+    });
+
+    const archived = await inject({
+      method: 'POST',
+      url: `/api/v1/checklists/${manual.id}/archive`,
+      payload: { version: 2 },
+    });
+    expect(archived.statusCode, archived.body).toBe(204);
+    const restored = await inject({
+      method: 'POST',
+      url: `/api/v1/checklists/${manual.id}/restore`,
+      payload: { version: 3 },
+    });
+    expect(restored.statusCode, restored.body).toBe(200);
+    expect(restored.json()).toMatchObject({ status: 'completed', version: 4 });
+
+    const reopened = await inject({
+      method: 'POST',
+      url: `/api/v1/checklists/${manual.id}/reopen`,
+      payload: { version: 4 },
+    });
+    expect(reopened.statusCode, reopened.body).toBe(200);
+    expect(reopened.json()).toMatchObject({ status: 'active', version: 5 });
+
+    const completedList = await inject({
+      method: 'GET',
+      url: '/api/v1/checklists?status=completed',
+    });
+    expect(completedList.statusCode, completedList.body).toBe(200);
+    expect(completedList.json().items).toMatchObject([{ id: automatic.id, status: 'completed' }]);
+  });
+
+  it('automatically completes when deleting the only remaining unchecked item', async () => {
+    const createdResponse = await inject({
+      method: 'POST',
+      url: '/api/v1/checklists',
+      payload: { name: '删除后完成' },
+    });
+    const checklist = createdResponse.json<{ id: string }>();
+    const checkedItemResponse = await inject({
+      method: 'POST',
+      url: `/api/v1/checklists/${checklist.id}/items`,
+      payload: { name: '已完成项' },
+    });
+    const checkedItem = checkedItemResponse.json<{ id: string; version: number }>();
+    const uncheckedItemResponse = await inject({
+      method: 'POST',
+      url: `/api/v1/checklists/${checklist.id}/items`,
+      payload: { name: '将删除项' },
+    });
+    const uncheckedItem = uncheckedItemResponse.json<{ id: string; version: number }>();
+    await inject({
+      method: 'POST',
+      url: `/api/v1/checklists/${checklist.id}/items/${checkedItem.id}/check`,
+      payload: { checked: true, version: checkedItem.version },
+    });
+
+    const removed = await inject({
+      method: 'DELETE',
+      url: `/api/v1/checklists/${checklist.id}/items/${uncheckedItem.id}`,
+      payload: { version: uncheckedItem.version },
+    });
+    expect(removed.statusCode, removed.body).toBe(204);
+    const detail = await inject({ method: 'GET', url: `/api/v1/checklists/${checklist.id}` });
+    expect(detail.json()).toMatchObject({
+      status: 'completed',
+      version: 2,
+      progress: { checked: 1, total: 1, percentage: 100 },
+    });
+  });
+
   it('edits items, resets every check and only clears checked items', async () => {
     const created = await inject({
       method: 'POST',
@@ -203,11 +325,12 @@ describe('checklists feature vertical slice', () => {
     const reset = await inject({
       method: 'POST',
       url: `/api/v1/checklists/${checklist.id}/reset`,
-      payload: { version: checklist.version },
+      payload: { version: 2 },
     });
     expect(reset.statusCode, reset.body).toBe(200);
     expect(reset.json()).toMatchObject({
-      version: 2,
+      version: 3,
+      status: 'completed',
       progress: { checked: 0, total: 2, percentage: 0 },
       amounts: { checked: 0, total: 99 },
       items: [
@@ -226,11 +349,11 @@ describe('checklists feature vertical slice', () => {
     const cleared = await inject({
       method: 'POST',
       url: `/api/v1/checklists/${checklist.id}/clear-checked`,
-      payload: { version: 2 },
+      payload: { version: 3 },
     });
     expect(cleared.statusCode, cleared.body).toBe(200);
     expect(cleared.json()).toMatchObject({
-      version: 3,
+      version: 4,
       progress: { checked: 0, total: 1, percentage: 0 },
       amounts: { checked: 0, total: 0 },
       items: [{ id: passport.id, name: '护照', checked: false }],

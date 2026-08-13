@@ -571,7 +571,7 @@ export interface TaskListResponse {
   items: Task[];
 }
 
-export type ChecklistStatus = 'active' | 'archived';
+export type ChecklistStatus = 'active' | 'completed' | 'archived';
 
 export interface ChecklistItem {
   id: string;

@@ -33,6 +33,12 @@ export const checklistApi = {
   update(id: string, input: ChecklistUpdateInput) {
     return workbenchClient.updateChecklist(id, input);
   },
+  complete(id: string, version: number) {
+    return workbenchClient.completeChecklist(id, version);
+  },
+  reopen(id: string, version: number) {
+    return workbenchClient.reopenChecklist(id, version);
+  },
   archive(id: string, version: number) {
     return workbenchClient.archiveChecklist(id, version);
   },

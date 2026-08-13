@@ -15,7 +15,7 @@ export function ChecklistForm({
 
   return (
     <form
-      className="form-stack"
+      className="form-stack checklist-form"
       onSubmit={(event) => {
         event.preventDefault();
         if (!name.trim() || submitting) return;

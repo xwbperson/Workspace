@@ -6,6 +6,7 @@ export interface ChecklistRow {
   name: string;
   note: string;
   status: ChecklistStatus;
+  archivedFromStatus: Exclude<ChecklistStatus, 'archived'> | null;
   position: number;
   version: number;
   createdAt: Date;
@@ -31,7 +32,9 @@ interface ChecklistDatabaseRow {
   id: string;
   name: string;
   note: string;
-  status: ChecklistStatus;
+  status: 'active' | 'archived';
+  completed: boolean;
+  archived_from_status: Exclude<ChecklistStatus, 'archived'> | null;
   position: number;
   version: number;
   created_at: Date;
@@ -53,7 +56,8 @@ interface ChecklistItemDatabaseRow {
   updated_at: Date;
 }
 
-const CHECKLIST_COLUMNS = 'id,name,note,status,position,version,created_at,updated_at';
+const CHECKLIST_COLUMNS =
+  'id,name,note,status,completed,archived_from_status,position,version,created_at,updated_at';
 const ITEM_COLUMNS =
   'id,checklist_id,name,note,quantity,unit,price_cents,checked_at,position,version,created_at,updated_at';
 
@@ -62,7 +66,8 @@ function mapChecklist(row: ChecklistDatabaseRow): ChecklistRow {
     id: row.id,
     name: row.name,
     note: row.note,
-    status: row.status,
+    status: row.status === 'archived' ? 'archived' : row.completed ? 'completed' : 'active',
+    archivedFromStatus: row.archived_from_status,
     position: row.position,
     version: row.version,
     createdAt: row.created_at,
@@ -145,7 +150,10 @@ export class ChecklistRepository {
 
   public async list(status: ChecklistStatus, limit: number): Promise<ChecklistRow[]> {
     const result = await this.database.query<ChecklistDatabaseRow>(
-      `SELECT ${CHECKLIST_COLUMNS} FROM checklists WHERE status=$1
+      `SELECT ${CHECKLIST_COLUMNS} FROM checklists
+       WHERE ($1='archived' AND status='archived')
+          OR ($1='active' AND status='active' AND completed=FALSE)
+          OR ($1='completed' AND status='active' AND completed=TRUE)
        ORDER BY position ASC,updated_at DESC,id ASC LIMIT $2`,
       [status, limit],
     );
@@ -171,10 +179,21 @@ export class ChecklistRepository {
 
   public async create(row: ChecklistRow): Promise<ChecklistRow> {
     const result = await this.database.query<ChecklistDatabaseRow>(
-      `INSERT INTO checklists (id,name,note,status,position,version,created_at,updated_at)
-       VALUES ($1,$2,$3,$4,(SELECT COALESCE(MAX(position),-1)+1 FROM checklists),$5,$6,$7)
+      `INSERT INTO checklists
+         (id,name,note,status,completed,archived_from_status,position,version,created_at,updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,(SELECT COALESCE(MAX(position),-1)+1 FROM checklists),$7,$8,$9)
        RETURNING ${CHECKLIST_COLUMNS}`,
-      [row.id, row.name, row.note, row.status, row.version, row.createdAt, row.updatedAt],
+      [
+        row.id,
+        row.name,
+        row.note,
+        row.status,
+        row.status === 'completed',
+        row.archivedFromStatus,
+        row.version,
+        row.createdAt,
+        row.updatedAt,
+      ],
     );
     return mapChecklist(result.rows[0]!);
   }
@@ -188,9 +207,31 @@ export class ChecklistRepository {
     return result.rows[0] ? mapChecklist(result.rows[0]) : null;
   }
 
+  public async complete(id: string, version: number, now: Date): Promise<ChecklistRow | null> {
+    const result = await this.database.query<ChecklistDatabaseRow>(
+      `UPDATE checklists SET completed=TRUE,version=version+1,updated_at=$3
+       WHERE id=$1 AND version=$2 AND status='active' AND completed=FALSE
+       RETURNING ${CHECKLIST_COLUMNS}`,
+      [id, version, now],
+    );
+    return result.rows[0] ? mapChecklist(result.rows[0]) : null;
+  }
+
+  public async reopen(id: string, version: number, now: Date): Promise<ChecklistRow | null> {
+    const result = await this.database.query<ChecklistDatabaseRow>(
+      `UPDATE checklists SET completed=FALSE,version=version+1,updated_at=$3
+       WHERE id=$1 AND version=$2 AND status='active' AND completed=TRUE
+       RETURNING ${CHECKLIST_COLUMNS}`,
+      [id, version, now],
+    );
+    return result.rows[0] ? mapChecklist(result.rows[0]) : null;
+  }
+
   public async archive(id: string, version: number, now: Date): Promise<boolean> {
     const result = await this.database.query(
-      `UPDATE checklists SET status='archived',version=version+1,updated_at=$3
+      `UPDATE checklists
+       SET archived_from_status=CASE WHEN completed THEN 'completed' ELSE 'active' END,
+         status='archived',version=version+1,updated_at=$3
        WHERE id=$1 AND version=$2 AND status='active'`,
       [id, version, now],
     );
@@ -199,7 +240,9 @@ export class ChecklistRepository {
 
   public async restore(id: string, version: number, now: Date): Promise<ChecklistRow | null> {
     const result = await this.database.query<ChecklistDatabaseRow>(
-      `UPDATE checklists SET status='active',version=version+1,updated_at=$3
+      `UPDATE checklists SET status='active',
+         completed=(archived_from_status='completed'),archived_from_status=NULL,
+         version=version+1,updated_at=$3
        WHERE id=$1 AND version=$2 AND status='archived' RETURNING ${CHECKLIST_COLUMNS}`,
       [id, version, now],
     );
@@ -254,13 +297,47 @@ export class ChecklistRepository {
     version: number,
     now: Date,
   ): Promise<ChecklistItemRow | null> {
-    const result = await this.database.query<ChecklistItemDatabaseRow>(
-      `UPDATE checklist_items SET checked_at=$3,version=version+1,updated_at=$5
-       WHERE checklist_id=$1 AND id=$2 AND version=$4 RETURNING ${ITEM_COLUMNS}`,
-      [checklistId, itemId, checkedAt, version, now],
-    );
-    if (result.rows[0]) await this.touch(checklistId, now);
-    return result.rows[0] ? mapItem(result.rows[0]) : null;
+    const client = await this.database.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await client.query<ChecklistItemDatabaseRow>(
+        `UPDATE checklist_items SET checked_at=$3,version=version+1,updated_at=$5
+         WHERE checklist_id=$1 AND id=$2 AND version=$4 RETURNING ${ITEM_COLUMNS}`,
+        [checklistId, itemId, checkedAt, version, now],
+      );
+      if (!result.rows[0]) {
+        await client.query('ROLLBACK');
+        return null;
+      }
+      let automaticallyCompleted = false;
+      if (checkedAt) {
+        const counts = await client.query<{ total: string | number; unchecked: string | number }>(
+          `SELECT COUNT(*) AS total,
+             SUM(CASE WHEN checked_at IS NULL THEN 1 ELSE 0 END) AS unchecked
+           FROM checklist_items WHERE checklist_id=$1`,
+          [checklistId],
+        );
+        const count = counts.rows[0];
+        if (count && Number(count.total) > 0 && Number(count.unchecked) === 0) {
+          const completed = await client.query(
+            `UPDATE checklists SET completed=TRUE,version=version+1,updated_at=$2
+             WHERE id=$1 AND status='active' AND completed=FALSE`,
+            [checklistId, now],
+          );
+          automaticallyCompleted = (completed.rowCount ?? 0) === 1;
+        }
+      }
+      if (!automaticallyCompleted) {
+        await client.query(`UPDATE checklists SET updated_at=$2 WHERE id=$1`, [checklistId, now]);
+      }
+      await client.query('COMMIT');
+      return mapItem(result.rows[0]);
+    } catch (error) {
+      await rollback(client);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   public async updateItem(
@@ -293,12 +370,43 @@ export class ChecklistRepository {
     version: number,
     now: Date,
   ): Promise<boolean> {
-    const result = await this.database.query(
-      `DELETE FROM checklist_items WHERE checklist_id=$1 AND id=$2 AND version=$3`,
-      [checklistId, itemId, version],
-    );
-    if ((result.rowCount ?? 0) === 1) await this.touch(checklistId, now);
-    return (result.rowCount ?? 0) === 1;
+    const client = await this.database.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await client.query(
+        `DELETE FROM checklist_items WHERE checklist_id=$1 AND id=$2 AND version=$3`,
+        [checklistId, itemId, version],
+      );
+      if ((result.rowCount ?? 0) !== 1) {
+        await client.query('ROLLBACK');
+        return false;
+      }
+      const counts = await client.query<{ total: string | number; unchecked: string | number }>(
+        `SELECT COUNT(*) AS total,
+           SUM(CASE WHEN checked_at IS NULL THEN 1 ELSE 0 END) AS unchecked
+         FROM checklist_items WHERE checklist_id=$1`,
+        [checklistId],
+      );
+      const count = counts.rows[0];
+      const canComplete = count && Number(count.total) > 0 && Number(count.unchecked) === 0;
+      const completed = canComplete
+        ? await client.query(
+            `UPDATE checklists SET completed=TRUE,version=version+1,updated_at=$2
+             WHERE id=$1 AND status='active' AND completed=FALSE`,
+            [checklistId, now],
+          )
+        : undefined;
+      if ((completed?.rowCount ?? 0) !== 1) {
+        await client.query(`UPDATE checklists SET updated_at=$2 WHERE id=$1`, [checklistId, now]);
+      }
+      await client.query('COMMIT');
+      return true;
+    } catch (error) {
+      await rollback(client);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   public async reset(id: string, version: number, now: Date): Promise<ChecklistRow | null> {
@@ -322,7 +430,7 @@ export class ChecklistRepository {
 
   public async recent(limit: number): Promise<ChecklistRow[]> {
     const result = await this.database.query<ChecklistDatabaseRow>(
-      `SELECT ${CHECKLIST_COLUMNS} FROM checklists WHERE status='active'
+      `SELECT ${CHECKLIST_COLUMNS} FROM checklists WHERE status='active' AND completed=FALSE
        ORDER BY updated_at DESC,id ASC LIMIT $1`,
       [limit],
     );
@@ -332,7 +440,8 @@ export class ChecklistRepository {
   public async search(query: string, limit: number): Promise<ChecklistRow[]> {
     const pattern = `%${query.toLocaleLowerCase('zh-CN')}%`;
     const result = await this.database.query<ChecklistDatabaseRow>(
-      `SELECT DISTINCT c.id,c.name,c.note,c.status,c.position,c.version,c.created_at,c.updated_at
+      `SELECT DISTINCT c.id,c.name,c.note,c.status,c.completed,c.archived_from_status,
+         c.position,c.version,c.created_at,c.updated_at
        FROM checklists c LEFT JOIN checklist_items i ON i.checklist_id=c.id
        WHERE c.status='active' AND (LOWER(c.name) LIKE $1 OR LOWER(c.note) LIKE $1
          OR LOWER(COALESCE(i.name,'')) LIKE $1 OR LOWER(COALESCE(i.note,'')) LIKE $1)

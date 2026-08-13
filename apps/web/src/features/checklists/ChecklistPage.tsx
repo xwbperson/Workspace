@@ -10,6 +10,7 @@ import {
   Archive,
   ArrowLeft,
   Check,
+  CircleCheckBig,
   CircleDollarSign,
   Edit3,
   ListChecks,
@@ -30,6 +31,7 @@ import { ChecklistItemForm } from './components/ChecklistItemForm.js';
 
 const statusLabels: Record<ChecklistStatus, string> = {
   active: '使用中',
+  completed: '已完成',
   archived: '已归档',
 };
 
@@ -100,6 +102,24 @@ export function ChecklistPage(): React.JSX.Element {
       void navigate(`/features/checklists/${checklist.id}`);
     },
   });
+  const complete = useMutation({
+    mutationFn: (checklist: Checklist) => checklistApi.complete(checklist.id, checklist.version),
+    onSuccess: async (checklist) => {
+      await invalidateChecklistData();
+      setFilter('completed');
+      show('清单已标记为完成');
+      void navigate(`/features/checklists/${checklist.id}`);
+    },
+  });
+  const reopen = useMutation({
+    mutationFn: (checklist: Checklist) => checklistApi.reopen(checklist.id, checklist.version),
+    onSuccess: async (checklist) => {
+      await invalidateChecklistData();
+      setFilter('active');
+      show('清单已重新标记为使用中');
+      void navigate(`/features/checklists/${checklist.id}`);
+    },
+  });
   const archive = useMutation({
     mutationFn: (checklist: Checklist) => checklistApi.archive(checklist.id, checklist.version),
     onSuccess: async () => {
@@ -113,7 +133,7 @@ export function ChecklistPage(): React.JSX.Element {
     mutationFn: (checklist: Checklist) => checklistApi.restore(checklist.id, checklist.version),
     onSuccess: async (checklist) => {
       await invalidateChecklistData();
-      setFilter('active');
+      setFilter(checklist.status);
       show('清单已恢复');
       void navigate(`/features/checklists/${checklist.id}`);
     },
@@ -162,8 +182,16 @@ export function ChecklistPage(): React.JSX.Element {
       item: ChecklistItem;
       checked: boolean;
     }) => checklistApi.checkItem(checklist.id, item.id, checked, item.version),
-    onSuccess: async () => {
+    onSuccess: async (_item, variables) => {
       await invalidateChecklistData();
+      if (
+        variables.checked &&
+        variables.checklist.status === 'active' &&
+        variables.checklist.progress.total > 0 &&
+        variables.checklist.progress.checked + 1 >= variables.checklist.progress.total
+      ) {
+        show('所有条目均已勾选，清单已自动完成');
+      }
     },
   });
   const deleteItem = useMutation({
@@ -196,6 +224,8 @@ export function ChecklistPage(): React.JSX.Element {
   const error =
     create.error ??
     update.error ??
+    complete.error ??
+    reopen.error ??
     archive.error ??
     restore.error ??
     remove.error ??
@@ -216,7 +246,7 @@ export function ChecklistPage(): React.JSX.Element {
       </PageTopbarActions>
       {error ? <SectionError title="操作没有完成" message={humanizeApiError(error)} /> : null}
       <div className="lifecycle-tabs" aria-label="清单状态">
-        {(['active', 'archived'] as const).map((status) => (
+        {(['active', 'completed', 'archived'] as const).map((status) => (
           <button
             key={status}
             className={filter === status ? 'active' : ''}
@@ -270,11 +300,19 @@ export function ChecklistPage(): React.JSX.Element {
             </div>
           ) : (
             <EmptyState
-              title={filter === 'active' ? '还没有清单' : '还没有已归档清单'}
+              title={
+                filter === 'active'
+                  ? '还没有使用中的清单'
+                  : filter === 'completed'
+                    ? '还没有已完成清单'
+                    : '还没有已归档清单'
+              }
               description={
                 filter === 'active'
                   ? '创建购物、观影、旅行或任何需要逐项核对的清单。'
-                  : '归档后的清单会保留在这里。'
+                  : filter === 'completed'
+                    ? '全部条目勾选后，清单会自动进入这里；也可以手动标记完成。'
+                    : '使用中和已完成的清单归档后都会保留在这里。'
               }
               action={
                 filter === 'active' ? (
@@ -293,6 +331,8 @@ export function ChecklistPage(): React.JSX.Element {
               checkingItemId={checkItem.isPending ? checkItem.variables?.item.id : undefined}
               onBack={() => void navigate('/features/checklists')}
               onEdit={() => setEditOpen(true)}
+              onComplete={() => complete.mutate(selected)}
+              onReopen={() => reopen.mutate(selected)}
               onArchive={() => setArchiveOpen(true)}
               onRestore={() => restore.mutate(selected)}
               onDelete={() => setDeleteOpen(true)}
@@ -358,7 +398,9 @@ export function ChecklistPage(): React.JSX.Element {
       <ConfirmModal
         open={archiveOpen}
         title="归档清单"
-        description="条目和勾选记录都会保留，之后可以恢复。"
+        description={`条目和勾选记录都会保留，恢复后仍是${
+          selected?.status === 'completed' ? '已完成' : '使用中'
+        }状态。`}
         confirmLabel="确认归档"
         onClose={() => setArchiveOpen(false)}
         onConfirm={() => selected && archive.mutate(selected)}
@@ -408,6 +450,8 @@ function ChecklistDetail({
   adding,
   onBack,
   onEdit,
+  onComplete,
+  onReopen,
   onArchive,
   onRestore,
   onDelete,
@@ -423,6 +467,8 @@ function ChecklistDetail({
   adding: boolean;
   onBack(): void;
   onEdit(): void;
+  onComplete(): void;
+  onReopen(): void;
   onArchive(): void;
   onRestore(): void;
   onDelete(): void;
@@ -433,7 +479,13 @@ function ChecklistDetail({
   onReset(): void;
   onClearChecked(): void;
 }): React.JSX.Element {
-  const active = checklist.status === 'active';
+  const editable = checklist.status !== 'archived';
+  const statusClass =
+    checklist.status === 'completed'
+      ? 'source-pill--completed'
+      : checklist.status === 'archived'
+        ? 'source-pill--archived'
+        : '';
   return (
     <article className="entity-detail checklist-detail">
       <button type="button" className="button button--quiet mobile-back" onClick={onBack}>
@@ -442,19 +494,26 @@ function ChecklistDetail({
       </button>
       <header className="entity-detail__header">
         <div>
-          <span className={`source-pill ${active ? '' : 'source-pill--archived'}`}>
-            {statusLabels[checklist.status]}
-          </span>
+          <span className={`source-pill ${statusClass}`}>{statusLabels[checklist.status]}</span>
           <p className="eyebrow">通用勾选清单</p>
           <h2>{checklist.name}</h2>
           {checklist.note ? <p>{checklist.note}</p> : null}
         </div>
         <div className="entity-detail__actions">
-          {active ? (
+          {editable ? (
             <>
               <button className="button button--quiet" onClick={onEdit}>
                 <Edit3 size={16} aria-hidden="true" /> 编辑
               </button>
+              {checklist.status === 'active' ? (
+                <button className="button button--quiet" onClick={onComplete}>
+                  <CircleCheckBig size={16} aria-hidden="true" /> 标记完成
+                </button>
+              ) : (
+                <button className="button button--quiet" onClick={onReopen}>
+                  <RotateCcw size={16} aria-hidden="true" /> 标记使用中
+                </button>
+              )}
               <button className="button button--quiet" onClick={onArchive}>
                 <Archive size={16} aria-hidden="true" /> 归档
               </button>
@@ -491,14 +550,14 @@ function ChecklistDetail({
           </div>
         ) : null}
       </div>
-      {active ? <ChecklistItemForm submitting={adding} onSubmit={onAddItem} /> : null}
+      {editable ? <ChecklistItemForm submitting={adding} onSubmit={onAddItem} /> : null}
       <section className="checklist-items-section">
         <header>
           <div>
             <p className="eyebrow">清单列表</p>
             <h3>{checklist.progress.total} 个条目</h3>
           </div>
-          {active && checklist.items.length ? (
+          {editable && checklist.items.length ? (
             <div>
               <button
                 className="button button--text"
@@ -527,7 +586,7 @@ function ChecklistDetail({
                     <input
                       type="checkbox"
                       checked={item.checked}
-                      disabled={!active || checkingItemId === item.id}
+                      disabled={!editable || checkingItemId === item.id}
                       onChange={(event) => onCheckItem(item, event.target.checked)}
                       aria-label={`${item.checked ? '取消勾选' : '勾选'}${item.name}`}
                     />
@@ -543,7 +602,7 @@ function ChecklistDetail({
                   {item.price !== null ? (
                     <b>{formatMoney(item.price * (item.quantity ?? 1))}</b>
                   ) : null}
-                  {active ? (
+                  {editable ? (
                     <div className="checklist-item-actions">
                       <button
                         type="button"
@@ -571,7 +630,7 @@ function ChecklistDetail({
           <EmptyState
             title="清单还是空的"
             description={
-              active ? '在上方输入第一项，之后可以连续按回车添加。' : '这个清单没有条目。'
+              editable ? '在上方输入第一项，之后可以连续按回车添加。' : '这个清单没有条目。'
             }
           />
         )}
