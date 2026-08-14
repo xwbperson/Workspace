@@ -1,3 +1,7 @@
+{$DOMAIN_ALIAS_1}, {$DOMAIN_ALIAS_2} {
+  redir https://{$DOMAIN}{uri} permanent
+}
+
 {$DOMAIN} {
   encode zstd gzip
 

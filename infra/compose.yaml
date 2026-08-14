@@ -57,6 +57,8 @@ services:
     restart: unless-stopped
     environment:
       DOMAIN: ${DOMAIN:?DOMAIN is required}
+      DOMAIN_ALIAS_1: ${DOMAIN_ALIAS_1:-http://domain-alias-1.invalid}
+      DOMAIN_ALIAS_2: ${DOMAIN_ALIAS_2:-http://domain-alias-2.invalid}
     ports:
       - '80:80'
       - '443:443'
