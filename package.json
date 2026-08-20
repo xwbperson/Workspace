@@ -32,6 +32,7 @@
     "backup:verify": "npm run cli -w @workspace/api -- backup verify",
     "backup:restore": "npm run cli -w @workspace/api -- backup restore",
     "openapi:generate": "npm run build -w @workspace/client-sdk && npm run openapi:generate -w @workspace/api && npm run generate -w @workspace/client-sdk && prettier --write contracts/openapi.json packages/client-sdk/src/generated/openapi.d.ts",
+    "prevalidate:postgres": "npm run build -w @workspace/client-sdk",
     "validate:postgres": "tsx scripts/validate-real-postgres.ts",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
