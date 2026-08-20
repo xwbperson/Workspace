@@ -7,6 +7,7 @@ import type {
   GoalMetric,
   GoalUpdateInput,
 } from '@workspace/client-sdk';
+import { isValidDateOnly } from '../../platform/date.js';
 import { AppError, ConflictError, NotFoundError } from '../../platform/errors.js';
 import type { GoalRepository, GoalRow } from './repository.js';
 
@@ -23,7 +24,7 @@ function text(value: string | undefined, name: string, max: number, required = f
 }
 
 function date(value: string, name: string): string {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(Date.parse(`${value}T00:00:00Z`))) {
+  if (!isValidDateOnly(value)) {
     throw new AppError(400, 'INVALID_GOAL_DATE', `${name}不是有效日期。`);
   }
   return value;

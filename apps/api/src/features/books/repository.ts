@@ -178,6 +178,22 @@ export class BookRepository {
     return result.rows[0] ? mapBook(result.rows[0]) : null;
   }
 
+  public async getMany(ids: readonly string[]): Promise<BookRow[]> {
+    if (ids.length === 0) return [];
+    const placeholders = ids.map((_, index) => `$${index + 1}`).join(',');
+    const result = await this.database.query<BookDatabaseRow>(
+      `SELECT ${BOOK_COLUMNS}
+       FROM books b LEFT JOIN stored_files f ON f.id = b.cover_file_id
+       WHERE b.id IN (${placeholders})`,
+      ids,
+    );
+    const rowsById = new Map(result.rows.map((row) => [row.id, mapBook(row)]));
+    return ids.flatMap((id) => {
+      const row = rowsById.get(id);
+      return row ? [row] : [];
+    });
+  }
+
   public async create(row: BookRow): Promise<BookRow> {
     await this.database.query(
       `INSERT INTO books
@@ -282,6 +298,26 @@ export class BookRepository {
       [bookId],
     );
     return result.rows.map(mapChapter);
+  }
+
+  public async listChaptersForBooks(
+    bookIds: readonly string[],
+  ): Promise<Map<string, ChapterRow[]>> {
+    const chaptersByBook = new Map(bookIds.map((bookId) => [bookId, [] as ChapterRow[]]));
+    if (bookIds.length === 0) return chaptersByBook;
+
+    const placeholders = bookIds.map((_, index) => `$${index + 1}`).join(',');
+    const result = await this.database.query<ChapterDatabaseRow>(
+      `SELECT ${CHAPTER_COLUMNS} FROM book_chapters
+       WHERE book_id IN (${placeholders})
+       ORDER BY book_id ASC,position ASC,start_page ASC,id ASC`,
+      bookIds,
+    );
+    for (const databaseRow of result.rows) {
+      const chapter = mapChapter(databaseRow);
+      chaptersByBook.get(chapter.bookId)?.push(chapter);
+    }
+    return chaptersByBook;
   }
 
   public async getChapter(bookId: string, chapterId: string): Promise<ChapterRow | null> {

@@ -18,6 +18,8 @@ import { financeAccountDetailsMigration } from './017-finance-account-details.js
 import { inboxContentTypesMigration } from './018-inbox-content-types.js';
 import { checklistsMigration } from './019-checklists.js';
 import { checklistLifecycleMigration } from './020-checklist-lifecycle.js';
+import { fileReferenceProtectionMigration } from './021-file-reference-protection.js';
+import { backupRestoreTimestampsMigration } from './022-backup-restore-timestamps.js';
 
 export interface Migration {
   id: string;
@@ -45,4 +47,6 @@ export const migrations: readonly Migration[] = [
   inboxContentTypesMigration,
   checklistsMigration,
   checklistLifecycleMigration,
+  fileReferenceProtectionMigration,
+  backupRestoreTimestampsMigration,
 ];

@@ -91,11 +91,12 @@ export async function registerAuthRoutes(
   const names = getCookieNames(config);
 
   app.get('/api/v1/auth/csrf', { config: { public: true } }, async (request, reply) => {
-    const csrfToken = createSecretToken();
+    let csrfToken = createSecretToken();
     const sessionCookie = request.cookies[names.session];
     if (sessionCookie) {
       try {
-        const session = await authService.refreshCsrf(sessionCookie, csrfToken);
+        const session = await authService.refreshCsrf(sessionCookie, request.cookies[names.csrf]);
+        csrfToken = session.csrfToken;
         if (session.replacementCookieValue) {
           setReplacementCookie(
             reply,

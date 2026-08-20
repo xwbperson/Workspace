@@ -35,6 +35,7 @@ describe('portable backup package', () => {
   });
 
   it('creates and verifies a complete package without authentication session data', async () => {
+    await writeFile(join(root, 'config', 'features', 'books.yaml'), 'display: compact\n', 'utf8');
     const fakeRunner: CommandRunner = async (spec) => {
       commandArgs = spec.args;
       const fileIndex = spec.args.indexOf('--file');
@@ -46,13 +47,16 @@ describe('portable backup package', () => {
     const manifest = await service.verify(backupPath);
 
     expect(manifest.status).toBe('complete');
-    expect(manifest.databaseMigrationVersion).toBe('020-checklist-lifecycle');
+    expect(manifest.databaseMigrationVersion).toBe('022-backup-restore-timestamps');
     expect(commandArgs).toContain('--format=custom');
     expect(commandArgs).toContain('--exclude-table-data=public.auth_sessions');
     expect(commandArgs).toContain('--exclude-table-data=public.auth_login_attempts');
     expect(await service.databaseDumpSize(backupPath)).toBeGreaterThan(0);
     expect(await readFile(join(backupPath, 'checksums.sha256'), 'utf8')).toContain(
       'database/workbench.dump',
+    );
+    expect(await readFile(join(backupPath, 'config', 'features', 'books.yaml'), 'utf8')).toBe(
+      'display: compact\n',
     );
   });
 
@@ -74,5 +78,25 @@ describe('portable backup package', () => {
     const occupied = join(root, 'occupied-target');
     await writeFile(occupied, 'not-a-directory', 'utf8');
     await expect(service.assertEmptyRestoreTarget(occupied)).rejects.toThrow();
+  });
+
+  it('blocks a live backup lock and recovers an abandoned lock', async () => {
+    const lockPath = join(root, 'runtime', 'backup.lock');
+    const fakeRunner: CommandRunner = async (spec) => {
+      const fileIndex = spec.args.indexOf('--file');
+      await writeFile(spec.args[fileIndex + 1]!, 'database-dump', 'utf8');
+    };
+    const service = new BackupService(config, database, fakeRunner);
+    await writeFile(
+      lockPath,
+      `${JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() })}\n`,
+    );
+    await expect(service.create()).rejects.toMatchObject({ code: 'BACKUP_ALREADY_RUNNING' });
+
+    await writeFile(
+      lockPath,
+      `${JSON.stringify({ pid: 999_999_999, startedAt: '2000-01-01T00:00:00.000Z' })}\n`,
+    );
+    await expect(service.create()).resolves.toContain('workbench-backup-');
   });
 });

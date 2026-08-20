@@ -239,17 +239,23 @@ export function ChecklistPage(): React.JSX.Element {
   return (
     <div className="feature-shell-page feature-shell-page--checklists">
       <PageTopbarActions>
-        <button className="button button--primary" onClick={() => setCreateOpen(true)}>
+        <button
+          type="button"
+          className="button button--primary"
+          onClick={() => setCreateOpen(true)}
+        >
           <Plus size={18} aria-hidden="true" />
           <span>新建清单</span>
         </button>
       </PageTopbarActions>
       {error ? <SectionError title="操作没有完成" message={humanizeApiError(error)} /> : null}
-      <div className="lifecycle-tabs" aria-label="清单状态">
+      <div className="lifecycle-tabs" role="group" aria-label="清单状态">
         {(['active', 'completed', 'archived'] as const).map((status) => (
           <button
+            type="button"
             key={status}
             className={filter === status ? 'active' : ''}
+            aria-pressed={filter === status}
             onClick={() => {
               setFilter(status);
               void navigate('/features/checklists');
@@ -316,7 +322,11 @@ export function ChecklistPage(): React.JSX.Element {
               }
               action={
                 filter === 'active' ? (
-                  <button className="button button--quiet" onClick={() => setCreateOpen(true)}>
+                  <button
+                    type="button"
+                    className="button button--quiet"
+                    onClick={() => setCreateOpen(true)}
+                  >
                     创建第一个清单
                   </button>
                 ) : undefined
@@ -502,28 +512,28 @@ function ChecklistDetail({
         <div className="entity-detail__actions">
           {editable ? (
             <>
-              <button className="button button--quiet" onClick={onEdit}>
+              <button type="button" className="button button--quiet" onClick={onEdit}>
                 <Edit3 size={16} aria-hidden="true" /> 编辑
               </button>
               {checklist.status === 'active' ? (
-                <button className="button button--quiet" onClick={onComplete}>
+                <button type="button" className="button button--quiet" onClick={onComplete}>
                   <CircleCheckBig size={16} aria-hidden="true" /> 标记完成
                 </button>
               ) : (
-                <button className="button button--quiet" onClick={onReopen}>
+                <button type="button" className="button button--quiet" onClick={onReopen}>
                   <RotateCcw size={16} aria-hidden="true" /> 标记使用中
                 </button>
               )}
-              <button className="button button--quiet" onClick={onArchive}>
+              <button type="button" className="button button--quiet" onClick={onArchive}>
                 <Archive size={16} aria-hidden="true" /> 归档
               </button>
             </>
           ) : (
             <>
-              <button className="button button--quiet" onClick={onRestore}>
+              <button type="button" className="button button--quiet" onClick={onRestore}>
                 <RotateCcw size={16} aria-hidden="true" /> 恢复
               </button>
-              <button className="button button--danger" onClick={onDelete}>
+              <button type="button" className="button button--danger" onClick={onDelete}>
                 <Trash2 size={16} aria-hidden="true" /> 永久删除
               </button>
             </>
@@ -560,6 +570,7 @@ function ChecklistDetail({
           {editable && checklist.items.length ? (
             <div>
               <button
+                type="button"
                 className="button button--text"
                 disabled={checklist.progress.checked === 0}
                 onClick={onReset}
@@ -567,6 +578,7 @@ function ChecklistDetail({
                 <RotateCcw size={15} aria-hidden="true" /> 重置勾选
               </button>
               <button
+                type="button"
                 className="button button--text button--text-danger"
                 disabled={checklist.progress.checked === 0}
                 onClick={onClearChecked}
@@ -663,10 +675,11 @@ function ConfirmModal({
       onClose={onClose}
       footer={
         <>
-          <button className="button button--quiet" onClick={onClose}>
+          <button type="button" className="button button--quiet" onClick={onClose}>
             取消
           </button>
           <button
+            type="button"
             className={`button ${danger ? 'button--danger' : 'button--primary'}`}
             onClick={onConfirm}
           >

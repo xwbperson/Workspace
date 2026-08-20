@@ -99,7 +99,7 @@ export function SearchPage(): React.JSX.Element {
               <span>{matchingFeatures.length}</span>
             </div>
             {matchingFeatures.length ? (
-              <div className="search-result-list">
+              <div className="search-result-list" role="status" aria-label="正在搜索">
                 {matchingFeatures.map((feature) => (
                   <Link to={feature.route} key={feature.featureId}>
                     <FeatureIcon name={feature.icon} />
@@ -143,7 +143,10 @@ export function SearchPage(): React.JSX.Element {
                 <div key={group.featureId} className="search-group">
                   <h3>{feature?.name ?? group.featureId}</h3>
                   {group.error ? (
-                    <SectionError message={group.error.message} />
+                    <SectionError
+                      message={group.error.message}
+                      onRetry={() => void results.refetch()}
+                    />
                   ) : (
                     <div className="search-result-list">
                       {group.items.map((item) => (

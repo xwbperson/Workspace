@@ -103,6 +103,7 @@ import type {
   WorkbenchNotification,
   WorkbenchPreferences,
 } from './types.js';
+import { MAX_UPLOAD_FILE_BYTES, MAX_UPLOAD_FILE_MEBIBYTES } from './constants.js';
 
 export class ApiClientError extends Error {
   public readonly status: number;
@@ -130,6 +131,7 @@ const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 export class WorkbenchClient {
   private readonly baseUrl: string;
   private csrfToken: string | undefined;
+  private csrfPromise: Promise<string> | undefined;
 
   public constructor(baseUrl = '/api/v1') {
     this.baseUrl = baseUrl.replace(/\/$/, '');
@@ -137,12 +139,24 @@ export class WorkbenchClient {
 
   private async ensureCsrfToken(): Promise<string> {
     if (this.csrfToken) return this.csrfToken;
-    const response = await this.request<{ csrfToken: string }>('/auth/csrf', { csrf: false });
-    this.csrfToken = response.csrfToken;
-    return response.csrfToken;
+    if (!this.csrfPromise) {
+      this.csrfPromise = this.request<{ csrfToken: string }>('/auth/csrf', { csrf: false })
+        .then((response) => {
+          this.csrfToken = response.csrfToken;
+          return response.csrfToken;
+        })
+        .finally(() => {
+          this.csrfPromise = undefined;
+        });
+    }
+    return this.csrfPromise;
   }
 
-  private async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  private async request<T>(
+    path: string,
+    options: RequestOptions = {},
+    canRetryCsrf = true,
+  ): Promise<T> {
     const { body, csrf, ...requestOptions } = options;
     const method = (requestOptions.method ?? 'GET').toUpperCase();
     const headers = new Headers(requestOptions.headers);
@@ -172,7 +186,17 @@ export class WorkbenchClient {
       } catch {
         body = undefined;
       }
-      if (response.status === 401) this.csrfToken = undefined;
+      if (response.status === 401) this.clearCsrfToken();
+      if (
+        response.status === 403 &&
+        body?.error?.code === 'CSRF_INVALID' &&
+        csrf !== false &&
+        MUTATION_METHODS.has(method) &&
+        canRetryCsrf
+      ) {
+        this.clearCsrfToken();
+        return this.request<T>(path, options, false);
+      }
       throw new ApiClientError(response.status, body);
     }
 
@@ -181,7 +205,7 @@ export class WorkbenchClient {
   }
 
   public async getCsrfToken(): Promise<string> {
-    this.csrfToken = undefined;
+    this.clearCsrfToken();
     return this.ensureCsrfToken();
   }
 
@@ -196,7 +220,7 @@ export class WorkbenchClient {
 
   public async logout(): Promise<void> {
     await this.request('/auth/logout', { method: 'POST' });
-    this.csrfToken = undefined;
+    this.clearCsrfToken();
   }
 
   public listSessions(): Promise<SessionView[]> {
@@ -223,7 +247,7 @@ export class WorkbenchClient {
       method: 'PUT',
       body: { currentPassword, newPassword },
     });
-    this.csrfToken = undefined;
+    this.clearCsrfToken();
   }
 
   public getFeatureStates(): Promise<FeatureRuntimeState[]> {
@@ -326,28 +350,56 @@ export class WorkbenchClient {
     });
   }
 
-  public async uploadFile(file: File): Promise<StoredFile> {
+  public async uploadFile(file: File, options: { signal?: AbortSignal } = {}): Promise<StoredFile> {
+    if (file.size === 0) {
+      throw new ApiClientError(400, {
+        error: { code: 'EMPTY_FILE', message: '不能上传空文件。' },
+      });
+    }
+    if (file.size > MAX_UPLOAD_FILE_BYTES) {
+      throw new ApiClientError(413, {
+        error: {
+          code: 'FILE_TOO_LARGE',
+          message: `单个文件不能超过 ${MAX_UPLOAD_FILE_MEBIBYTES} MB。`,
+        },
+      });
+    }
     const form = new FormData();
     form.append('file', file, file.name);
-    const response = await fetch(`${this.baseUrl}/files`, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'X-CSRF-Token': await this.ensureCsrfToken(),
-      },
-      credentials: 'same-origin',
-      body: form,
-    });
-    if (!response.ok) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const response = await fetch(`${this.baseUrl}/files`, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'X-CSRF-Token': await this.ensureCsrfToken(),
+        },
+        credentials: 'same-origin',
+        body: form,
+        ...(options.signal ? { signal: options.signal } : {}),
+      });
+      if (response.ok) return (await response.json()) as StoredFile;
+
       let body: Partial<ApiErrorBody> | undefined;
       try {
         body = (await response.json()) as Partial<ApiErrorBody>;
       } catch {
         body = undefined;
       }
+      if (response.status === 401) this.clearCsrfToken();
+      if (response.status === 403 && body?.error?.code === 'CSRF_INVALID' && attempt === 0) {
+        this.clearCsrfToken();
+        continue;
+      }
       throw new ApiClientError(response.status, body);
     }
-    return (await response.json()) as StoredFile;
+    throw new ApiClientError(403, {
+      error: { code: 'CSRF_INVALID', message: 'CSRF 校验失败，请重试。' },
+    });
+  }
+
+  private clearCsrfToken(): void {
+    this.csrfToken = undefined;
+    this.csrfPromise = undefined;
   }
 
   public getBooks(

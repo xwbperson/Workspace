@@ -146,12 +146,13 @@ export function InboxPage(): React.JSX.Element {
         </button>
       </PageTopbarActions>
       {error ? <SectionError title="操作没有完成" message={humanizeApiError(error)} /> : null}
-      <div className="lifecycle-tabs" aria-label="收集箱状态">
+      <div className="lifecycle-tabs" role="group" aria-label="收集箱状态">
         {(['inbox', 'processed', 'archived'] as const).map((status) => (
           <button
             type="button"
             key={status}
             className={filter === status ? 'active' : ''}
+            aria-pressed={filter === status}
             onClick={() => {
               setFilter(status);
               void navigate('/features/inbox');
@@ -170,7 +171,7 @@ export function InboxPage(): React.JSX.Element {
               onRetry={() => void list.refetch()}
             />
           ) : list.isLoading ? (
-            <div className="skeleton-list">
+            <div className="skeleton-list" role="status" aria-label="正在加载收集箱">
               <div className="skeleton" />
               <div className="skeleton" />
             </div>

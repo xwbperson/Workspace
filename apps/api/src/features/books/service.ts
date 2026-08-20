@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { MAX_BOOK_COVER_FILE_BYTES, MAX_BOOK_COVER_FILE_MEBIBYTES } from '@workspace/client-sdk';
+import { isValidDateOnly } from '../../platform/date.js';
 import { AppError, ConflictError, NotFoundError } from '../../platform/errors.js';
 import type { FileStorageService, StoredFile } from '../../platform/files/service.js';
 import {
@@ -59,7 +61,17 @@ function text(value: string | undefined, fallback = ''): string {
 
 function nullableDate(value: string | null | undefined, fallback: string | null): string | null {
   if (value === undefined) return fallback;
-  return value || null;
+  if (!value) return null;
+  if (!isValidDateOnly(value)) {
+    throw new AppError(400, 'INVALID_BOOK_DATE', '书籍日期无效。');
+  }
+  return value;
+}
+
+function validateReadingDates(startedAt: string | null, finishedAt: string | null): void {
+  if (startedAt && finishedAt && finishedAt < startedAt) {
+    throw new AppError(400, 'INVALID_READING_DATE_RANGE', '读完日期不能早于开始阅读日期。');
+  }
 }
 
 export function chapterProgress(chapter: ChapterRow): ReadingProgress {
@@ -165,10 +177,9 @@ export class BookService {
       ...(input.readingStatus ? { readingStatus: input.readingStatus } : {}),
       limit: Math.min(100, Math.max(1, input.limit ?? 50)),
     });
+    const chaptersByBook = await this.repository.listChaptersForBooks(rows.map((row) => row.id));
     return {
-      items: await Promise.all(
-        rows.map(async (row) => bookView(row, await this.repository.listChapters(row.id))),
-      ),
+      items: rows.map((row) => bookView(row, chaptersByBook.get(row.id) ?? [])),
     };
   }
 
@@ -180,8 +191,12 @@ export class BookService {
 
   public async create(input: BookInput) {
     if (!input.title.trim()) throw new AppError(400, 'BOOK_TITLE_REQUIRED', '请输入书名。');
-    if (input.coverFileId) await this.files.get(input.coverFileId);
+    if (input.coverFileId) await this.validateCoverFile(input.coverFileId);
     const now = this.now();
+    const publishDate = nullableDate(input.publishDate, null);
+    const startedAt = nullableDate(input.startedAt, null);
+    const finishedAt = nullableDate(input.finishedAt, null);
+    validateReadingDates(startedAt, finishedAt);
     const row: BookRow = {
       id: randomUUID(),
       title: input.title.trim(),
@@ -191,7 +206,7 @@ export class BookService {
       translator: text(input.translator),
       isbn: text(input.isbn),
       publisher: text(input.publisher),
-      publishDate: nullableDate(input.publishDate, null),
+      publishDate,
       edition: text(input.edition),
       series: text(input.series),
       language: text(input.language),
@@ -200,8 +215,8 @@ export class BookService {
       description: text(input.description),
       notes: text(input.notes),
       readingStatus: input.readingStatus ?? 'to-read',
-      startedAt: nullableDate(input.startedAt, null),
-      finishedAt: nullableDate(input.finishedAt, null),
+      startedAt,
+      finishedAt,
       coverFileId: input.coverFileId ?? null,
       coverOriginalName: null,
       coverMimeType: null,
@@ -220,7 +235,11 @@ export class BookService {
     if (input.title !== undefined && !input.title.trim()) {
       throw new AppError(400, 'BOOK_TITLE_REQUIRED', '请输入书名。');
     }
-    if (input.coverFileId) await this.files.get(input.coverFileId);
+    if (input.coverFileId) await this.validateCoverFile(input.coverFileId);
+    const publishDate = nullableDate(input.publishDate, existing.publishDate);
+    const startedAt = nullableDate(input.startedAt, existing.startedAt);
+    const finishedAt = nullableDate(input.finishedAt, existing.finishedAt);
+    validateReadingDates(startedAt, finishedAt);
     const next: BookRow = {
       ...existing,
       title: input.title === undefined ? existing.title : input.title.trim(),
@@ -230,7 +249,7 @@ export class BookService {
       translator: text(input.translator, existing.translator),
       isbn: text(input.isbn, existing.isbn),
       publisher: text(input.publisher, existing.publisher),
-      publishDate: nullableDate(input.publishDate, existing.publishDate),
+      publishDate,
       edition: text(input.edition, existing.edition),
       series: text(input.series, existing.series),
       language: text(input.language, existing.language),
@@ -239,8 +258,8 @@ export class BookService {
       description: text(input.description, existing.description),
       notes: text(input.notes, existing.notes),
       readingStatus: input.readingStatus ?? existing.readingStatus,
-      startedAt: nullableDate(input.startedAt, existing.startedAt),
-      finishedAt: nullableDate(input.finishedAt, existing.finishedAt),
+      startedAt,
+      finishedAt,
       coverFileId:
         input.coverFileId === undefined ? existing.coverFileId : (input.coverFileId ?? null),
       updatedAt: this.now(),
@@ -373,6 +392,20 @@ export class BookService {
     const row = await this.repository.get(id);
     if (!row) throw new NotFoundError('没有找到该书籍。');
     return row;
+  }
+
+  private async validateCoverFile(fileId: string): Promise<void> {
+    const file = await this.files.get(fileId);
+    if (!file.mimeType.startsWith('image/')) {
+      throw new AppError(400, 'BOOK_COVER_NOT_IMAGE', '书籍封面必须是图片文件。');
+    }
+    if (file.size > MAX_BOOK_COVER_FILE_BYTES) {
+      throw new AppError(
+        400,
+        'BOOK_COVER_TOO_LARGE',
+        `书籍封面不能超过 ${MAX_BOOK_COVER_FILE_MEBIBYTES} MB。`,
+      );
+    }
   }
 
   private async requireActiveBook(id: string): Promise<BookRow> {

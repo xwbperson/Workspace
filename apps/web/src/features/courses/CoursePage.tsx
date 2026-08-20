@@ -273,7 +273,7 @@ export function CoursePage(): React.JSX.Element {
       {mutationError ? (
         <SectionError title="操作没有完成" message={humanizeApiError(mutationError)} />
       ) : null}
-      <div className="learning-filter" aria-label="课程状态">
+      <div className="learning-filter" role="group" aria-label="课程状态">
         {(
           [
             ['in-progress', '进行中'],
@@ -285,6 +285,7 @@ export function CoursePage(): React.JSX.Element {
             key={value}
             type="button"
             className={filter === value ? 'active' : ''}
+            aria-pressed={filter === value}
             onClick={() => {
               setFilter(value);
               void navigate('/features/courses');
@@ -298,9 +299,12 @@ export function CoursePage(): React.JSX.Element {
       <div className={`learning-workspace ${selected ? 'learning-workspace--detail' : ''}`}>
         <section className="learning-list-panel">
           {list.isError ? (
-            <SectionError message={humanizeApiError(list.error)} />
+            <SectionError
+              message={humanizeApiError(list.error)}
+              onRetry={() => void list.refetch()}
+            />
           ) : list.isLoading ? (
-            <div className="skeleton-list">
+            <div className="skeleton-list" role="status" aria-label="正在加载课程">
               <div className="skeleton" />
             </div>
           ) : courses.length ? (
@@ -350,7 +354,10 @@ export function CoursePage(): React.JSX.Element {
           {detail.isLoading && courseId ? (
             <div className="skeleton skeleton--detail" />
           ) : detail.isError ? (
-            <SectionError message={humanizeApiError(detail.error)} />
+            <SectionError
+              message={humanizeApiError(detail.error)}
+              onRetry={() => void detail.refetch()}
+            />
           ) : selected ? (
             <CourseDetail
               course={selected}
@@ -385,6 +392,8 @@ export function CoursePage(): React.JSX.Element {
               }}
               onDeleteMaterial={(item) => setConfirmTarget({ kind: 'material', item })}
               onUploadSyllabus={() => syllabusInput.current?.click()}
+              materialUploading={uploadMaterial.isPending}
+              syllabusUploading={uploadSyllabus.isPending}
             />
           ) : (
             <div className="learning-detail-empty">
@@ -400,6 +409,7 @@ export function CoursePage(): React.JSX.Element {
         className="sr-only"
         aria-label="选择课程资料文件"
         type="file"
+        disabled={uploadMaterial.isPending || uploadSyllabus.isPending}
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (selected && file)
@@ -417,6 +427,7 @@ export function CoursePage(): React.JSX.Element {
         aria-label="选择课程大纲文件"
         type="file"
         accept=".pdf,.doc,.docx,.html,.htm,.txt,.md"
+        disabled={uploadMaterial.isPending || uploadSyllabus.isPending}
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (selected && file) uploadSyllabus.mutate({ course: selected, file });
@@ -554,6 +565,8 @@ function CourseDetail({
   onUploadMaterial,
   onDeleteMaterial,
   onUploadSyllabus,
+  materialUploading,
+  syllabusUploading,
 }: {
   course: Course;
   onBack(): void;
@@ -572,6 +585,8 @@ function CourseDetail({
   onUploadMaterial(groupId?: string): void;
   onDeleteMaterial(item: CourseMaterial): void;
   onUploadSyllabus(): void;
+  materialUploading: boolean;
+  syllabusUploading: boolean;
 }): React.JSX.Element {
   const groups = [
     { kind: 'ungrouped' as const, id: undefined, name: '未分组', version: 0 },
@@ -664,8 +679,14 @@ function CourseDetail({
           title={course.syllabus?.originalName ?? '尚未上传'}
           action={
             !course.archived ? (
-              <button type="button" className="button button--quiet" onClick={onUploadSyllabus}>
-                <Upload aria-hidden="true" /> {course.syllabus ? '更换大纲' : '上传大纲'}
+              <button
+                type="button"
+                className="button button--quiet"
+                onClick={onUploadSyllabus}
+                disabled={syllabusUploading || materialUploading}
+              >
+                <Upload aria-hidden="true" />
+                {syllabusUploading ? '正在上传…' : course.syllabus ? '更换大纲' : '上传大纲'}
               </button>
             ) : undefined
           }
@@ -847,8 +868,10 @@ function CourseDetail({
                         type="button"
                         className="button button--text"
                         onClick={() => onUploadMaterial(group.id)}
+                        disabled={materialUploading || syllabusUploading}
                       >
-                        <Upload aria-hidden="true" /> 上传
+                        <Upload aria-hidden="true" />
+                        {materialUploading ? '正在上传…' : '上传'}
                       </button>
                       {group.kind === 'group' ? (
                         <button

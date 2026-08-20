@@ -148,11 +148,13 @@ export function FinancePage(): React.JSX.Element {
   return (
     <div className="feature-shell-page feature-shell-page--finance">
       {error ? <SectionError title="数据没有更新" message={humanizeApiError(error)} /> : null}
-      <div className="lifecycle-tabs finance-tabs">
+      <div className="lifecycle-tabs finance-tabs" role="group" aria-label="财务视图">
         {(['overview', 'accounts', 'debt', 'archived'] as const).map((item) => (
           <button
+            type="button"
             key={item}
             className={view === item ? 'active' : ''}
+            aria-pressed={view === item}
             onClick={() => setView(item)}
           >
             {{ overview: '总览', accounts: '资金账户', debt: '负债管理', archived: '已归档' }[item]}
@@ -250,10 +252,15 @@ export function FinancePage(): React.JSX.Element {
         onClose={() => setRemoveTarget(undefined)}
         footer={
           <>
-            <button className="button button--quiet" onClick={() => setRemoveTarget(undefined)}>
+            <button
+              type="button"
+              className="button button--quiet"
+              onClick={() => setRemoveTarget(undefined)}
+            >
               取消
             </button>
             <button
+              type="button"
               className="button button--danger"
               onClick={() => removeTarget && remove.mutate(removeTarget)}
             >
@@ -341,7 +348,7 @@ function AccountSection({
           <p className="eyebrow">资金账户</p>
           <h3>{items.length} 个账户</h3>
         </div>
-        <button className="button button--primary" onClick={onCreate}>
+        <button type="button" className="button button--primary" onClick={onCreate}>
           <Plus size={17} />
           添加账户
         </button>
@@ -366,6 +373,7 @@ function AccountSection({
               {item.note ? <p>{item.note}</p> : null}
               <div>
                 <button
+                  type="button"
                   className="icon-button"
                   aria-label={`编辑${item.name}`}
                   onClick={() => onEdit(item)}
@@ -373,6 +381,7 @@ function AccountSection({
                   <Edit3 />
                 </button>
                 <button
+                  type="button"
                   className="icon-button"
                   aria-label={`归档${item.name}`}
                   onClick={() => onArchive(item)}
@@ -420,7 +429,7 @@ function DebtSection({
           <h3>年度负债与平台额度</h3>
         </div>
         <div className="finance-heading-actions">
-          <button className="button button--accent" onClick={onCreatePlatform}>
+          <button type="button" className="button button--accent" onClick={onCreatePlatform}>
             <Plus size={17} />
             添加平台
           </button>
@@ -471,6 +480,7 @@ function DebtSection({
                   </div>
                   <div>
                     <button
+                      type="button"
                       className="icon-button"
                       aria-label={`编辑${item.name}`}
                       onClick={() => onEditPlatform(item)}
@@ -478,6 +488,7 @@ function DebtSection({
                       <Edit3 />
                     </button>
                     <button
+                      type="button"
                       className="icon-button"
                       aria-label={`归档${item.name}`}
                       onClick={() => onArchivePlatform(item)}
@@ -534,11 +545,19 @@ function ArchivedSection({
                 <small>资金账户</small>
                 <strong>{accountTitle(item)}</strong>
               </div>
-              <button className="button button--quiet" onClick={() => onRestoreAccount(item)}>
+              <button
+                type="button"
+                className="button button--quiet"
+                onClick={() => onRestoreAccount(item)}
+              >
                 <RotateCcw />
                 恢复
               </button>
-              <button className="button button--danger" onClick={() => onDeleteAccount(item)}>
+              <button
+                type="button"
+                className="button button--danger"
+                onClick={() => onDeleteAccount(item)}
+              >
                 <Trash2 />
                 删除
               </button>
@@ -551,11 +570,19 @@ function ArchivedSection({
                 <small>负债平台</small>
                 <strong>{item.name}</strong>
               </div>
-              <button className="button button--quiet" onClick={() => onRestorePlatform(item)}>
+              <button
+                type="button"
+                className="button button--quiet"
+                onClick={() => onRestorePlatform(item)}
+              >
                 <RotateCcw />
                 恢复
               </button>
-              <button className="button button--danger" onClick={() => onDeletePlatform(item)}>
+              <button
+                type="button"
+                className="button button--danger"
+                onClick={() => onDeletePlatform(item)}
+              >
                 <Trash2 />
                 删除
               </button>

@@ -61,6 +61,12 @@ function normalizeClientLabel(input: string | undefined, userAgent: string | und
   return label;
 }
 
+function validateNewPassword(password: string): void {
+  if (password.length < 12 || password.length > 128) {
+    throw new AppError(400, 'INVALID_PASSWORD_LENGTH', '密码需要 12–128 个字符。');
+  }
+}
+
 export class AuthService {
   public constructor(
     private readonly repository: AuthRepository,
@@ -69,6 +75,7 @@ export class AuthService {
   ) {}
 
   public async initializeOwner(password: string): Promise<void> {
+    validateNewPassword(password);
     if (await this.repository.getOwner()) {
       throw new AppError(409, 'OWNER_ALREADY_INITIALIZED', '固定 owner 账户已经初始化。');
     }
@@ -77,6 +84,7 @@ export class AuthService {
   }
 
   public async resetOwnerPassword(password: string): Promise<void> {
+    validateNewPassword(password);
     if (!(await this.repository.getOwner())) {
       throw new NotFoundError('固定 owner 账户尚未初始化。');
     }
@@ -189,16 +197,18 @@ export class AuthService {
     if (currentMatches && now.getTime() - row.lastRotatedAt.getTime() >= ROTATION_MS) {
       const nextToken = createSecretToken();
       const nextHash = hashToken(nextToken);
-      await this.repository.rotateSession(
+      const rotated = await this.repository.rotateSession(
         row.sessionId,
         row.currentTokenHash,
         nextHash,
         new Date(now.getTime() + ROTATION_GRACE_MS),
         now,
       );
-      currentHash = nextHash;
-      lastRotatedAt = now;
-      replacementCookieValue = formatSessionCookie(row.sessionId, nextToken);
+      if (rotated) {
+        currentHash = nextHash;
+        lastRotatedAt = now;
+        replacementCookieValue = formatSessionCookie(row.sessionId, nextToken);
+      }
     }
 
     const renewalInterval = row.remembered ? LONG_RENEWAL_MS : TEMP_RENEWAL_MS;
@@ -242,11 +252,15 @@ export class AuthService {
 
   public async refreshCsrf(
     cookieValue: string | undefined,
-    csrfToken: string,
-  ): Promise<AuthenticatedSession> {
+    existingCsrfToken?: string,
+  ): Promise<AuthenticatedSession & { csrfToken: string }> {
     const session = await this.authenticate(cookieValue);
+    if (existingCsrfToken && this.csrfMatches(session.auth, existingCsrfToken)) {
+      return { ...session, csrfToken: existingCsrfToken };
+    }
+    const csrfToken = createSecretToken();
     await this.repository.updateCsrfHash(session.auth.sessionId, hashToken(csrfToken));
-    return session;
+    return { ...session, csrfToken };
   }
 
   public csrfMatches(auth: { csrfTokenHash: string }, token: string): boolean {
@@ -285,6 +299,7 @@ export class AuthService {
   }
 
   public async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    validateNewPassword(newPassword);
     const owner = await this.repository.getOwner();
     if (!owner || !(await verifyPassword(owner.passwordHash, currentPassword))) {
       throw new UnauthorizedError('当前密码不正确。');

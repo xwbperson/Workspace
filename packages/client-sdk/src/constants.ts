@@ -1,0 +1,4 @@
+export const MAX_UPLOAD_FILE_BYTES = 50 * 1024 * 1024;
+export const MAX_UPLOAD_FILE_MEBIBYTES = 50;
+export const MAX_BOOK_COVER_FILE_BYTES = 5 * 1024 * 1024;
+export const MAX_BOOK_COVER_FILE_MEBIBYTES = 5;

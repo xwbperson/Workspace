@@ -142,16 +142,18 @@ export class AuthRepository {
     nextHash: string,
     graceUntil: Date,
     now: Date,
-  ): Promise<void> {
-    await this.database.query(
+  ): Promise<boolean> {
+    const result = await this.database.query<{ session_id: string }>(
       `UPDATE auth_sessions
        SET previous_token_hash = $2,
            previous_token_grace_until = $3,
            current_token_hash = $4,
            last_rotated_at = $5
-       WHERE session_id = $1 AND current_token_hash = $2 AND revoked_at IS NULL`,
+       WHERE session_id = $1 AND current_token_hash = $2 AND revoked_at IS NULL
+       RETURNING session_id`,
       [sessionId, currentHash, graceUntil, nextHash, now],
     );
+    return result.rows.length === 1;
   }
 
   public async renewSession(

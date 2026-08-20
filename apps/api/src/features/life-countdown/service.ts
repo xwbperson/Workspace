@@ -7,6 +7,7 @@ import type {
   LifeProfile,
   LifeProfileInput,
 } from '@workspace/client-sdk';
+import { isValidDateOnly } from '../../platform/date.js';
 import { AppError, ConflictError, NotFoundError } from '../../platform/errors.js';
 import { toLifeEvent, toLifeProfile, type LifeCountdownRepository } from './repository.js';
 
@@ -21,11 +22,7 @@ function text(value: string | undefined, name: string, max: number, required = f
   return normalized;
 }
 function birthDate(value: string, now: Date): string {
-  if (
-    !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
-    Number.isNaN(Date.parse(`${value}T00:00:00Z`)) ||
-    Date.parse(`${value}T00:00:00Z`) > now.getTime()
-  )
+  if (!isValidDateOnly(value) || Date.parse(`${value}T00:00:00Z`) > now.getTime())
     throw new AppError(400, 'INVALID_BIRTH_DATE', '出生日期无效或晚于今天。');
   return value;
 }

@@ -101,17 +101,23 @@ export function SubscriptionPage(): React.JSX.Element {
   return (
     <div className="feature-shell-page feature-shell-page--subscriptions">
       <PageTopbarActions>
-        <button className="button button--primary" onClick={() => setCreateOpen(true)}>
+        <button
+          type="button"
+          className="button button--primary"
+          onClick={() => setCreateOpen(true)}
+        >
           <Plus size={18} />
           <span>添加订阅</span>
         </button>
       </PageTopbarActions>
       {error ? <SectionError title="操作没有完成" message={humanizeApiError(error)} /> : null}
-      <div className="lifecycle-tabs" aria-label="订阅状态">
+      <div className="lifecycle-tabs" role="group" aria-label="订阅状态">
         {(['active', 'expired', 'archived'] as const).map((status) => (
           <button
+            type="button"
             key={status}
             className={filter === status ? 'active' : ''}
+            aria-pressed={filter === status}
             onClick={() => {
               setFilter(status);
               void navigate('/features/subscriptions');
@@ -161,7 +167,11 @@ export function SubscriptionPage(): React.JSX.Element {
               description="添加后可以随时修改、归档和恢复。"
               action={
                 filter !== 'archived' ? (
-                  <button className="button button--quiet" onClick={() => setCreateOpen(true)}>
+                  <button
+                    type="button"
+                    className="button button--quiet"
+                    onClick={() => setCreateOpen(true)}
+                  >
                     添加第一项
                   </button>
                 ) : undefined
@@ -224,10 +234,15 @@ export function SubscriptionPage(): React.JSX.Element {
         onClose={() => setArchiveOpen(false)}
         footer={
           <>
-            <button className="button button--quiet" onClick={() => setArchiveOpen(false)}>
+            <button
+              type="button"
+              className="button button--quiet"
+              onClick={() => setArchiveOpen(false)}
+            >
               取消
             </button>
             <button
+              type="button"
               className="button button--danger"
               onClick={() => selected && archive.mutate(selected)}
             >
@@ -244,10 +259,15 @@ export function SubscriptionPage(): React.JSX.Element {
         onClose={() => setDeleteOpen(false)}
         footer={
           <>
-            <button className="button button--quiet" onClick={() => setDeleteOpen(false)}>
+            <button
+              type="button"
+              className="button button--quiet"
+              onClick={() => setDeleteOpen(false)}
+            >
               取消
             </button>
             <button
+              type="button"
               className="button button--danger"
               onClick={() => selected && remove.mutate(selected)}
             >
@@ -295,22 +315,22 @@ function SubscriptionDetail({
         <div className="entity-detail__actions">
           {item.status === 'archived' ? (
             <>
-              <button className="button button--quiet" onClick={onRestore}>
+              <button type="button" className="button button--quiet" onClick={onRestore}>
                 <RotateCcw size={16} />
                 恢复
               </button>
-              <button className="button button--danger" onClick={onDelete}>
+              <button type="button" className="button button--danger" onClick={onDelete}>
                 <Trash2 size={16} />
                 永久删除
               </button>
             </>
           ) : (
             <>
-              <button className="button button--quiet" onClick={onEdit}>
+              <button type="button" className="button button--quiet" onClick={onEdit}>
                 <Edit3 size={16} />
                 编辑
               </button>
-              <button className="button button--quiet" onClick={onArchive}>
+              <button type="button" className="button button--quiet" onClick={onArchive}>
                 <Archive size={16} />
                 归档
               </button>

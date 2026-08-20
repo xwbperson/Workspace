@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { AppError, ConflictError, NotFoundError } from '../../platform/errors.js';
 import type { FileStorageService, StoredFile } from '../../platform/files/service.js';
-import { type BookRepository, type BookRow, totalProgress } from '../books/index.js';
+import {
+  type BookRepository,
+  type BookRow,
+  type ChapterRow,
+  totalProgress,
+} from '../books/index.js';
 import {
   type AssignmentRow,
   type AssignmentStatus,
@@ -178,8 +183,12 @@ export class CourseService {
   public async get(id: string) {
     const row = await this.requireCourse(id);
     const referenceBookIds = await this.repository.referenceBookIds(id);
-    const referenceBooks = await Promise.all(
-      referenceBookIds.map((bookId) => this.referenceBook(bookId)),
+    const referenceBookRows = await this.books.getMany(referenceBookIds);
+    if (referenceBookRows.length !== referenceBookIds.length) {
+      throw new NotFoundError('参考书已不存在。');
+    }
+    const chaptersByBook = await this.books.listChaptersForBooks(
+      referenceBookRows.map((book) => book.id),
     );
     const [classRecords, assignments, materialGroups, materials] = await Promise.all([
       this.repository.listClassRecords(id),
@@ -189,7 +198,9 @@ export class CourseService {
     ]);
     return {
       ...courseSummary(row),
-      referenceBooks,
+      referenceBooks: referenceBookRows.map((book) =>
+        this.referenceBookView(book, chaptersByBook.get(book.id) ?? []),
+      ),
       classRecords: classRecords.map(classRecordView),
       assignments: assignments.map(assignmentView),
       materialGroups: materialGroups.map(groupView),
@@ -458,21 +469,14 @@ export class CourseService {
     referenceBookIds: readonly string[],
   ): Promise<void> {
     if (syllabusFileId) await this.files.get(syllabusFileId);
-    for (const id of [...new Set(referenceBookIds)]) {
-      const book = await this.books.get(id);
-      if (!book || book.archived) {
-        throw new AppError(400, 'REFERENCE_BOOK_INVALID', '参考书必须从未归档的书籍中选择。');
-      }
+    const uniqueIds = [...new Set(referenceBookIds)];
+    const books = await this.books.getMany(uniqueIds);
+    if (books.length !== uniqueIds.length || books.some((book) => book.archived)) {
+      throw new AppError(400, 'REFERENCE_BOOK_INVALID', '参考书必须从未归档的书籍中选择。');
     }
   }
 
-  private async referenceBook(id: string) {
-    const row = await this.books.get(id);
-    if (!row) throw new NotFoundError('参考书已不存在。');
-    return this.referenceBookView(row);
-  }
-
-  private async referenceBookView(row: BookRow) {
+  private referenceBookView(row: BookRow, chapters: readonly ChapterRow[]) {
     return {
       id: row.id,
       title: row.title,
@@ -481,7 +485,7 @@ export class CourseService {
       isbn: row.isbn,
       readingStatus: row.readingStatus,
       archived: row.archived,
-      progress: totalProgress(await this.books.listChapters(row.id)),
+      progress: totalProgress(chapters),
       targetRoute: `/features/books/${row.id}`,
     };
   }

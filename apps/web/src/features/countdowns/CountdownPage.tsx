@@ -142,10 +142,11 @@ export function CountdownPage(): React.JSX.Element {
       <div className={`countdown-workspace ${selected ? 'countdown-workspace--detail' : ''}`}>
         <section className="countdown-list-panel" aria-label="倒计时列表">
           <div className="countdown-list-toolbar">
-            <div className="segmented-control" aria-label="倒计时状态">
+            <div className="segmented-control" role="group" aria-label="倒计时状态">
               <button
                 type="button"
                 className={filter === 'active' ? 'active' : ''}
+                aria-pressed={filter === 'active'}
                 onClick={() => changeFilter('active')}
               >
                 <Circle aria-hidden="true" />
@@ -154,6 +155,7 @@ export function CountdownPage(): React.JSX.Element {
               <button
                 type="button"
                 className={filter === 'completed' ? 'active' : ''}
+                aria-pressed={filter === 'completed'}
                 onClick={() => changeFilter('completed')}
               >
                 <CheckCircle2 aria-hidden="true" />
@@ -162,6 +164,7 @@ export function CountdownPage(): React.JSX.Element {
               <button
                 type="button"
                 className={filter === 'archived' ? 'active' : ''}
+                aria-pressed={filter === 'archived'}
                 onClick={() => changeFilter('archived')}
               >
                 <Archive aria-hidden="true" />
@@ -176,7 +179,7 @@ export function CountdownPage(): React.JSX.Element {
               onRetry={() => void list.refetch()}
             />
           ) : list.isLoading ? (
-            <div className="skeleton-list">
+            <div className="skeleton-list" role="status" aria-label="正在加载倒计时">
               <div className="skeleton" />
               <div className="skeleton" />
               <div className="skeleton" />

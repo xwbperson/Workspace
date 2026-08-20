@@ -63,17 +63,15 @@ export class ChecklistService {
       input.status ?? 'active',
       Math.min(500, input.limit ?? 200),
     );
-    return { items: await Promise.all(rows.map((row) => this.hydrate(row))) };
+    return { items: await this.hydrateMany(rows) };
   }
 
   public async recent(limit: number): Promise<Checklist[]> {
-    return Promise.all((await this.repository.recent(limit)).map((row) => this.hydrate(row)));
+    return this.hydrateMany(await this.repository.recent(limit));
   }
 
   public async search(query: string, limit: number): Promise<Checklist[]> {
-    return Promise.all(
-      (await this.repository.search(query, limit)).map((row) => this.hydrate(row)),
-    );
+    return this.hydrateMany(await this.repository.search(query, limit));
   }
 
   public async get(id: string): Promise<Checklist> {
@@ -271,6 +269,11 @@ export class ChecklistService {
 
   private async hydrate(row: ChecklistRow): Promise<Checklist> {
     return toChecklist(row, await this.repository.items(row.id));
+  }
+
+  private async hydrateMany(rows: readonly ChecklistRow[]): Promise<Checklist[]> {
+    const itemsByChecklist = await this.repository.itemsForChecklists(rows.map((row) => row.id));
+    return rows.map((row) => toChecklist(row, itemsByChecklist.get(row.id) ?? []));
   }
 
   private async checklistConflict(id: string): Promise<ConflictError> {

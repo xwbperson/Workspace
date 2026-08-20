@@ -173,6 +173,24 @@ try {
     },
     '任务',
   );
+  const checklist = await createApiRecord<{ id: string }>(
+    '/api/v1/checklists',
+    {
+      name: '真实 PostgreSQL 清单样本',
+      note: '恢复后仍应包含不涉及金额的条目',
+    },
+    '清单',
+  );
+  const checklistItem = await createApiRecord<{ id: string }>(
+    `/api/v1/checklists/${checklist.id}/items`,
+    {
+      name: '真实 PostgreSQL 清单条目',
+      note: '价格和数量特意留空',
+      quantity: null,
+      price: null,
+    },
+    '清单条目',
+  );
   await createApiRecord(
     '/api/v1/calendar-entries',
     {
@@ -354,6 +372,14 @@ try {
 
   const currentDatabase = await createDatabase(config);
   try {
+    const currentStoredFile = await currentDatabase.query<{ storage_key: string }>(
+      'SELECT storage_key FROM stored_files WHERE id=$1',
+      [attachment.id],
+    );
+    await currentDatabase.query('UPDATE stored_files SET storage_key=$2 WHERE id=$1', [
+      attachment.id,
+      currentStoredFile.rows[0].storage_key.replaceAll('/', '\\'),
+    ]);
     const backup = new BackupService(config, currentDatabase);
     const backupPath = await backup.create();
     await backup.verify(backupPath);
@@ -391,6 +417,8 @@ try {
         goals: number;
         goalMeasurements: number;
         tasks: number;
+        checklists: number;
+        checklistItems: number;
         calendarEntries: number;
         inboxItems: number;
         subscriptions: number;
@@ -424,6 +452,8 @@ try {
            (SELECT count(*)::int FROM goals) AS goals,
            (SELECT count(*)::int FROM goal_measurements) AS "goalMeasurements",
            (SELECT count(*)::int FROM tasks) AS tasks,
+           (SELECT count(*)::int FROM checklists) AS checklists,
+           (SELECT count(*)::int FROM checklist_items) AS "checklistItems",
            (SELECT count(*)::int FROM calendar_entries) AS "calendarEntries",
            (SELECT count(*)::int FROM inbox_items) AS "inboxItems",
            (SELECT count(*)::int FROM subscriptions) AS subscriptions,
@@ -459,6 +489,8 @@ try {
         value.goals !== 1 ||
         value.goalMeasurements !== 1 ||
         value.tasks !== 1 ||
+        value.checklists !== 1 ||
+        value.checklistItems !== 1 ||
         value.calendarEntries !== 1 ||
         value.inboxItems !== 1 ||
         value.subscriptions !== 1 ||
@@ -497,6 +529,18 @@ try {
       if (restoredInboxItem.rows[0]?.content_type !== 'information') {
         throw new Error('恢复后的收集箱内容类型不一致。');
       }
+      const restoredChecklistItem = await restoredDatabase.query<{
+        name: string;
+        quantity: string | null;
+        price_cents: number | null;
+      }>('SELECT name,quantity,price_cents FROM checklist_items WHERE id=$1', [checklistItem.id]);
+      if (
+        restoredChecklistItem.rows[0]?.name !== '真实 PostgreSQL 清单条目' ||
+        restoredChecklistItem.rows[0]?.quantity !== null ||
+        restoredChecklistItem.rows[0]?.price_cents !== null
+      ) {
+        throw new Error('恢复后的清单条目或可选金额字段不一致。');
+      }
       const storedFile = await restoredDatabase.query<{ storage_key: string }>(
         'SELECT storage_key FROM stored_files WHERE id=$1',
         [attachment.id],
@@ -504,7 +548,7 @@ try {
       const storageKey = storedFile.rows[0]?.storage_key;
       if (!storageKey) throw new Error('恢复后的附件元数据不存在。');
       const restoredAttachment = await readFile(
-        join(restoredRoot, 'storage', 'objects', storageKey),
+        join(restoredRoot, 'storage', 'objects', ...storageKey.replaceAll('\\', '/').split('/')),
       );
       if (!restoredAttachment.equals(attachmentBytes)) {
         throw new Error('恢复后的课程附件内容不一致。');

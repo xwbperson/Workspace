@@ -63,6 +63,31 @@ describe('long-lived owner session', () => {
     await expect(service.authenticate(rotated.replacementCookieValue)).resolves.toBeDefined();
   });
 
+  it('only returns the winning cookie when parallel requests rotate one session', async () => {
+    const login = await service.login(
+      { username: 'owner', password: 'correct horse battery staple', remember: true },
+      '127.0.0.1',
+      createSecretToken(),
+    );
+    now = new Date(now.getTime() + 7 * DAY_MS);
+
+    const results = await Promise.all([
+      service.authenticate(login.cookieValue),
+      service.authenticate(login.cookieValue),
+      service.authenticate(login.cookieValue),
+    ]);
+    const replacementCookies = results.flatMap((result) =>
+      result.replacementCookieValue ? [result.replacementCookieValue] : [],
+    );
+    expect(replacementCookies).toHaveLength(1);
+
+    now = new Date(now.getTime() + 2 * 60 * 1000 + 1);
+    await expect(service.authenticate(replacementCookies[0])).resolves.toBeDefined();
+    await expect(service.authenticate(login.cookieValue)).rejects.toMatchObject({
+      code: 'UNAUTHENTICATED',
+    });
+  });
+
   it('keeps temporary login browser-scoped with a 24-hour absolute server limit', async () => {
     const login = await service.login(
       { username: 'owner', password: 'correct horse battery staple', remember: false },
@@ -76,5 +101,18 @@ describe('long-lived owner session', () => {
     expect(new Date(login.response.session.absoluteExpiresAt).getTime() - now.getTime()).toBe(
       DAY_MS,
     );
+  });
+
+  it('rejects a short password through the CLI-facing service boundary', async () => {
+    await expect(service.resetOwnerPassword('too-short')).rejects.toMatchObject({
+      code: 'INVALID_PASSWORD_LENGTH',
+    });
+    await expect(
+      service.login(
+        { username: 'owner', password: 'correct horse battery staple', remember: false },
+        '127.0.0.1',
+        createSecretToken(),
+      ),
+    ).resolves.toBeDefined();
   });
 });

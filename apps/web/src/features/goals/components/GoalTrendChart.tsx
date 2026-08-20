@@ -1,5 +1,20 @@
 import type { GoalMeasurement } from '@workspace/client-sdk';
 
+const MAX_RENDERED_POINTS = 500;
+
+export function downsampleMeasurements(
+  measurements: GoalMeasurement[],
+  limit = MAX_RENDERED_POINTS,
+): GoalMeasurement[] {
+  if (measurements.length <= limit) return measurements;
+  if (limit < 2) return measurements.length > 0 ? [measurements[0]!] : [];
+
+  return Array.from({ length: limit }, (_, index) => {
+    const sourceIndex = Math.round((index * (measurements.length - 1)) / (limit - 1));
+    return measurements[sourceIndex]!;
+  });
+}
+
 export function GoalTrendChart({
   measurements,
   unit,
@@ -13,13 +28,17 @@ export function GoalTrendChart({
   const width = 620;
   const height = 210;
   const padding = 28;
-  const values = measurements.map((item) => item.value);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
+  let min = measurements[0]!.value;
+  let max = min;
+  for (const measurement of measurements) {
+    min = Math.min(min, measurement.value);
+    max = Math.max(max, measurement.value);
+  }
   const range = max - min || 1;
-  const points = measurements.map((item, index) => ({
+  const renderedMeasurements = downsampleMeasurements(measurements);
+  const points = renderedMeasurements.map((item, index) => ({
     ...item,
-    x: padding + (index / Math.max(1, measurements.length - 1)) * (width - padding * 2),
+    x: padding + (index / Math.max(1, renderedMeasurements.length - 1)) * (width - padding * 2),
     y: height - padding - ((item.value - min) / range) * (height - padding * 2),
   }));
 

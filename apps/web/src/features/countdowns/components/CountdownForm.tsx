@@ -74,6 +74,8 @@ export function CountdownForm({
             autoFocus
             placeholder="例如：论文初稿完成"
             maxLength={120}
+            aria-invalid={form.formState.errors.title ? 'true' : undefined}
+            aria-describedby={form.formState.errors.title ? 'countdown-title-error' : undefined}
             {...form.register('title', {
               required: '请输入倒计时名称',
               maxLength: { value: 120, message: '名称不能超过 120 个字符' },
@@ -81,7 +83,9 @@ export function CountdownForm({
           />
         </div>
         {form.formState.errors.title ? (
-          <small className="field-error">{form.formState.errors.title.message}</small>
+          <small id="countdown-title-error" className="field-error">
+            {form.formState.errors.title.message}
+          </small>
         ) : null}
       </label>
       <label className="field">
@@ -90,11 +94,15 @@ export function CountdownForm({
           <CalendarClock aria-hidden="true" size={18} />
           <input
             type="datetime-local"
+            aria-invalid={form.formState.errors.targetAt ? 'true' : undefined}
+            aria-describedby={form.formState.errors.targetAt ? 'countdown-target-error' : undefined}
             {...form.register('targetAt', { required: '请选择目标时间' })}
           />
         </div>
         {form.formState.errors.targetAt ? (
-          <small className="field-error">{form.formState.errors.targetAt.message}</small>
+          <small id="countdown-target-error" className="field-error">
+            {form.formState.errors.targetAt.message}
+          </small>
         ) : null}
       </label>
       <label className="field">

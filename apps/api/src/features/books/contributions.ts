@@ -36,9 +36,10 @@ export function createBookContributions(
             readingStatus: 'reading',
             limit: 20,
           });
-          const chapterSets = await Promise.all(
-            reading.map((book) => repository.listChapters(book.id)),
+          const chaptersByBook = await repository.listChaptersForBooks(
+            reading.map((book) => book.id),
           );
+          const chapterSets = reading.map((book) => chaptersByBook.get(book.id) ?? []);
           const readPages = chapterSets.reduce(
             (sum, chapters) => sum + totalProgress(chapters).readPages,
             0,

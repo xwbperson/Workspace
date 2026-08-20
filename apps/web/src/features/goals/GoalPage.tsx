@@ -145,12 +145,13 @@ export function GoalPage(): React.JSX.Element {
         <SectionError title="操作没有完成" message={humanizeApiError(mutationError)} />
       ) : null}
 
-      <div className="lifecycle-tabs" aria-label="目标状态">
+      <div className="lifecycle-tabs" role="group" aria-label="目标状态">
         {(['active', 'completed', 'archived'] as const).map((status) => (
           <button
             type="button"
             key={status}
             className={filter === status ? 'active' : ''}
+            aria-pressed={filter === status}
             onClick={() => changeFilter(status)}
           >
             {statusLabels[status]}
@@ -167,7 +168,7 @@ export function GoalPage(): React.JSX.Element {
               onRetry={() => void list.refetch()}
             />
           ) : list.isLoading ? (
-            <div className="skeleton-list">
+            <div className="skeleton-list" role="status" aria-label="正在加载目标">
               <div className="skeleton" />
               <div className="skeleton" />
             </div>

@@ -36,13 +36,32 @@ function validateRecurrence(recurrence: TaskRecurrence, due: Date | null): void 
   }
 }
 
-function nextDueAt(current: Date, recurrence: Exclude<TaskRecurrence, 'none'>): Date {
-  const next = new Date(current);
-  if (recurrence === 'daily') next.setUTCDate(next.getUTCDate() + 1);
-  if (recurrence === 'weekly') next.setUTCDate(next.getUTCDate() + 7);
-  if (recurrence === 'monthly') next.setUTCMonth(next.getUTCMonth() + 1);
-  if (recurrence === 'yearly') next.setUTCFullYear(next.getUTCFullYear() + 1);
-  return next;
+export function nextRecurringDueAt(
+  current: Date,
+  recurrence: Exclude<TaskRecurrence, 'none'>,
+): Date {
+  if (recurrence === 'daily' || recurrence === 'weekly') {
+    const next = new Date(current);
+    next.setUTCDate(next.getUTCDate() + (recurrence === 'daily' ? 1 : 7));
+    return next;
+  }
+
+  const monthsToAdd = recurrence === 'monthly' ? 1 : 12;
+  const targetMonth = current.getUTCMonth() + monthsToAdd;
+  const targetYear = current.getUTCFullYear() + Math.floor(targetMonth / 12);
+  const normalizedMonth = ((targetMonth % 12) + 12) % 12;
+  const lastDay = new Date(Date.UTC(targetYear, normalizedMonth + 1, 0)).getUTCDate();
+  return new Date(
+    Date.UTC(
+      targetYear,
+      normalizedMonth,
+      Math.min(current.getUTCDate(), lastDay),
+      current.getUTCHours(),
+      current.getUTCMinutes(),
+      current.getUTCSeconds(),
+      current.getUTCMilliseconds(),
+    ),
+  );
 }
 
 export class TaskService {
@@ -145,7 +164,7 @@ export class TaskService {
             id: randomUUID(),
             status: 'todo' as const,
             archivedFromStatus: null,
-            dueAt: nextDueAt(existing.dueAt, existing.recurrence),
+            dueAt: nextRecurringDueAt(existing.dueAt, existing.recurrence),
             recurrenceSourceId: existing.id,
             completedAt: null,
             version: 1,

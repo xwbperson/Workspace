@@ -11,6 +11,7 @@ import type {
   WorkbenchPreferences,
 } from '@workspace/client-sdk';
 import type { PreferencesRepository } from '../platform/preferences/repository.js';
+import { AppError } from '../platform/errors.js';
 import type { WorkbenchContributionProvider } from './workbench-contracts.js';
 
 const PROVIDER_TIMEOUT_MS = 3_000;
@@ -33,7 +34,7 @@ function errorFor(featureId: string, error: unknown): ContributionError {
   return {
     featureId,
     code: 'PROVIDER_FAILED',
-    message: error instanceof Error ? error.message : '功能数据暂时不可用。',
+    message: error instanceof AppError ? error.message : '功能数据暂时不可用。',
   };
 }
 

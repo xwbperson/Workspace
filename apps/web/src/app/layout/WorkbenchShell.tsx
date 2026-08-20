@@ -12,8 +12,8 @@ import {
   UserRound,
   X,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { featureCatalog, featureCategories } from '../feature-catalog.js';
 import { getVisibleFeatureNavigation } from '../navigation.js';
 import { FeatureIcon } from '../../components/ui/FeatureIcon.js';
@@ -44,9 +44,14 @@ export function WorkbenchShell(): React.JSX.Element {
   const { session } = useAuth();
   const { preferences } = usePreferences();
   const [collapsed, setCollapsed] = useState(readCollapsedPreference);
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    () => window.matchMedia('(max-width: 839px)').matches,
+  );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [topbarActionTarget, setTopbarActionTarget] = useState<HTMLDivElement | null>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const registerTopbarActionTarget = useCallback((element: HTMLDivElement | null): void => {
     setTopbarActionTarget(element);
   }, []);
@@ -68,6 +73,56 @@ export function WorkbenchShell(): React.JSX.Element {
   });
   const unreadCount =
     notifications.data?.filter((notification) => !notification.readAt).length ?? 0;
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 839px)');
+    const handleChange = (event: MediaQueryListEvent): void => {
+      setIsMobileViewport(event.matches);
+      if (!event.matches) setMobileMenuOpen(false);
+    };
+    media.addEventListener('change', handleChange);
+    return () => media.removeEventListener('change', handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileViewport || !mobileMenuOpen) return;
+
+    previouslyFocusedRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const sidebar = sidebarRef.current;
+    const focusCloseButton = window.requestAnimationFrame(() => {
+      sidebar?.querySelector<HTMLElement>('.sidebar__mobile-close')?.focus();
+    });
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setMobileMenuOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab' || !sidebar) return;
+
+      const focusable = Array.from(
+        sidebar.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'),
+      ).filter((element) => element.offsetParent !== null);
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.cancelAnimationFrame(focusCloseButton);
+      document.removeEventListener('keydown', handleKeyDown);
+      previouslyFocusedRef.current?.focus();
+      previouslyFocusedRef.current = null;
+    };
+  }, [isMobileViewport, mobileMenuOpen]);
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent): void => {
@@ -97,8 +152,13 @@ export function WorkbenchShell(): React.JSX.Element {
         跳到主要内容
       </a>
       <aside
+        ref={sidebarRef}
         className={`sidebar ${mobileMenuOpen ? 'sidebar--mobile-open' : ''}`}
+        role={isMobileViewport ? 'dialog' : undefined}
         aria-label="主导航"
+        aria-modal={isMobileViewport ? mobileMenuOpen : undefined}
+        aria-hidden={isMobileViewport && !mobileMenuOpen ? true : undefined}
+        inert={isMobileViewport && !mobileMenuOpen}
       >
         <div className="sidebar__brand">
           <span className="brand-mark" aria-hidden="true">
@@ -155,9 +215,14 @@ export function WorkbenchShell(): React.JSX.Element {
             <Settings aria-hidden="true" />
             <span className="sidebar__label">设置与状态</span>
           </NavLink>
-          <button type="button" className="sidebar__collapse" onClick={toggleCollapsed}>
+          <button
+            type="button"
+            className="sidebar__collapse"
+            aria-label={collapsed ? '展开侧栏' : '收起侧栏'}
+            onClick={toggleCollapsed}
+          >
             <ChevronLeft aria-hidden="true" />
-            <span className="sidebar__label">收起侧栏</span>
+            <span className="sidebar__label">{collapsed ? '展开侧栏' : '收起侧栏'}</span>
           </button>
         </div>
       </aside>
@@ -188,15 +253,11 @@ export function WorkbenchShell(): React.JSX.Element {
               </div>
             </div>
             <div className="topbar__actions">
-              <button
-                type="button"
-                className="search-trigger"
-                onClick={() => void navigate('/search?focus=1')}
-              >
+              <Link to="/search?focus=1" className="search-trigger">
                 <Search aria-hidden="true" size={18} />
                 <span>搜索工作台</span>
                 <kbd>Ctrl K</kbd>
-              </button>
+              </Link>
               <div
                 className="topbar__context-actions"
                 aria-label="当前页面操作"
@@ -210,26 +271,20 @@ export function WorkbenchShell(): React.JSX.Element {
                 <Plus aria-hidden="true" size={18} />
                 <span>快速创建</span>
               </button>
-              <button
-                type="button"
+              <Link
+                to="/notifications"
                 className="icon-button notification-button"
                 aria-label={unreadCount > 0 ? `${unreadCount} 条未读通知` : '通知'}
-                onClick={() => void navigate('/notifications')}
               >
                 <Bell aria-hidden="true" />
                 {unreadCount > 0 ? (
                   <span className="notification-dot">{Math.min(unreadCount, 9)}</span>
                 ) : null}
-              </button>
-              <button
-                type="button"
-                className="account-button"
-                aria-label="打开账户设置"
-                onClick={() => void navigate('/settings')}
-              >
+              </Link>
+              <Link to="/settings" className="account-button" aria-label="打开账户设置">
                 <UserRound aria-hidden="true" size={18} />
                 <span>{session?.owner.username}</span>
-              </button>
+              </Link>
             </div>
           </header>
 
@@ -277,13 +332,12 @@ export function WorkbenchShell(): React.JSX.Element {
           {quickActions.data?.map((action) => {
             const feature = featureCatalog.find((item) => item.featureId === action.featureId);
             return (
-              <button
-                type="button"
+              <Link
+                to={action.targetRoute}
                 className="quick-action"
                 key={`${action.featureId}:${action.actionId}`}
                 onClick={() => {
                   setQuickCreateOpen(false);
-                  void navigate(action.targetRoute);
                 }}
               >
                 {feature ? <FeatureIcon name={feature.icon} /> : <Command aria-hidden="true" />}
@@ -292,7 +346,7 @@ export function WorkbenchShell(): React.JSX.Element {
                   <small>{feature?.description}</small>
                 </span>
                 <ChevronLeft className="quick-action__arrow" aria-hidden="true" />
-              </button>
+              </Link>
             );
           })}
         </div>

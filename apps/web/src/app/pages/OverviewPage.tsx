@@ -255,7 +255,7 @@ export function OverviewPage(): React.JSX.Element {
           <span />
         </div>
         {overview.isLoading ? (
-          <div className="timeline-skeleton">
+          <div className="timeline-skeleton" role="status" aria-label="正在加载时间轨道">
             <div className="skeleton" />
             <div className="skeleton" />
           </div>

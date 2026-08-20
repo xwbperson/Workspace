@@ -178,10 +178,11 @@ export function CalendarPage(): React.JSX.Element {
             今天
           </button>
         </div>
-        <div className="lifecycle-tabs lifecycle-tabs--compact">
+        <div className="lifecycle-tabs lifecycle-tabs--compact" role="group" aria-label="日历状态">
           <button
             type="button"
             className={status === 'active' ? 'active' : ''}
+            aria-pressed={status === 'active'}
             onClick={() => {
               setStatus('active');
               void navigate('/features/calendar');
@@ -192,6 +193,7 @@ export function CalendarPage(): React.JSX.Element {
           <button
             type="button"
             className={status === 'archived' ? 'active' : ''}
+            aria-pressed={status === 'archived'}
             onClick={() => {
               setStatus('archived');
               void navigate('/features/calendar');

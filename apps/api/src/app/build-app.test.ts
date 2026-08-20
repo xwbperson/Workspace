@@ -88,6 +88,15 @@ describe('workbench HTTP vertical slice', () => {
     expect(JSON.stringify(sessionCookie)).toContain('Max-Age=');
     jar.absorb(sessionCookie);
 
+    const csrfFromAnotherTab = await app.inject({
+      method: 'GET',
+      url: '/api/v1/auth/csrf',
+      headers: { cookie: jar.header() },
+    });
+    expect(csrfFromAnotherTab.statusCode).toBe(200);
+    expect(csrfFromAnotherTab.json<{ csrfToken: string }>().csrfToken).toBe(csrfToken);
+    jar.absorb(csrfFromAnotherTab.headers['set-cookie']);
+
     const stored = await database.query<{ current_token_hash: string }>(
       'SELECT current_token_hash FROM auth_sessions LIMIT 1',
     );
@@ -138,6 +147,35 @@ describe('workbench HTTP vertical slice', () => {
     });
     expect(overview.statusCode).toBe(200);
     expect(overview.body).toContain('论文提交');
+
+    await database.query(
+      `INSERT INTO backup_runs
+         (backup_id,status,path,started_at,completed_at,verified_at,restored_at)
+       VALUES ($1,'restored',$2,$3,$4,$5,$6)`,
+      [
+        '00000000-0000-4000-8000-000000000088',
+        '/tmp/backup',
+        new Date('2026-01-01T00:00:00.000Z'),
+        new Date('2026-01-01T00:10:00.000Z'),
+        new Date('2026-01-02T00:00:00.000Z'),
+        new Date('2026-02-01T00:00:00.000Z'),
+      ],
+    );
+
+    const systemStatus = await app.inject({
+      method: 'GET',
+      url: '/api/v1/workbench/system-status',
+      headers: { cookie: jar.header() },
+    });
+    expect(systemStatus.statusCode).toBe(200);
+    expect(systemStatus.json()).toMatchObject({
+      connected: true,
+      ready: true,
+      databaseMigration: '022-backup-restore-timestamps',
+      lastSuccessfulBackupAt: '2026-01-01T00:00:00.000Z',
+      lastVerifiedBackupAt: '2026-01-02T00:00:00.000Z',
+      lastSuccessfulRestoreAt: '2026-02-01T00:00:00.000Z',
+    });
 
     const conflict = await app.inject({
       method: 'PUT',

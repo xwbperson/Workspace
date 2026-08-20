@@ -25,6 +25,25 @@ interface WorkspaceMetadata {
   createdAt: string;
 }
 
+function assertWorkspaceMetadata(
+  value: unknown,
+  expectedWorkspaceId: string,
+): asserts value is WorkspaceMetadata {
+  if (!value || typeof value !== 'object') throw new Error('工作区元数据格式无效。');
+  const metadata = value as Partial<WorkspaceMetadata>;
+  if (metadata.workspaceId !== expectedWorkspaceId) {
+    throw new Error(
+      `工作区 ID 不匹配：目录为 ${String(metadata.workspaceId)}，配置为 ${expectedWorkspaceId}。`,
+    );
+  }
+  if (metadata.formatVersion !== 1) {
+    throw new Error(`不支持的工作区格式版本：${String(metadata.formatVersion)}。`);
+  }
+  if (typeof metadata.createdAt !== 'string' || Number.isNaN(Date.parse(metadata.createdAt))) {
+    throw new Error('工作区创建时间无效。');
+  }
+}
+
 export async function initializeWorkspace(config: AppConfig): Promise<WorkspaceMetadata> {
   await mkdir(config.workbenchRoot, { recursive: true });
   for (const directory of REQUIRED_DIRECTORIES) {
@@ -34,7 +53,9 @@ export async function initializeWorkspace(config: AppConfig): Promise<WorkspaceM
   const metadataPath = join(config.workbenchRoot, WORKSPACE_META);
   let metadata: WorkspaceMetadata;
   try {
-    metadata = JSON.parse(await readFile(metadataPath, 'utf8')) as WorkspaceMetadata;
+    const storedMetadata: unknown = JSON.parse(await readFile(metadataPath, 'utf8'));
+    assertWorkspaceMetadata(storedMetadata, config.workspaceId);
+    metadata = storedMetadata;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
     metadata = {
@@ -48,15 +69,6 @@ export async function initializeWorkspace(config: AppConfig): Promise<WorkspaceM
     });
   }
 
-  if (metadata.workspaceId !== config.workspaceId) {
-    throw new Error(
-      `工作区 ID 不匹配：目录为 ${metadata.workspaceId}，配置为 ${config.workspaceId}。`,
-    );
-  }
-  if (metadata.formatVersion !== 1) {
-    throw new Error(`不支持的工作区格式版本：${metadata.formatVersion}。`);
-  }
-
   const appConfigPath = join(config.workbenchRoot, 'config', 'app.yaml');
   try {
     await access(appConfigPath, constants.F_OK);
@@ -66,11 +78,6 @@ export async function initializeWorkspace(config: AppConfig): Promise<WorkspaceM
       stringifyYaml({
         workspaceId: config.workspaceId,
         formatVersion: 1,
-        features: {
-          countdowns: { enabled: true },
-          books: { enabled: true },
-          courses: { enabled: true },
-        },
       }),
       { encoding: 'utf8', flag: 'wx' },
     );
@@ -81,12 +88,8 @@ export async function initializeWorkspace(config: AppConfig): Promise<WorkspaceM
 
 export async function validateWorkspace(config: AppConfig): Promise<WorkspaceMetadata> {
   const metadataPath = join(config.workbenchRoot, WORKSPACE_META);
-  const metadata = JSON.parse(await readFile(metadataPath, 'utf8')) as WorkspaceMetadata;
-  if (metadata.workspaceId !== config.workspaceId) {
-    throw new Error(
-      `工作区 ID 不匹配：目录为 ${metadata.workspaceId}，配置为 ${config.workspaceId}。`,
-    );
-  }
+  const metadata: unknown = JSON.parse(await readFile(metadataPath, 'utf8'));
+  assertWorkspaceMetadata(metadata, config.workspaceId);
   for (const directory of REQUIRED_DIRECTORIES) {
     await access(
       join(config.workbenchRoot, directory),

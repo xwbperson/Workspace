@@ -4,6 +4,7 @@ import type {
   SubscriptionInput,
   SubscriptionUpdateInput,
 } from '@workspace/client-sdk';
+import { isValidDateOnly } from '../../platform/date.js';
 import { AppError, ConflictError, NotFoundError } from '../../platform/errors.js';
 import { toSubscription, type SubscriptionRepository, type SubscriptionRow } from './repository.js';
 
@@ -26,7 +27,7 @@ function amount(value: number): number {
 }
 
 function dateOnly(value: string): string {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(Date.parse(`${value}T00:00:00Z`))) {
+  if (!isValidDateOnly(value)) {
     throw new AppError(400, 'INVALID_SUBSCRIPTION_DATE', '续费日期无效。');
   }
   return value;

@@ -11,7 +11,7 @@ import { AuthService } from '../platform/auth/service.js';
 import type { Database } from '../platform/database/types.js';
 import { AppError } from '../platform/errors.js';
 import { registerFileRoutes } from '../platform/files/routes.js';
-import { FileStorageService } from '../platform/files/service.js';
+import { FileStorageService, startFileCleanup } from '../platform/files/service.js';
 import { NotificationRepository } from '../platform/notifications/repository.js';
 import { PreferencesRepository } from '../platform/preferences/repository.js';
 import { registerWorkbenchRoutes } from './workbench-routes.js';
@@ -149,6 +149,11 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   const stopSchedulers: Array<() => void> = [];
   if (options.startSchedulers !== false) {
+    stopSchedulers.push(
+      startFileCleanup(files, (error) =>
+        app.log.error({ err: error }, 'Unreferenced file cleanup failed'),
+      ),
+    );
     for (const feature of features) {
       stopSchedulers.push(
         feature.startScheduler((error) =>

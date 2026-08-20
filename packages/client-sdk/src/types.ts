@@ -190,7 +190,8 @@ export interface SystemStatus {
   workspaceId: string;
   databaseMigration: string;
   lastSuccessfulBackupAt?: string;
-  lastRestoreVerifiedAt?: string;
+  lastVerifiedBackupAt?: string;
+  lastSuccessfulRestoreAt?: string;
   storage: {
     available: boolean;
     root: string;

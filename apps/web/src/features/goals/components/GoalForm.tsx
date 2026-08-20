@@ -8,8 +8,10 @@ import type {
 import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
+export function localDateKey(date = new Date()): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+    date.getDate(),
+  ).padStart(2, '0')}`;
 }
 
 function newKeyResult(): GoalKeyResult {
@@ -30,8 +32,8 @@ export function GoalForm({
     description: goal?.description ?? '',
     periodType: goal?.periodType ?? 'quarterly',
     periodLabel: goal?.periodLabel ?? '',
-    startDate: goal?.startDate ?? today(),
-    endDate: goal?.endDate ?? today(),
+    startDate: goal?.startDate ?? localDateKey(),
+    endDate: goal?.endDate ?? localDateKey(),
     status: goal?.status === 'completed' ? ('completed' as const) : ('active' as const),
     metricEnabled: Boolean(goal?.metric),
     startValue: String(goal?.metric?.startValue ?? ''),

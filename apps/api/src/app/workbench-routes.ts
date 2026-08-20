@@ -139,26 +139,31 @@ export async function registerWorkbenchRoutes(
 
   app.get('/api/v1/workbench/system-status', { config: { authenticated: true } }, async () => {
     const ownerReady = await authService.isOwnerInitialized();
-    const backups = await database.query<{
-      completed_at: Date | null;
-      verified_at: Date | null;
-      status: string;
-    }>(
-      `SELECT completed_at, verified_at, status FROM backup_runs
-         WHERE status IN ('complete', 'verified', 'restored')
-         ORDER BY COALESCE(verified_at, completed_at) DESC LIMIT 1`,
-    );
-    const backup = backups.rows[0];
+    const [lastBackup, lastVerified, lastRestore] = await Promise.all([
+      database.query<{ value: Date | null }>(
+        `SELECT max(started_at) AS value FROM backup_runs
+         WHERE status IN ('complete', 'verified', 'restored')`,
+      ),
+      database.query<{ value: Date | null }>(
+        'SELECT max(verified_at) AS value FROM backup_runs WHERE verified_at IS NOT NULL',
+      ),
+      database.query<{ value: Date | null }>(
+        `SELECT max(restored_at) AS value FROM backup_runs
+         WHERE status='restored' AND restored_at IS NOT NULL`,
+      ),
+    ]);
+    const lastBackupAt = lastBackup.rows[0]?.value;
+    const lastVerifiedAt = lastVerified.rows[0]?.value;
+    const lastRestoreAt = lastRestore.rows[0]?.value;
     return {
       connected: true,
       ready: ownerReady,
       version: config.version,
       workspaceId: config.workspaceId,
       databaseMigration: await getMigrationVersion(database),
-      ...(backup?.completed_at
-        ? { lastSuccessfulBackupAt: backup.completed_at.toISOString() }
-        : {}),
-      ...(backup?.verified_at ? { lastRestoreVerifiedAt: backup.verified_at.toISOString() } : {}),
+      ...(lastBackupAt ? { lastSuccessfulBackupAt: lastBackupAt.toISOString() } : {}),
+      ...(lastVerifiedAt ? { lastVerifiedBackupAt: lastVerifiedAt.toISOString() } : {}),
+      ...(lastRestoreAt ? { lastSuccessfulRestoreAt: lastRestoreAt.toISOString() } : {}),
       storage: { available: true, root: 'configured' },
       checkedAt: new Date().toISOString(),
     };

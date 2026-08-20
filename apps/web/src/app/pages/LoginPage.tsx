@@ -25,6 +25,7 @@ export function LoginPage(): React.JSX.Element {
     mutationFn: (input: LoginForm) => login(input),
     onSuccess: () => navigate(isSafeReturnTo(returnTo) ? returnTo : '/', { replace: true }),
   });
+  const passwordError = form.formState.errors.password;
 
   if (session) return <Navigate to={isSafeReturnTo(returnTo) ? returnTo : '/'} replace />;
 
@@ -91,7 +92,8 @@ export function LoginPage(): React.JSX.Element {
                   {...form.register('password', { required: '请输入密码' })}
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  autoFocus
+                  aria-invalid={passwordError ? 'true' : undefined}
+                  aria-describedby={passwordError ? 'login-password-error' : undefined}
                 />
                 <button
                   type="button"
@@ -102,8 +104,10 @@ export function LoginPage(): React.JSX.Element {
                   {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
                 </button>
               </div>
-              {form.formState.errors.password ? (
-                <small className="field-error">{form.formState.errors.password.message}</small>
+              {passwordError ? (
+                <small id="login-password-error" className="field-error">
+                  {passwordError.message}
+                </small>
               ) : null}
             </label>
             <label className="checkbox-row">

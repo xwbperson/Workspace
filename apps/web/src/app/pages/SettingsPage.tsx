@@ -115,7 +115,7 @@ export function SettingsPage(): React.JSX.Element {
               <strong>主题模式</strong>
               <small>在所有设备间同步</small>
             </div>
-            <div className="segmented-control" aria-label="主题模式">
+            <div className="segmented-control" role="group" aria-label="主题模式">
               {(['dark', 'light', 'glass'] as const).map((theme) => {
                 const ThemeIcon = theme === 'light' ? Sun : theme === 'glass' ? Layers3 : Moon;
                 const label = theme === 'light' ? '浅色' : theme === 'glass' ? '玻璃' : '深色';
@@ -124,6 +124,7 @@ export function SettingsPage(): React.JSX.Element {
                   <button
                     type="button"
                     className={preferences.theme === theme ? 'active' : ''}
+                    aria-pressed={preferences.theme === theme}
                     key={theme}
                     disabled={saving}
                     onClick={() => void updatePreference('theme', theme)}
@@ -233,9 +234,29 @@ export function SettingsPage(): React.JSX.Element {
                     : '尚无已记录备份'}
                 </dd>
               </div>
+              <div>
+                <dt>最近备份校验</dt>
+                <dd>
+                  {status.data.lastVerifiedBackupAt
+                    ? formatRelativeTime(status.data.lastVerifiedBackupAt)
+                    : '尚无校验记录'}
+                </dd>
+              </div>
+              <div>
+                <dt>最近成功恢复</dt>
+                <dd>
+                  {status.data.lastSuccessfulRestoreAt
+                    ? formatRelativeTime(status.data.lastSuccessfulRestoreAt)
+                    : '尚无恢复记录'}
+                </dd>
+              </div>
             </dl>
           ) : (
-            <div className="skeleton skeleton--settings" />
+            <div
+              className="skeleton skeleton--settings"
+              role="status"
+              aria-label="正在加载系统状态"
+            />
           )}
           <div className="backup-note">
             <DatabaseBackup aria-hidden="true" />
@@ -322,21 +343,34 @@ export function SettingsPage(): React.JSX.Element {
             <input
               type="password"
               autoComplete="current-password"
+              aria-invalid={passwordForm.formState.errors.currentPassword ? 'true' : undefined}
+              aria-describedby={
+                passwordForm.formState.errors.currentPassword ? 'current-password-error' : undefined
+              }
               {...passwordForm.register('currentPassword', { required: '请输入当前密码' })}
             />
+            {passwordForm.formState.errors.currentPassword ? (
+              <small id="current-password-error" className="field-error">
+                {passwordForm.formState.errors.currentPassword.message}
+              </small>
+            ) : null}
           </label>
           <label className="field">
             <span>新密码</span>
             <input
               type="password"
               autoComplete="new-password"
+              aria-invalid={passwordForm.formState.errors.newPassword ? 'true' : undefined}
+              aria-describedby={
+                passwordForm.formState.errors.newPassword ? 'new-password-error' : undefined
+              }
               {...passwordForm.register('newPassword', {
                 required: '请输入新密码',
                 minLength: { value: 12, message: '至少需要 12 个字符' },
               })}
             />
             {passwordForm.formState.errors.newPassword ? (
-              <small className="field-error">
+              <small id="new-password-error" className="field-error">
                 {passwordForm.formState.errors.newPassword.message}
               </small>
             ) : null}
@@ -346,10 +380,14 @@ export function SettingsPage(): React.JSX.Element {
             <input
               type="password"
               autoComplete="new-password"
+              aria-invalid={passwordForm.formState.errors.confirmPassword ? 'true' : undefined}
+              aria-describedby={
+                passwordForm.formState.errors.confirmPassword ? 'confirm-password-error' : undefined
+              }
               {...passwordForm.register('confirmPassword', { required: '请再次输入新密码' })}
             />
             {passwordForm.formState.errors.confirmPassword ? (
-              <small className="field-error">
+              <small id="confirm-password-error" className="field-error">
                 {passwordForm.formState.errors.confirmPassword.message}
               </small>
             ) : null}

@@ -4,6 +4,7 @@ import type {
   CalendarEntryInput,
   CalendarEntryUpdateInput,
 } from '@workspace/client-sdk';
+import { isValidDateOnly } from '../../platform/date.js';
 import { AppError, ConflictError, NotFoundError } from '../../platform/errors.js';
 import { toCalendarEntry, type CalendarEntryRow, type CalendarRepository } from './repository.js';
 
@@ -20,7 +21,7 @@ function text(value: string | undefined, name: string, max: number, required = f
 }
 
 function entryDate(value: string): string {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(Date.parse(`${value}T00:00:00Z`))) {
+  if (!isValidDateOnly(value)) {
     throw new AppError(400, 'INVALID_CALENDAR_DATE', '日历日期无效。');
   }
   return value;

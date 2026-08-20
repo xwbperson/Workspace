@@ -177,6 +177,28 @@ export class ChecklistRepository {
     return result.rows.map(mapItem);
   }
 
+  public async itemsForChecklists(
+    checklistIds: readonly string[],
+  ): Promise<Map<string, ChecklistItemRow[]>> {
+    const itemsByChecklist = new Map(
+      checklistIds.map((checklistId) => [checklistId, [] as ChecklistItemRow[]]),
+    );
+    if (checklistIds.length === 0) return itemsByChecklist;
+
+    const placeholders = checklistIds.map((_, index) => `$${index + 1}`).join(',');
+    const result = await this.database.query<ChecklistItemDatabaseRow>(
+      `SELECT ${ITEM_COLUMNS} FROM checklist_items WHERE checklist_id IN (${placeholders})
+       ORDER BY checklist_id ASC,
+         CASE WHEN checked_at IS NULL THEN 0 ELSE 1 END,position ASC,checked_at ASC,id ASC`,
+      checklistIds,
+    );
+    for (const databaseRow of result.rows) {
+      const item = mapItem(databaseRow);
+      itemsByChecklist.get(item.checklistId)?.push(item);
+    }
+    return itemsByChecklist;
+  }
+
   public async create(row: ChecklistRow): Promise<ChecklistRow> {
     const result = await this.database.query<ChecklistDatabaseRow>(
       `INSERT INTO checklists

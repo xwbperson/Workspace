@@ -104,7 +104,7 @@ export function NotificationsPage(): React.JSX.Element {
           description="倒计时到达或备份任务产生结果时，会在这里留下清楚的记录。"
         />
       ) : (
-        <div className="skeleton-list">
+        <div className="skeleton-list" role="status" aria-label="正在加载通知">
           <div className="skeleton" />
           <div className="skeleton" />
         </div>

@@ -5,6 +5,7 @@ import type {
   BookInput,
   BookReadingStatus,
 } from '@workspace/client-sdk';
+import { MAX_BOOK_COVER_FILE_BYTES, MAX_BOOK_COVER_FILE_MEBIBYTES } from '@workspace/client-sdk';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   Archive,
@@ -149,6 +150,9 @@ export function BookPage(): React.JSX.Element {
   const uploadCover = useMutation({
     mutationFn: async ({ book, file }: { book: Book; file: File }) => {
       if (!file.type.startsWith('image/')) throw new Error('封面必须是图片文件。');
+      if (file.size > MAX_BOOK_COVER_FILE_BYTES) {
+        throw new Error(`书籍封面不能超过 ${MAX_BOOK_COVER_FILE_MEBIBYTES} MB。`);
+      }
       const stored = await bookApi.uploadFile(file);
       return bookApi.update(book.id, { coverFileId: stored.id, version: book.version });
     },
@@ -190,7 +194,7 @@ export function BookPage(): React.JSX.Element {
         <SectionError title="操作没有完成" message={humanizeApiError(mutationError)} />
       ) : null}
 
-      <div className="learning-filter" aria-label="书籍状态">
+      <div className="learning-filter" role="group" aria-label="书籍状态">
         {(
           [
             ['all', '全部'],
@@ -205,6 +209,7 @@ export function BookPage(): React.JSX.Element {
             key={value}
             type="button"
             className={filter === value ? 'active' : ''}
+            aria-pressed={filter === value}
             onClick={() => changeFilter(value)}
           >
             {label}
@@ -221,7 +226,7 @@ export function BookPage(): React.JSX.Element {
               onRetry={() => void list.refetch()}
             />
           ) : list.isLoading ? (
-            <div className="skeleton-list">
+            <div className="skeleton-list" role="status" aria-label="正在加载书籍">
               <div className="skeleton" />
               <div className="skeleton" />
             </div>
@@ -235,7 +240,14 @@ export function BookPage(): React.JSX.Element {
                 >
                   <div className="book-card__cover">
                     {book.cover ? (
-                      <img src={book.cover.contentUrl} alt={`${book.title}封面`} />
+                      <img
+                        src={book.cover.contentUrl}
+                        alt={`${book.title}封面`}
+                        width="76"
+                        height="108"
+                        loading="lazy"
+                        decoding="async"
+                      />
                     ) : (
                       <Library aria-hidden="true" />
                     )}
@@ -300,6 +312,7 @@ export function BookPage(): React.JSX.Element {
               onRestore={() => restore.mutate(selected)}
               onDeletePermanently={() => setDeleteOpen(true)}
               onPickCover={() => fileInput.current?.click()}
+              coverUploading={uploadCover.isPending}
             />
           ) : (
             <div className="learning-detail-empty">
@@ -317,6 +330,7 @@ export function BookPage(): React.JSX.Element {
         aria-label="选择书籍封面图片"
         type="file"
         accept="image/*"
+        disabled={uploadCover.isPending}
         onChange={(event) => {
           const file = event.target.files?.[0];
           if (selected && file) uploadCover.mutate({ book: selected, file });
@@ -425,6 +439,7 @@ function BookDetail({
   onRestore,
   onDeletePermanently,
   onPickCover,
+  coverUploading,
 }: {
   book: Book;
   onBack(): void;
@@ -436,6 +451,7 @@ function BookDetail({
   onRestore(): void;
   onDeletePermanently(): void;
   onPickCover(): void;
+  coverUploading: boolean;
 }): React.JSX.Element {
   return (
     <article className="learning-detail">
@@ -445,13 +461,20 @@ function BookDetail({
       <header className="book-detail-header">
         <div className="book-detail-cover">
           {book.cover ? (
-            <img src={book.cover.contentUrl} alt={`${book.title}封面`} />
+            <img
+              src={book.cover.contentUrl}
+              alt={`${book.title}封面`}
+              width="160"
+              height="220"
+              decoding="async"
+            />
           ) : (
             <Library aria-hidden="true" />
           )}
           {!book.archived ? (
-            <button type="button" onClick={onPickCover}>
-              <Camera aria-hidden="true" size={16} /> 更换封面
+            <button type="button" onClick={onPickCover} disabled={coverUploading}>
+              <Camera aria-hidden="true" size={16} />
+              {coverUploading ? '正在上传…' : '更换封面'}
             </button>
           ) : null}
         </div>

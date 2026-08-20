@@ -123,11 +123,19 @@ export function LifeCountdownPage(): React.JSX.Element {
     <div className="feature-shell-page feature-shell-page--life">
       <PageTopbarActions>
         <div className="topbar__context-action-group">
-          <button className="button button--quiet" onClick={() => setProfileOpen(true)}>
+          <button
+            type="button"
+            className="button button--quiet"
+            onClick={() => setProfileOpen(true)}
+          >
             <Settings2 size={17} />
             <span>人生参数</span>
           </button>
-          <button className="button button--primary" onClick={() => setCreateOpen(true)}>
+          <button
+            type="button"
+            className="button button--primary"
+            onClick={() => setCreateOpen(true)}
+          >
             <Plus size={17} />
             <span>添加事件</span>
           </button>
@@ -143,11 +151,13 @@ export function LifeCountdownPage(): React.JSX.Element {
       ) : (
         <div className="skeleton skeleton--detail" />
       )}
-      <div className="lifecycle-tabs" aria-label="人生事件状态">
+      <div className="lifecycle-tabs" role="group" aria-label="人生事件状态">
         {(['active', 'archived'] as const).map((item) => (
           <button
+            type="button"
             key={item}
             className={status === item ? 'active' : ''}
+            aria-pressed={status === item}
             onClick={() => {
               setStatus(item);
               void navigate('/features/life-countdown');
@@ -192,7 +202,11 @@ export function LifeCountdownPage(): React.JSX.Element {
               description="毕业、旅行、纪念日或任何你想看见的未来节点都可以放在这里。"
               action={
                 status === 'active' ? (
-                  <button className="button button--quiet" onClick={() => setCreateOpen(true)}>
+                  <button
+                    type="button"
+                    className="button button--quiet"
+                    onClick={() => setCreateOpen(true)}
+                  >
                     添加第一项
                   </button>
                 ) : undefined
@@ -263,10 +277,15 @@ export function LifeCountdownPage(): React.JSX.Element {
         onClose={() => setArchiveOpen(false)}
         footer={
           <>
-            <button className="button button--quiet" onClick={() => setArchiveOpen(false)}>
+            <button
+              type="button"
+              className="button button--quiet"
+              onClick={() => setArchiveOpen(false)}
+            >
               取消
             </button>
             <button
+              type="button"
               className="button button--danger"
               onClick={() => selected && archive.mutate(selected)}
             >
@@ -283,10 +302,15 @@ export function LifeCountdownPage(): React.JSX.Element {
         onClose={() => setDeleteOpen(false)}
         footer={
           <>
-            <button className="button button--quiet" onClick={() => setDeleteOpen(false)}>
+            <button
+              type="button"
+              className="button button--quiet"
+              onClick={() => setDeleteOpen(false)}
+            >
               取消
             </button>
             <button
+              type="button"
               className="button button--danger"
               onClick={() => selected && remove.mutate(selected)}
             >
@@ -318,7 +342,7 @@ function LifeMetrics({
           <h3>先填写出生日期和预期寿命</h3>
           <p>完成后，这里会显示已走过比例、剩余天数和今天/今年的进度。</p>
         </div>
-        <button className="button button--primary" onClick={onSetup}>
+        <button type="button" className="button button--primary" onClick={onSetup}>
           现在设置
         </button>
       </section>
@@ -405,22 +429,22 @@ function LifeEventDetail({
         <div className="entity-detail__actions">
           {item.status === 'archived' ? (
             <>
-              <button className="button button--quiet" onClick={onRestore}>
+              <button type="button" className="button button--quiet" onClick={onRestore}>
                 <RotateCcw />
                 恢复
               </button>
-              <button className="button button--danger" onClick={onDelete}>
+              <button type="button" className="button button--danger" onClick={onDelete}>
                 <Trash2 />
                 永久删除
               </button>
             </>
           ) : (
             <>
-              <button className="button button--quiet" onClick={onEdit}>
+              <button type="button" className="button button--quiet" onClick={onEdit}>
                 <Edit3 />
                 编辑
               </button>
-              <button className="button button--quiet" onClick={onArchive}>
+              <button type="button" className="button button--quiet" onClick={onArchive}>
                 <Archive />
                 归档
               </button>

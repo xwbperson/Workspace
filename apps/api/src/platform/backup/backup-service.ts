@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
+import { createReadStream } from 'node:fs';
 import {
   cp,
   lstat,
@@ -107,7 +108,7 @@ async function collectFiles(root: string, current = root): Promise<string[]> {
 
 async function sha256(path: string): Promise<string> {
   const hash = createHash('sha256');
-  hash.update(await readFile(path));
+  for await (const chunk of createReadStream(path) as AsyncIterable<Buffer>) hash.update(chunk);
   return hash.digest('hex');
 }
 
@@ -139,6 +140,31 @@ function assertChildPath(parent: string, child: string): void {
   }
 }
 
+async function backupLockIsActive(lockPath: string): Promise<boolean> {
+  try {
+    const lock = JSON.parse(await readFile(lockPath, 'utf8')) as {
+      pid?: unknown;
+      startedAt?: unknown;
+    };
+    if (
+      !Number.isInteger(lock.pid) ||
+      typeof lock.startedAt !== 'string' ||
+      !Number.isFinite(new Date(lock.startedAt).getTime()) ||
+      Date.now() - new Date(lock.startedAt).getTime() > 12 * 60 * 60 * 1_000
+    ) {
+      return false;
+    }
+    try {
+      process.kill(lock.pid as number, 0);
+      return true;
+    } catch (error) {
+      return (error as NodeJS.ErrnoException).code === 'EPERM';
+    }
+  } catch {
+    return false;
+  }
+}
+
 export class BackupService {
   public constructor(
     private readonly config: AppConfig,
@@ -148,20 +174,25 @@ export class BackupService {
 
   public async create(): Promise<string> {
     const lockPath = join(this.config.workbenchRoot, 'runtime', 'backup.lock');
-    try {
-      await writeFile(
-        lockPath,
-        `${JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() })}\n`,
-        {
-          encoding: 'utf8',
-          flag: 'wx',
-        },
-      );
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
-        throw new AppError(409, 'BACKUP_ALREADY_RUNNING', '已有备份任务正在运行，请先检查运行锁。');
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        await writeFile(
+          lockPath,
+          `${JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() })}\n`,
+          {
+            encoding: 'utf8',
+            flag: 'wx',
+          },
+        );
+        break;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+        if (attempt === 0 && !(await backupLockIsActive(lockPath))) {
+          await rm(lockPath, { force: true });
+          continue;
+        }
+        throw new AppError(409, 'BACKUP_ALREADY_RUNNING', '已有备份任务正在运行，请稍后重试。');
       }
-      throw error;
     }
 
     try {
@@ -209,10 +240,9 @@ export class BackupService {
         force: false,
         errorOnExist: true,
       });
-      await cp(
-        join(this.config.workbenchRoot, 'config', 'app.yaml'),
-        join(incompletePath, 'config', 'app.yaml'),
-        { force: false, errorOnExist: true },
+      await copyDirectoryContents(
+        join(this.config.workbenchRoot, 'config'),
+        join(incompletePath, 'config'),
       );
 
       const manifest: BackupManifest = {
@@ -248,11 +278,15 @@ export class BackupService {
       );
       return finalPath;
     } catch (error) {
-      await this.database.query(
-        `UPDATE backup_runs SET status = 'failed', completed_at = now(), error_code = $2
-         WHERE backup_id = $1`,
-        [backupId, error instanceof Error ? error.name : 'UNKNOWN'],
-      );
+      try {
+        await this.database.query(
+          `UPDATE backup_runs SET status = 'failed', completed_at = now(), error_code = $2
+           WHERE backup_id = $1`,
+          [backupId, error instanceof Error ? error.name : 'UNKNOWN'],
+        );
+      } finally {
+        await rm(incompletePath, { recursive: true, force: true });
+      }
       throw error;
     }
   }
@@ -343,9 +377,9 @@ export class BackupService {
         join(backupRoot, 'storage', 'objects'),
         join(target, 'storage', 'objects'),
       );
-      await cp(join(backupRoot, 'config', 'app.yaml'), join(target, 'config', 'app.yaml'), {
-        force: true,
-      });
+      await rm(join(target, 'config'), { recursive: true, force: true });
+      await mkdir(join(target, 'config'), { recursive: true });
+      await copyDirectoryContents(join(backupRoot, 'config'), join(target, 'config'));
 
       await this.runCommand(
         postgresCommand(process.env.PG_RESTORE_BIN ?? 'pg_restore', targetDatabaseUrl, [
@@ -401,7 +435,7 @@ export class BackupService {
       };
       await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
       await this.database.query(
-        `UPDATE backup_runs SET status = 'restored', completed_at = now()
+        `UPDATE backup_runs SET status = 'restored', restored_at = now()
          WHERE backup_id = $1`,
         [manifest.backupId],
       );

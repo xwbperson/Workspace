@@ -1,8 +1,18 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { GoalForm } from './GoalForm.js';
+import { GoalForm, localDateKey } from './GoalForm.js';
 
 describe('GoalForm', () => {
+  it('uses browser-local calendar fields instead of the UTC date', () => {
+    const localDate = {
+      getFullYear: () => 2026,
+      getMonth: () => 7,
+      getDate: () => 20,
+    } as unknown as Date;
+
+    expect(localDateKey(localDate)).toBe('2026-08-20');
+  });
+
   it('uses an aligned metric toggle and an accent action for key results', () => {
     render(<GoalForm submitting={false} onSubmit={vi.fn(async () => undefined)} />);
 

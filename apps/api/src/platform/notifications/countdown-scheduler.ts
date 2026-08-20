@@ -27,11 +27,20 @@ export function startCountdownNotificationScheduler(
   notifications: NotificationRepository,
   onError: (error: unknown) => void,
 ): () => void {
-  const run = (): void => {
-    void syncReachedCountdownNotifications(countdowns, notifications).catch(onError);
+  let running = false;
+  const run = async (): Promise<void> => {
+    if (running) return;
+    running = true;
+    try {
+      await syncReachedCountdownNotifications(countdowns, notifications);
+    } catch (error) {
+      onError(error);
+    } finally {
+      running = false;
+    }
   };
-  run();
-  const timer = setInterval(run, 60_000);
+  void run();
+  const timer = setInterval(() => void run(), 60_000);
   timer.unref();
   return () => clearInterval(timer);
 }
