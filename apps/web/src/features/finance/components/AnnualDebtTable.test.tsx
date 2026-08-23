@@ -80,6 +80,57 @@ describe('AnnualDebtTable', () => {
     );
   });
 
+  it('keeps a failed amount edit visible so the user can retry it', async () => {
+    const onSave = vi.fn(async () => Promise.reject(new Error('保存失败')));
+    render(
+      <AnnualDebtTable
+        year={2026}
+        onYearChange={vi.fn()}
+        platforms={[{ id: 'p1', name: '信用卡' }]}
+        records={records.filter((record) => record.platformId === 'p1')}
+        saving={false}
+        onSave={onSave}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑年度负债' }));
+    fireEvent.change(screen.getByLabelText('8月 信用卡 负债'), { target: { value: '2300' } });
+    fireEvent.click(screen.getByRole('button', { name: '完成年度负债编辑' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('保存失败');
+    expect(screen.getByLabelText('8月 信用卡 负债')).toHaveValue(2300);
+    expect(screen.getByRole('button', { name: '完成年度负债编辑' })).toBeInTheDocument();
+  });
+
+  it('waits for dirty cells to save before leaving edit mode', async () => {
+    let resolveSave: (() => void) | undefined;
+    const onSave = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveSave = resolve;
+        }),
+    );
+    render(
+      <AnnualDebtTable
+        year={2026}
+        onYearChange={vi.fn()}
+        platforms={[{ id: 'p1', name: '信用卡' }]}
+        records={records.filter((record) => record.platformId === 'p1')}
+        saving={false}
+        onSave={onSave}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑年度负债' }));
+    fireEvent.change(screen.getByLabelText('8月 信用卡 负债'), { target: { value: '2300' } });
+    fireEvent.click(screen.getByRole('button', { name: '完成年度负债编辑' }));
+
+    expect(screen.getByRole('button', { name: '完成年度负债编辑' })).toHaveTextContent('正在保存');
+    expect(screen.getByLabelText('8月 信用卡 负债')).toHaveValue(2300);
+    resolveSave?.();
+    await waitFor(() => expect(screen.queryByLabelText('8月 信用卡 负债')).not.toBeInTheDocument());
+  });
+
   it('changes the year from the annual table toolbar', () => {
     const onYearChange = vi.fn();
     render(

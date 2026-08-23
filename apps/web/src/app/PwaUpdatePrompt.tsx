@@ -1,4 +1,4 @@
-import { RefreshCw, WifiOff, X } from 'lucide-react';
+import { CheckCircle2, RefreshCw, X } from 'lucide-react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export function PwaUpdatePrompt(): React.JSX.Element | null {
@@ -10,7 +10,7 @@ export function PwaUpdatePrompt(): React.JSX.Element | null {
   if (!offlineReady && !needRefresh) return null;
   return (
     <div className="pwa-prompt" role="status">
-      {needRefresh ? <RefreshCw aria-hidden="true" /> : <WifiOff aria-hidden="true" />}
+      {needRefresh ? <RefreshCw aria-hidden="true" /> : <CheckCircle2 aria-hidden="true" />}
       <div>
         <strong>{needRefresh ? '工作台有新版本' : '静态界面已可离线打开'}</strong>
         <small>{needRefresh ? '重新载入后使用最新版本。' : '业务数据仍需要连接服务器。'}</small>

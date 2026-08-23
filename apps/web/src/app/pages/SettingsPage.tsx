@@ -19,6 +19,7 @@ import { humanizeApiError, queryClient, workbenchClient } from '../../platform/a
 import { useAuth } from '../../platform/auth/AuthProvider.js';
 import { usePreferences } from '../../platform/preferences/usePreferences.js';
 import { formatDateTime, formatRelativeTime } from '../../platform/time/format.js';
+import { Modal } from '../../components/ui/Modal.js';
 import { SectionError } from '../../components/ui/States.js';
 import { useToast } from '../../components/ui/ToastProvider.js';
 import { SidebarFeatureSettings } from './SidebarFeatureSettings.js';
@@ -29,9 +30,17 @@ interface PasswordForm {
   confirmPassword: string;
 }
 
+type SessionAction = { kind: 'logout-others' } | { kind: 'revoke'; session: SessionView };
+
 export function SettingsPage(): React.JSX.Element {
   const { logout } = useAuth();
-  const { preferences, save, saving } = usePreferences();
+  const {
+    preferences,
+    save,
+    saving,
+    error: preferenceError,
+    retry: retryPreferences,
+  } = usePreferences();
   const { show } = useToast();
   const sessions = useQuery({
     queryKey: ['auth', 'sessions'],
@@ -43,6 +52,7 @@ export function SettingsPage(): React.JSX.Element {
   });
   const [editingSession, setEditingSession] = useState<string | null>(null);
   const [sessionLabel, setSessionLabel] = useState('');
+  const [sessionAction, setSessionAction] = useState<SessionAction | null>(null);
   const passwordForm = useForm<PasswordForm>();
   const rename = useMutation({
     mutationFn: ({ id, label }: { id: string; label: string }) =>
@@ -56,6 +66,7 @@ export function SettingsPage(): React.JSX.Element {
   const revoke = useMutation({
     mutationFn: (id: string) => workbenchClient.revokeSession(id),
     onSuccess: (_value, id) => {
+      setSessionAction(null);
       const current = sessions.data?.find((session) => session.sessionId === id)?.current;
       if (current) window.dispatchEvent(new CustomEvent('workbench:unauthorized'));
       else void queryClient.invalidateQueries({ queryKey: ['auth', 'sessions'] });
@@ -65,6 +76,7 @@ export function SettingsPage(): React.JSX.Element {
   const logoutOthers = useMutation({
     mutationFn: () => workbenchClient.logoutOtherSessions(),
     onSuccess: () => {
+      setSessionAction(null);
       void queryClient.invalidateQueries({ queryKey: ['auth', 'sessions'] });
       show('其他登录会话已退出');
     },
@@ -82,9 +94,15 @@ export function SettingsPage(): React.JSX.Element {
     key: K,
     value: WorkbenchPreferences[K],
   ): Promise<void> => {
-    await save({ ...preferences, [key]: value });
-    show('设置已保存');
+    try {
+      await save({ ...preferences, [key]: value });
+      show('设置已保存');
+    } catch {
+      // The shared preferences error is rendered next to these controls.
+    }
   };
+
+  const sessionMutationError = rename.error ?? revoke.error ?? logoutOthers.error;
 
   return (
     <div className="settings-page page-stack">
@@ -98,6 +116,14 @@ export function SettingsPage(): React.JSX.Element {
           <LogOut aria-hidden="true" size={17} /> 退出当前会话
         </button>
       </header>
+
+      {preferenceError ? (
+        <SectionError
+          title="工作台设置没有保存"
+          message={humanizeApiError(preferenceError)}
+          onRetry={() => void retryPreferences()}
+        />
+      ) : null}
 
       <div className="settings-grid">
         <section className="settings-card">
@@ -183,8 +209,12 @@ export function SettingsPage(): React.JSX.Element {
           preferences={preferences}
           saving={saving}
           onSave={async (next) => {
-            await save(next);
-            show('侧边栏设置已保存');
+            try {
+              await save(next);
+              show('侧边栏设置已保存');
+            } catch {
+              // The shared preferences error is rendered above the settings grid.
+            }
           }}
         />
 
@@ -282,16 +312,25 @@ export function SettingsPage(): React.JSX.Element {
           <button
             type="button"
             className="button button--quiet"
-            disabled={logoutOthers.isPending || (sessions.data?.length ?? 0) <= 1}
-            onClick={() => logoutOthers.mutate()}
+            disabled={(sessions.data?.length ?? 0) <= 1}
+            onClick={() => setSessionAction({ kind: 'logout-others' })}
           >
             退出其他会话
           </button>
         </div>
+        {sessionMutationError ? (
+          <SectionError title="会话操作没有完成" message={humanizeApiError(sessionMutationError)} />
+        ) : null}
         {sessions.isError ? (
           <SectionError
             message={humanizeApiError(sessions.error)}
             onRetry={() => void sessions.refetch()}
+          />
+        ) : sessions.isLoading ? (
+          <div
+            className="skeleton skeleton--settings"
+            role="status"
+            aria-label="正在加载登录会话"
           />
         ) : (
           <div className="session-list">
@@ -308,12 +347,65 @@ export function SettingsPage(): React.JSX.Element {
                 onLabelChange={setSessionLabel}
                 onSave={() => rename.mutate({ id: session.sessionId, label: sessionLabel })}
                 onCancel={() => setEditingSession(null)}
-                onRevoke={() => revoke.mutate(session.sessionId)}
+                busy={
+                  (rename.isPending && rename.variables?.id === session.sessionId) ||
+                  (revoke.isPending && revoke.variables === session.sessionId)
+                }
+                onRevoke={() => {
+                  setSessionAction({ kind: 'revoke', session });
+                }}
               />
             ))}
           </div>
         )}
       </section>
+
+      <Modal
+        open={Boolean(sessionAction)}
+        title={sessionAction?.kind === 'logout-others' ? '退出其他会话' : '撤销登录会话'}
+        description={
+          sessionAction?.kind === 'logout-others'
+            ? '除当前浏览器外，其他设备和浏览器都需要重新登录。'
+            : sessionAction?.session.current
+              ? '当前浏览器会立即退出，需要重新登录。'
+              : sessionAction
+                ? `“${sessionAction.session.clientLabel}”将立即失效。`
+                : ''
+        }
+        onClose={() => setSessionAction(null)}
+        busy={logoutOthers.isPending || revoke.isPending}
+        error={
+          logoutOthers.error || revoke.error
+            ? humanizeApiError(logoutOthers.error ?? revoke.error)
+            : null
+        }
+        confirmDiscard={false}
+        footer={
+          <>
+            <button
+              type="button"
+              className="button button--quiet"
+              disabled={logoutOthers.isPending || revoke.isPending}
+              onClick={() => setSessionAction(null)}
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              className="button button--danger"
+              disabled={!sessionAction || logoutOthers.isPending || revoke.isPending}
+              onClick={() => {
+                if (sessionAction?.kind === 'logout-others') logoutOthers.mutate();
+                else if (sessionAction) revoke.mutate(sessionAction.session.sessionId);
+              }}
+            >
+              {logoutOthers.isPending || revoke.isPending ? '正在处理…' : '确认退出'}
+            </button>
+          </>
+        }
+      >
+        <p className="muted">该操作不会删除工作台数据。</p>
+      </Modal>
 
       <section className="settings-card settings-card--wide">
         <div className="settings-card__heading">
@@ -420,6 +512,7 @@ function SessionRow({
   onSave,
   onCancel,
   onRevoke,
+  busy,
 }: {
   session: SessionView;
   editing: boolean;
@@ -429,6 +522,7 @@ function SessionRow({
   onSave(): void;
   onCancel(): void;
   onRevoke(): void;
+  busy: boolean;
 }): React.JSX.Element {
   return (
     <div className="session-row">
@@ -444,10 +538,15 @@ function SessionRow({
               aria-label="会话名称"
               onChange={(event) => onLabelChange(event.target.value)}
             />
-            <button type="button" className="button button--quiet" onClick={onSave}>
-              保存
+            <button type="button" className="button button--quiet" disabled={busy} onClick={onSave}>
+              {busy ? '正在保存…' : '保存'}
             </button>
-            <button type="button" className="button button--text" onClick={onCancel}>
+            <button
+              type="button"
+              className="button button--text"
+              disabled={busy}
+              onClick={onCancel}
+            >
               取消
             </button>
           </div>
@@ -469,6 +568,7 @@ function SessionRow({
           type="button"
           className="icon-button"
           aria-label={`重命名 ${session.clientLabel}`}
+          disabled={busy}
           onClick={onStartEdit}
         >
           <Pencil aria-hidden="true" />
@@ -477,6 +577,7 @@ function SessionRow({
           type="button"
           className="icon-button icon-button--danger"
           aria-label={`撤销 ${session.clientLabel}`}
+          disabled={busy}
           onClick={onRevoke}
         >
           {session.current ? <LogOut aria-hidden="true" /> : <Trash2 aria-hidden="true" />}

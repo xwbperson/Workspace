@@ -142,103 +142,109 @@ export function LifeCountdownPage(): React.JSX.Element {
         </div>
       </PageTopbarActions>
       {error ? <SectionError title="数据没有更新" message={humanizeApiError(error)} /> : null}
-      {dashboard.data ? (
-        <LifeMetrics
-          profile={dashboard.data.profile}
-          now={now}
-          onSetup={() => setProfileOpen(true)}
-        />
-      ) : (
-        <div className="skeleton skeleton--detail" />
-      )}
-      <div className="lifecycle-tabs" role="group" aria-label="人生事件状态">
-        {(['active', 'archived'] as const).map((item) => (
-          <button
-            type="button"
-            key={item}
-            className={status === item ? 'active' : ''}
-            aria-pressed={status === item}
-            onClick={() => {
-              setStatus(item);
-              void navigate('/features/life-countdown');
-            }}
-          >
-            {item === 'active' ? '进行中' : '已归档'}
-          </button>
-        ))}
-        <span>{events.length}项</span>
-      </div>
-      <div
-        className={`entity-workspace life-event-workspace ${selected ? 'entity-workspace--detail' : ''}`}
-      >
-        <section className="entity-list-panel">
-          {events.length ? (
-            <div className="life-event-list">
-              {events.map((item) => {
-                const remaining = duration(item.targetAt, now);
-                return (
-                  <Link
-                    key={item.id}
-                    className={`life-event-card ${item.id === eventId ? 'active' : ''}`}
-                    to={`/features/life-countdown/${item.id}`}
-                  >
-                    <span>
-                      <Sparkles />
-                    </span>
-                    <div>
-                      <small>{new Date(item.targetAt).toLocaleString('zh-CN')}</small>
-                      <strong>{item.title}</strong>
-                      <p>
-                        {remaining.overdue ? '已过去' : '还剩'} {remaining.label}
-                      </p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <EmptyState
-              title={status === 'active' ? '还没有人生事件' : '还没有已归档事件'}
-              description="毕业、旅行、纪念日或任何你想看见的未来节点都可以放在这里。"
-              action={
-                status === 'active' ? (
-                  <button
-                    type="button"
-                    className="button button--quiet"
-                    onClick={() => setCreateOpen(true)}
-                  >
-                    添加第一项
-                  </button>
-                ) : undefined
-              }
-            />
-          )}
-        </section>
-        <section className="entity-detail-panel">
-          {selected ? (
-            <LifeEventDetail
-              item={selected}
+      {!dashboard.isError ? (
+        <>
+          {dashboard.data ? (
+            <LifeMetrics
+              profile={dashboard.data.profile}
               now={now}
-              onBack={() => void navigate('/features/life-countdown')}
-              onEdit={() => setEditOpen(true)}
-              onArchive={() => setArchiveOpen(true)}
-              onRestore={() => restore.mutate(selected)}
-              onDelete={() => setDeleteOpen(true)}
+              onSetup={() => setProfileOpen(true)}
             />
           ) : (
-            <div className="entity-detail-placeholder">
-              <Hourglass size={46} />
-              <h3>选择一个人生事件</h3>
-              <p>这里会以秒为单位持续更新剩余时间。</p>
-            </div>
+            <div className="skeleton skeleton--detail" />
           )}
-        </section>
-      </div>
+          <div className="lifecycle-tabs" role="group" aria-label="人生事件状态">
+            {(['active', 'archived'] as const).map((item) => (
+              <button
+                type="button"
+                key={item}
+                className={status === item ? 'active' : ''}
+                aria-pressed={status === item}
+                onClick={() => {
+                  setStatus(item);
+                  void navigate('/features/life-countdown');
+                }}
+              >
+                {item === 'active' ? '进行中' : '已归档'}
+              </button>
+            ))}
+            <span>{events.length}项</span>
+          </div>
+          <div
+            className={`entity-workspace life-event-workspace ${selected ? 'entity-workspace--detail' : ''}`}
+          >
+            <section className="entity-list-panel">
+              {events.length ? (
+                <div className="life-event-list">
+                  {events.map((item) => {
+                    const remaining = duration(item.targetAt, now);
+                    return (
+                      <Link
+                        key={item.id}
+                        className={`life-event-card ${item.id === eventId ? 'active' : ''}`}
+                        to={`/features/life-countdown/${item.id}`}
+                      >
+                        <span>
+                          <Sparkles />
+                        </span>
+                        <div>
+                          <small>{new Date(item.targetAt).toLocaleString('zh-CN')}</small>
+                          <strong>{item.title}</strong>
+                          <p>
+                            {remaining.overdue ? '已过去' : '还剩'} {remaining.label}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <EmptyState
+                  title={status === 'active' ? '还没有人生事件' : '还没有已归档事件'}
+                  description="毕业、旅行、纪念日或任何你想看见的未来节点都可以放在这里。"
+                  action={
+                    status === 'active' ? (
+                      <button
+                        type="button"
+                        className="button button--quiet"
+                        onClick={() => setCreateOpen(true)}
+                      >
+                        添加第一项
+                      </button>
+                    ) : undefined
+                  }
+                />
+              )}
+            </section>
+            <section className="entity-detail-panel">
+              {selected ? (
+                <LifeEventDetail
+                  item={selected}
+                  now={now}
+                  onBack={() => void navigate('/features/life-countdown')}
+                  onEdit={() => setEditOpen(true)}
+                  onArchive={() => setArchiveOpen(true)}
+                  onRestore={() => restore.mutate(selected)}
+                  onDelete={() => setDeleteOpen(true)}
+                />
+              ) : (
+                <div className="entity-detail-placeholder">
+                  <Hourglass size={46} />
+                  <h3>选择一个人生事件</h3>
+                  <p>这里会以秒为单位持续更新剩余时间。</p>
+                </div>
+              )}
+            </section>
+          </div>
+        </>
+      ) : null}
       <Modal
         open={profileOpen}
         title="设置人生参数"
         description="这只是个人时间视图，不是寿命预测。"
         onClose={() => setProfileOpen(false)}
+        busy={profile.isPending}
+        error={profile.error ? humanizeApiError(profile.error) : null}
       >
         {dashboard.data ? (
           <LifeProfileForm
@@ -251,7 +257,13 @@ export function LifeCountdownPage(): React.JSX.Element {
           />
         ) : null}
       </Modal>
-      <Modal open={createOpen} title="添加人生事件" onClose={() => setCreateOpen(false)}>
+      <Modal
+        open={createOpen}
+        title="添加人生事件"
+        onClose={() => setCreateOpen(false)}
+        busy={create.isPending}
+        error={create.error ? humanizeApiError(create.error) : null}
+      >
         <LifeEventForm
           submitting={create.isPending}
           onSubmit={async (input) => {
@@ -259,7 +271,13 @@ export function LifeCountdownPage(): React.JSX.Element {
           }}
         />
       </Modal>
-      <Modal open={editOpen} title="编辑人生事件" onClose={() => setEditOpen(false)}>
+      <Modal
+        open={editOpen}
+        title="编辑人生事件"
+        onClose={() => setEditOpen(false)}
+        busy={update.isPending}
+        error={update.error ? humanizeApiError(update.error) : null}
+      >
         {selected ? (
           <LifeEventForm
             key={`${selected.id}:${selected.version}`}
@@ -275,11 +293,14 @@ export function LifeCountdownPage(): React.JSX.Element {
         open={archiveOpen}
         title="归档人生事件"
         onClose={() => setArchiveOpen(false)}
+        busy={archive.isPending}
+        error={archive.error ? humanizeApiError(archive.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={archive.isPending}
               onClick={() => setArchiveOpen(false)}
             >
               取消
@@ -287,9 +308,10 @@ export function LifeCountdownPage(): React.JSX.Element {
             <button
               type="button"
               className="button button--danger"
+              disabled={!selected || archive.isPending}
               onClick={() => selected && archive.mutate(selected)}
             >
-              确认归档
+              {archive.isPending ? '正在归档…' : '确认归档'}
             </button>
           </>
         }
@@ -300,11 +322,14 @@ export function LifeCountdownPage(): React.JSX.Element {
         open={deleteOpen}
         title="永久删除人生事件"
         onClose={() => setDeleteOpen(false)}
+        busy={remove.isPending}
+        error={remove.error ? humanizeApiError(remove.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={remove.isPending}
               onClick={() => setDeleteOpen(false)}
             >
               取消
@@ -312,9 +337,10 @@ export function LifeCountdownPage(): React.JSX.Element {
             <button
               type="button"
               className="button button--danger"
+              disabled={!selected || remove.isPending}
               onClick={() => selected && remove.mutate(selected)}
             >
-              永久删除
+              {remove.isPending ? '正在删除…' : '永久删除'}
             </button>
           </>
         }

@@ -202,6 +202,8 @@ export function SubscriptionPage(): React.JSX.Element {
         open={createOpen}
         title="添加订阅"
         onClose={() => setCreateOpen(false)}
+        busy={create.isPending}
+        error={create.error ? humanizeApiError(create.error) : null}
         className="modal--wide"
       >
         <SubscriptionForm
@@ -215,6 +217,8 @@ export function SubscriptionPage(): React.JSX.Element {
         open={editOpen}
         title="编辑订阅"
         onClose={() => setEditOpen(false)}
+        busy={update.isPending}
+        error={update.error ? humanizeApiError(update.error) : null}
         className="modal--wide"
       >
         {selected ? (
@@ -232,11 +236,14 @@ export function SubscriptionPage(): React.JSX.Element {
         open={archiveOpen}
         title="归档订阅"
         onClose={() => setArchiveOpen(false)}
+        busy={archive.isPending}
+        error={archive.error ? humanizeApiError(archive.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={archive.isPending}
               onClick={() => setArchiveOpen(false)}
             >
               取消
@@ -244,9 +251,10 @@ export function SubscriptionPage(): React.JSX.Element {
             <button
               type="button"
               className="button button--danger"
+              disabled={!selected || archive.isPending}
               onClick={() => selected && archive.mutate(selected)}
             >
-              确认归档
+              {archive.isPending ? '正在归档…' : '确认归档'}
             </button>
           </>
         }
@@ -257,11 +265,14 @@ export function SubscriptionPage(): React.JSX.Element {
         open={deleteOpen}
         title="永久删除订阅"
         onClose={() => setDeleteOpen(false)}
+        busy={remove.isPending}
+        error={remove.error ? humanizeApiError(remove.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={remove.isPending}
               onClick={() => setDeleteOpen(false)}
             >
               取消
@@ -269,9 +280,10 @@ export function SubscriptionPage(): React.JSX.Element {
             <button
               type="button"
               className="button button--danger"
+              disabled={!selected || remove.isPending}
               onClick={() => selected && remove.mutate(selected)}
             >
-              永久删除
+              {remove.isPending ? '正在删除…' : '永久删除'}
             </button>
           </>
         }

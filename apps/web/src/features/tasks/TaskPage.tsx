@@ -278,6 +278,8 @@ export function TaskPage(): React.JSX.Element {
           setCreateOpen(false);
           setDefaultParentId(undefined);
         }}
+        busy={create.isPending}
+        error={create.error ? humanizeApiError(create.error) : null}
         className="modal--wide"
       >
         <TaskForm
@@ -293,6 +295,8 @@ export function TaskPage(): React.JSX.Element {
         open={editOpen}
         title="编辑任务"
         onClose={() => setEditOpen(false)}
+        busy={update.isPending}
+        error={update.error ? humanizeApiError(update.error) : null}
         className="modal--wide"
       >
         {selected ? (
@@ -311,11 +315,14 @@ export function TaskPage(): React.JSX.Element {
         title="归档任务"
         description="归档后仍然可以恢复。"
         onClose={() => setArchiveOpen(false)}
+        busy={archive.isPending}
+        error={archive.error ? humanizeApiError(archive.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={archive.isPending}
               onClick={() => setArchiveOpen(false)}
             >
               取消
@@ -326,7 +333,7 @@ export function TaskPage(): React.JSX.Element {
               disabled={!selected || archive.isPending}
               onClick={() => selected && archive.mutate(selected)}
             >
-              确认归档
+              {archive.isPending ? '正在归档…' : '确认归档'}
             </button>
           </>
         }
@@ -338,11 +345,14 @@ export function TaskPage(): React.JSX.Element {
         title="永久删除任务"
         description="该任务下的全部子任务也会一并删除，无法恢复。"
         onClose={() => setDeleteOpen(false)}
+        busy={permanentDelete.isPending}
+        error={permanentDelete.error ? humanizeApiError(permanentDelete.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={permanentDelete.isPending}
               onClick={() => setDeleteOpen(false)}
             >
               取消
@@ -353,7 +363,7 @@ export function TaskPage(): React.JSX.Element {
               disabled={!selected || permanentDelete.isPending}
               onClick={() => selected && permanentDelete.mutate(selected)}
             >
-              永久删除
+              {permanentDelete.isPending ? '正在删除…' : '永久删除'}
             </button>
           </>
         }

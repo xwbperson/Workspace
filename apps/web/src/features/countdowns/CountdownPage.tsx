@@ -281,6 +281,8 @@ export function CountdownPage(): React.JSX.Element {
             void navigate('/features/countdowns', { replace: true });
           }
         }}
+        busy={create.isPending}
+        error={create.error ? humanizeApiError(create.error) : null}
       >
         <CountdownForm
           submitting={create.isPending}
@@ -295,6 +297,8 @@ export function CountdownPage(): React.JSX.Element {
         title="编辑倒计时"
         description="保存时会检查版本，避免覆盖其他位置的更新。"
         onClose={() => setEditOpen(false)}
+        busy={update.isPending}
+        error={update.error ? humanizeApiError(update.error) : null}
       >
         {selected ? (
           <CountdownForm
@@ -312,11 +316,14 @@ export function CountdownPage(): React.JSX.Element {
         title="归档倒计时"
         description="归档后不再出现在总览和默认列表中。"
         onClose={() => setArchiveOpen(false)}
+        busy={archive.isPending}
+        error={archive.error ? humanizeApiError(archive.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={archive.isPending}
               onClick={() => setArchiveOpen(false)}
             >
               取消
@@ -328,7 +335,7 @@ export function CountdownPage(): React.JSX.Element {
               onClick={() => selected && archive.mutate(selected)}
             >
               <Archive aria-hidden="true" size={17} />
-              确认归档
+              {archive.isPending ? '正在归档…' : '确认归档'}
             </button>
           </>
         }
@@ -340,11 +347,14 @@ export function CountdownPage(): React.JSX.Element {
         title="永久删除倒计时"
         description="此操作会从数据库中删除记录，不能撤销。"
         onClose={() => setDeleteOpen(false)}
+        busy={permanentDelete.isPending}
+        error={permanentDelete.error ? humanizeApiError(permanentDelete.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={permanentDelete.isPending}
               onClick={() => setDeleteOpen(false)}
             >
               取消
@@ -356,7 +366,7 @@ export function CountdownPage(): React.JSX.Element {
               onClick={() => selected && permanentDelete.mutate(selected)}
             >
               <Trash2 aria-hidden="true" size={17} />
-              确认永久删除
+              {permanentDelete.isPending ? '正在删除…' : '确认永久删除'}
             </button>
           </>
         }

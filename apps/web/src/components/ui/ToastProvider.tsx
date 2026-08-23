@@ -28,9 +28,10 @@ export function ToastProvider({ children }: PropsWithChildren): React.JSX.Elemen
   const show = useCallback((message: string, tone: ToastTone = 'success') => {
     const id = Date.now() + Math.round(Math.random() * 1_000);
     setToasts((current) => [...current, { id, tone, message }]);
+    const duration = tone === 'error' ? 9_000 : tone === 'info' ? 6_500 : 5_000;
     window.setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== id));
-    }, 4_000);
+    }, duration);
   }, []);
 
   const value = useMemo(() => ({ show }), [show]);

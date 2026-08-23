@@ -48,8 +48,7 @@ export function NotificationsPage(): React.JSX.Element {
           message={humanizeApiError(query.error)}
           onRetry={() => void query.refetch()}
         />
-      ) : null}
-      {query.data?.length ? (
+      ) : query.data?.length ? (
         <div className="notification-list">
           {query.data.map((notification) => {
             const content = (
@@ -109,6 +108,12 @@ export function NotificationsPage(): React.JSX.Element {
           <div className="skeleton" />
         </div>
       )}
+      {markRead.error || markAll.error ? (
+        <SectionError
+          title="通知状态没有更新"
+          message={humanizeApiError(markRead.error ?? markAll.error)}
+        />
+      ) : null}
     </div>
   );
 }

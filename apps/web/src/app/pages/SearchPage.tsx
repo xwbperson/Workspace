@@ -9,13 +9,43 @@ import { humanizeApiError, workbenchClient } from '../../platform/api/client.js'
 import { formatRelativeTime } from '../../platform/time/format.js';
 
 export function SearchPage(): React.JSX.Element {
-  const [params] = useSearchParams();
-  const [query, setQuery] = useState('');
+  const [params, setParams] = useSearchParams();
+  const urlQuery = params.get('q') ?? '';
+  const focusRequested = params.get('focus') === '1';
+  const [query, setQuery] = useState(urlQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(urlQuery.trim());
   const inputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    if (params.get('focus') === '1') inputRef.current?.focus();
-  }, [params]);
+    if (focusRequested) inputRef.current?.focus();
+  }, [focusRequested]);
+
+  useEffect(() => {
+    setQuery(urlQuery);
+    setDebouncedQuery(urlQuery.trim());
+  }, [urlQuery]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const trimmed = query.trim();
+      setDebouncedQuery(trimmed);
+      setParams(
+        (current) => {
+          const next = new URLSearchParams(current);
+          next.delete('focus');
+          if (trimmed) next.set('q', trimmed);
+          else next.delete('q');
+          return next;
+        },
+        { replace: true },
+      );
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [query, setParams]);
+
   const normalized = query.trim().toLocaleLowerCase('zh-CN');
+  const normalizedDebounced = debouncedQuery.toLocaleLowerCase('zh-CN');
   const matchingFeatures = useMemo(
     () =>
       normalized
@@ -29,9 +59,10 @@ export function SearchPage(): React.JSX.Element {
     [normalized],
   );
   const results = useQuery({
-    queryKey: ['workbench', 'search', normalized],
-    queryFn: () => workbenchClient.search(query.trim()),
-    enabled: normalized.length > 0,
+    queryKey: ['workbench', 'search', normalizedDebounced],
+    queryFn: () => workbenchClient.search(debouncedQuery),
+    enabled: normalizedDebounced.length > 0,
+    placeholderData: (previous) => previous,
   });
   const contentCount =
     results.data?.groups.reduce((count, group) => count + group.items.length, 0) ?? 0;
@@ -90,6 +121,9 @@ export function SearchPage(): React.JSX.Element {
         </div>
       ) : (
         <div className="search-results">
+          <p className="sr-only" role="status" aria-live="polite">
+            {results.isFetching ? '正在搜索工作台内容' : `搜索完成，共 ${contentCount} 条内容结果`}
+          </p>
           <section>
             <div className="section-heading">
               <div>
@@ -99,7 +133,7 @@ export function SearchPage(): React.JSX.Element {
               <span>{matchingFeatures.length}</span>
             </div>
             {matchingFeatures.length ? (
-              <div className="search-result-list" role="status" aria-label="正在搜索">
+              <div className="search-result-list">
                 {matchingFeatures.map((feature) => (
                   <Link to={feature.route} key={feature.featureId}>
                     <FeatureIcon name={feature.icon} />
@@ -129,11 +163,14 @@ export function SearchPage(): React.JSX.Element {
                 onRetry={() => void results.refetch()}
               />
             ) : null}
-            {results.isFetching ? (
+            {results.isLoading ? (
               <div className="search-result-list">
                 <div className="skeleton" />
                 <div className="skeleton" />
               </div>
+            ) : null}
+            {results.isFetching && results.data ? (
+              <p className="muted search-refreshing">正在更新内容结果…</p>
             ) : null}
             {visibleGroups.map((group) => {
               const feature = featureCatalog.find(
@@ -174,7 +211,7 @@ export function SearchPage(): React.JSX.Element {
             {!results.isFetching && results.data && contentCount === 0 ? (
               <EmptyState
                 title="没有找到内容"
-                description={`没有内容匹配“${query.trim()}”。可以尝试更短的关键词。`}
+                description={`没有内容匹配“${debouncedQuery}”。可以尝试更短的关键词。`}
               />
             ) : null}
           </section>

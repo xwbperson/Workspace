@@ -13,14 +13,24 @@ import {
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Link,
+  NavLink,
+  NavigationType,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useNavigationType,
+} from 'react-router-dom';
 import { featureCatalog, featureCategories } from '../feature-catalog.js';
+import { resolveWorkbenchShortcut } from '../keyboard-shortcuts.js';
 import { getVisibleFeatureNavigation } from '../navigation.js';
 import { FeatureIcon } from '../../components/ui/FeatureIcon.js';
 import { Modal } from '../../components/ui/Modal.js';
 import { PageTopbarActionsProvider } from '../../components/ui/PageTopbarActions.js';
+import { EmptyState, SectionError } from '../../components/ui/States.js';
 import { useAuth } from '../../platform/auth/AuthProvider.js';
-import { workbenchClient } from '../../platform/api/client.js';
+import { humanizeApiError, workbenchClient } from '../../platform/api/client.js';
 import { usePreferences } from '../../platform/preferences/usePreferences.js';
 
 function readCollapsedPreference(): boolean {
@@ -41,6 +51,7 @@ function pageTitle(pathname: string): { eyebrow?: string; title: string } {
 export function WorkbenchShell(): React.JSX.Element {
   const location = useLocation();
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
   const { session } = useAuth();
   const { preferences } = usePreferences();
   const [collapsed, setCollapsed] = useState(readCollapsedPreference);
@@ -51,6 +62,8 @@ export function WorkbenchShell(): React.JSX.Element {
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [topbarActionTarget, setTopbarActionTarget] = useState<HTMLDivElement | null>(null);
   const sidebarRef = useRef<HTMLElement>(null);
+  const pageTitleRef = useRef<HTMLHeadingElement>(null);
+  const scrollPositionsRef = useRef(new Map<string, number>());
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const registerTopbarActionTarget = useCallback((element: HTMLDivElement | null): void => {
     setTopbarActionTarget(element);
@@ -126,19 +139,36 @@ export function WorkbenchShell(): React.JSX.Element {
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent): void => {
-      if (!(event.ctrlKey || event.metaKey)) return;
-      if (event.key.toLocaleLowerCase() === 'k') {
-        event.preventDefault();
-        void navigate('/search?focus=1');
-      }
-      if (event.key.toLocaleLowerCase() === 'n') {
-        event.preventDefault();
-        setQuickCreateOpen(true);
-      }
+      const shortcut = resolveWorkbenchShortcut(
+        event,
+        event.target,
+        Boolean(document.querySelector('dialog[open]')),
+      );
+      if (!shortcut) return;
+
+      event.preventDefault();
+      if (shortcut === 'search') void navigate('/search?focus=1');
+      if (shortcut === 'create') setQuickCreateOpen(true);
     };
     window.addEventListener('keydown', handleShortcut);
     return () => window.removeEventListener('keydown', handleShortcut);
   }, [navigate]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const scrollTop =
+        navigationType === NavigationType.Pop
+          ? (scrollPositionsRef.current.get(location.key) ?? 0)
+          : 0;
+      window.scrollTo({ top: scrollTop, behavior: 'instant' });
+      pageTitleRef.current?.focus({ preventScroll: true });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      scrollPositionsRef.current.set(location.key, window.scrollY);
+    };
+  }, [location.key, navigationType]);
 
   const toggleCollapsed = (): void => {
     const next = !collapsed;
@@ -249,7 +279,9 @@ export function WorkbenchShell(): React.JSX.Element {
               </button>
               <div>
                 {page.eyebrow ? <span>{page.eyebrow}</span> : null}
-                <h1>{page.title}</h1>
+                <h1 ref={pageTitleRef} tabIndex={-1}>
+                  {page.title}
+                </h1>
               </div>
             </div>
             <div className="topbar__actions">
@@ -328,7 +360,17 @@ export function WorkbenchShell(): React.JSX.Element {
         onClose={() => setQuickCreateOpen(false)}
       >
         <div className="quick-action-list">
-          {quickActions.isLoading ? <p className="muted">正在获取可用操作…</p> : null}
+          {quickActions.isError ? (
+            <SectionError
+              title="暂时无法读取创建入口"
+              message={humanizeApiError(quickActions.error)}
+              onRetry={() => void quickActions.refetch()}
+            />
+          ) : quickActions.isLoading ? (
+            <p className="muted">正在获取可用操作…</p>
+          ) : quickActions.data?.length === 0 ? (
+            <EmptyState title="暂无快捷操作" description="可以从功能目录进入对应功能。" />
+          ) : null}
           {quickActions.data?.map((action) => {
             const feature = featureCatalog.find((item) => item.featureId === action.featureId);
             return (

@@ -32,5 +32,6 @@ describe('FeaturesPage', () => {
     expect(screen.queryAllByRole('button', { name: '常用' })).toHaveLength(0);
     expect(screen.queryAllByRole('button', { name: '全部' })).toHaveLength(0);
     expect(screen.getAllByRole('article')).toHaveLength(featureCatalog.length);
+    expect(screen.getByRole('link', { name: '打开倒计时' })).toHaveClass('feature-tile__cover');
   });
 });

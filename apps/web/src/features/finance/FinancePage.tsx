@@ -145,6 +145,14 @@ export function FinancePage(): React.JSX.Element {
     accountRestore.error ??
     platformRestore.error ??
     remove.error;
+  const editorBusy =
+    editor?.kind === 'account'
+      ? accountCreate.isPending || accountUpdate.isPending
+      : platformCreate.isPending || platformUpdate.isPending;
+  const editorError =
+    editor?.kind === 'account'
+      ? (accountUpdate.error ?? accountCreate.error)
+      : (platformUpdate.error ?? platformCreate.error);
   return (
     <div className="feature-shell-page feature-shell-page--finance">
       {error ? <SectionError title="数据没有更新" message={humanizeApiError(error)} /> : null}
@@ -170,16 +178,16 @@ export function FinancePage(): React.JSX.Element {
           />
         </label>
       </div>
-      {view === 'overview' ? (
+      {view === 'overview' && !summary.isError ? (
         <FinanceOverview summary={summary.data} />
-      ) : view === 'accounts' ? (
+      ) : view === 'accounts' && !accounts.isError ? (
         <AccountSection
           items={accounts.data?.items ?? []}
           onCreate={() => setEditor({ kind: 'account' })}
           onEdit={(item) => setEditor({ kind: 'account', item })}
           onArchive={(item) => accountArchive.mutate(item)}
         />
-      ) : view === 'debt' ? (
+      ) : view === 'debt' && !summary.isError && !platforms.isError ? (
         <DebtSection
           year={year}
           month={month}
@@ -192,7 +200,7 @@ export function FinancePage(): React.JSX.Element {
           onArchivePlatform={(item) => platformArchive.mutate(item)}
           onSaveRecord={(input) => recordSave.mutateAsync(input)}
         />
-      ) : (
+      ) : view === 'archived' && !accounts.isError && !platforms.isError ? (
         <ArchivedSection
           accounts={accounts.data?.items ?? []}
           platforms={platforms.data?.items ?? []}
@@ -201,7 +209,7 @@ export function FinancePage(): React.JSX.Element {
           onDeleteAccount={(item) => setRemoveTarget({ kind: 'account', item })}
           onDeletePlatform={(item) => setRemoveTarget({ kind: 'platform', item })}
         />
-      )}
+      ) : null}
       <Modal
         open={Boolean(editor)}
         title={
@@ -216,6 +224,8 @@ export function FinancePage(): React.JSX.Element {
               : ''
         }
         onClose={() => setEditor(undefined)}
+        busy={editorBusy}
+        error={editorError ? humanizeApiError(editorError) : null}
         className="modal--wide"
       >
         {editor?.kind === 'account' ? (
@@ -250,11 +260,14 @@ export function FinancePage(): React.JSX.Element {
         open={Boolean(removeTarget)}
         title="永久删除财务记录"
         onClose={() => setRemoveTarget(undefined)}
+        busy={remove.isPending}
+        error={remove.error ? humanizeApiError(remove.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={remove.isPending}
               onClick={() => setRemoveTarget(undefined)}
             >
               取消
@@ -262,9 +275,10 @@ export function FinancePage(): React.JSX.Element {
             <button
               type="button"
               className="button button--danger"
+              disabled={!removeTarget || remove.isPending}
               onClick={() => removeTarget && remove.mutate(removeTarget)}
             >
-              永久删除
+              {remove.isPending ? '正在删除…' : '永久删除'}
             </button>
           </>
         }

@@ -245,6 +245,25 @@ export function CoursePage(): React.JSX.Element {
     deleteMaterial.error ??
     uploadSyllabus.error;
 
+  const confirmMutationState = (() => {
+    switch (confirmTarget?.kind) {
+      case 'archive':
+        return { busy: archiveCourse.isPending, error: archiveCourse.error };
+      case 'course-delete':
+        return { busy: deleteCourse.isPending, error: deleteCourse.error };
+      case 'record':
+        return { busy: deleteRecord.isPending, error: deleteRecord.error };
+      case 'assignment':
+        return { busy: deleteAssignment.isPending, error: deleteAssignment.error };
+      case 'group':
+        return { busy: deleteGroup.isPending, error: deleteGroup.error };
+      case 'material':
+        return { busy: deleteMaterial.isPending, error: deleteMaterial.error };
+      default:
+        return { busy: false, error: null };
+    }
+  })();
+
   const confirm = (): void => {
     if (!selected || !confirmTarget) return;
     if (confirmTarget.kind === 'archive') archiveCourse.mutate(selected);
@@ -438,6 +457,8 @@ export function CoursePage(): React.JSX.Element {
         open={createOpen}
         title="添加课程"
         onClose={() => setCreateOpen(false)}
+        busy={create.isPending}
+        error={create.error ? humanizeApiError(create.error) : null}
         className="modal--wide"
       >
         <CourseForm
@@ -450,6 +471,8 @@ export function CoursePage(): React.JSX.Element {
         open={editOpen}
         title="编辑课程"
         onClose={() => setEditOpen(false)}
+        busy={update.isPending}
+        error={update.error ? humanizeApiError(update.error) : null}
         className="modal--wide"
       >
         {selected ? (
@@ -471,6 +494,8 @@ export function CoursePage(): React.JSX.Element {
           setRecordOpen(false);
           setRecordToEdit(undefined);
         }}
+        busy={saveRecord.isPending}
+        error={saveRecord.error ? humanizeApiError(saveRecord.error) : null}
       >
         {selected ? (
           <ClassRecordForm
@@ -490,6 +515,8 @@ export function CoursePage(): React.JSX.Element {
           setAssignmentOpen(false);
           setAssignmentToEdit(undefined);
         }}
+        busy={saveAssignment.isPending}
+        error={saveAssignment.error ? humanizeApiError(saveAssignment.error) : null}
       >
         {selected ? (
           <AssignmentForm
@@ -506,11 +533,14 @@ export function CoursePage(): React.JSX.Element {
         open={groupOpen}
         title="添加资料组"
         onClose={() => setGroupOpen(false)}
+        busy={createGroup.isPending}
+        error={createGroup.error ? humanizeApiError(createGroup.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={createGroup.isPending}
               onClick={() => setGroupOpen(false)}
             >
               取消
@@ -540,6 +570,10 @@ export function CoursePage(): React.JSX.Element {
       <ConfirmModal
         {...(confirmTarget ? { target: confirmTarget } : {})}
         {...(selected ? { course: selected } : {})}
+        busy={confirmMutationState.busy}
+        error={
+          confirmMutationState.error ? humanizeApiError(confirmMutationState.error) : undefined
+        }
         onClose={() => setConfirmTarget(undefined)}
         onConfirm={confirm}
       />
@@ -950,11 +984,15 @@ function SectionHeading({
 function ConfirmModal({
   target,
   course,
+  busy = false,
+  error,
   onClose,
   onConfirm,
 }: {
   target?: ConfirmTarget;
   course?: Course;
+  busy?: boolean;
+  error?: string | undefined;
   onClose(): void;
   onConfirm(): void;
 }): React.JSX.Element {
@@ -972,17 +1010,20 @@ function ConfirmModal({
       open={Boolean(target)}
       title={target ? labels[target.kind] : '确认操作'}
       onClose={onClose}
+      busy={busy}
+      error={error ?? null}
       footer={
         <>
-          <button type="button" className="button button--quiet" onClick={onClose}>
+          <button type="button" className="button button--quiet" disabled={busy} onClick={onClose}>
             取消
           </button>
           <button
             type="button"
             className={`button ${danger ? 'button--danger' : 'button--primary'}`}
+            disabled={busy}
             onClick={onConfirm}
           >
-            确认
+            {busy ? '处理中…' : '确认'}
           </button>
         </>
       }

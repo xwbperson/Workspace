@@ -424,12 +424,15 @@ export function TimetablePage(): React.JSX.Element {
           title="设置第一个学期"
           description="默认作息来自西电研究生院通知，保存后仍可修改。"
           onClose={() => setSemesterOpen(false)}
+          busy={createSemester.isPending}
+          error={createSemester.error ? humanizeApiError(createSemester.error) : null}
           className="modal--wide"
           footer={
             <>
               <button
                 type="button"
                 className="button button--quiet"
+                disabled={createSemester.isPending}
                 onClick={() => setSemesterOpen(false)}
               >
                 取消
@@ -600,87 +603,89 @@ export function TimetablePage(): React.JSX.Element {
         />
       ) : (
         <>
-          <section
-            className={`timetable-grid ${currentSemester.showWeekend ? 'has-weekend' : ''}`}
-            aria-label={`第 ${week} 周课程表`}
-          >
-            <div className="timetable-grid__corner">
-              <span>教学周</span>
-              <strong>
-                {week}/{currentSemester.totalWeeks}
-              </strong>
-            </div>
-            {Array.from({ length: visibleWeekdays }, (_, index) => {
-              const day = index + 1;
-              const date = addDateDays(weekStart, index);
-              return (
-                <div
-                  className={`timetable-day-heading ${date === today ? 'is-today' : ''}`}
-                  key={day}
-                >
-                  <span>{WEEKDAYS[index]}</span>
-                  <strong>{displayDate(date)}</strong>
-                </div>
-              );
-            })}
-            {currentSemester.timeBlocks.flatMap((block) => [
-              <div className="timetable-time-label" key={`label-${block.id}`}>
-                <strong>{block.label}</strong>
-                <span>{block.sourceLabel}</span>
-                <time>
-                  {block.startTime}
-                  <br />
-                  {block.endTime}
-                </time>
-              </div>,
-              ...Array.from({ length: visibleWeekdays }, (_, index) => {
+          <div className="timetable-grid-scroll">
+            <section
+              className={`timetable-grid ${currentSemester.showWeekend ? 'has-weekend' : ''}`}
+              aria-label={`第 ${week} 周课程表`}
+            >
+              <div className="timetable-grid__corner">
+                <span>教学周</span>
+                <strong>
+                  {week}/{currentSemester.totalWeeks}
+                </strong>
+              </div>
+              {Array.from({ length: visibleWeekdays }, (_, index) => {
                 const day = index + 1;
                 const date = addDateDays(weekStart, index);
-                const cellItems = occurrenceItems.filter(
-                  (item) => item.weekday === day && item.timeBlock.id === block.id,
-                );
-                const nowPosition = date === today ? nowLinePosition(block) : null;
                 return (
                   <div
-                    className={`timetable-cell ${date === today ? 'is-today' : ''}`}
-                    key={`${block.id}-${day}`}
+                    className={`timetable-day-heading ${date === today ? 'is-today' : ''}`}
+                    key={day}
                   >
-                    {nowPosition !== null ? (
-                      <span
-                        className="timetable-now-line"
-                        style={{ top: `${nowPosition}%` }}
-                        aria-label="当前时间"
-                      />
-                    ) : null}
-                    {cellItems.map((occurrence) => (
-                      <CourseCard
-                        occurrence={occurrence}
-                        key={occurrence.occurrenceId}
-                        onSelect={(item) => {
-                          setSelectedOccurrence(item);
-                          setOccurrenceOpen(true);
-                        }}
-                      />
-                    ))}
-                    {cellItems.length === 0 ? (
-                      <button
-                        type="button"
-                        className="timetable-empty-cell"
-                        aria-label={`${WEEKDAYS[index]}${block.label}添加课程`}
-                        onClick={() => {
-                          setPreset({ weekday: day, timeBlockId: block.id });
-                          setConflictMessage('');
-                          setCourseOpen(true);
-                        }}
-                      >
-                        <Plus aria-hidden="true" size={15} /> 添加
-                      </button>
-                    ) : null}
+                    <span>{WEEKDAYS[index]}</span>
+                    <strong>{displayDate(date)}</strong>
                   </div>
                 );
-              }),
-            ])}
-          </section>
+              })}
+              {currentSemester.timeBlocks.flatMap((block) => [
+                <div className="timetable-time-label" key={`label-${block.id}`}>
+                  <strong>{block.label}</strong>
+                  <span>{block.sourceLabel}</span>
+                  <time>
+                    {block.startTime}
+                    <br />
+                    {block.endTime}
+                  </time>
+                </div>,
+                ...Array.from({ length: visibleWeekdays }, (_, index) => {
+                  const day = index + 1;
+                  const date = addDateDays(weekStart, index);
+                  const cellItems = occurrenceItems.filter(
+                    (item) => item.weekday === day && item.timeBlock.id === block.id,
+                  );
+                  const nowPosition = date === today ? nowLinePosition(block) : null;
+                  return (
+                    <div
+                      className={`timetable-cell ${date === today ? 'is-today' : ''}`}
+                      key={`${block.id}-${day}`}
+                    >
+                      {nowPosition !== null ? (
+                        <span
+                          className="timetable-now-line"
+                          style={{ top: `${nowPosition}%` }}
+                          aria-label="当前时间"
+                        />
+                      ) : null}
+                      {cellItems.map((occurrence) => (
+                        <CourseCard
+                          occurrence={occurrence}
+                          key={occurrence.occurrenceId}
+                          onSelect={(item) => {
+                            setSelectedOccurrence(item);
+                            setOccurrenceOpen(true);
+                          }}
+                        />
+                      ))}
+                      {cellItems.length === 0 ? (
+                        <button
+                          type="button"
+                          className="timetable-empty-cell"
+                          aria-label={`${WEEKDAYS[index]}${block.label}添加课程`}
+                          onClick={() => {
+                            setPreset({ weekday: day, timeBlockId: block.id });
+                            setConflictMessage('');
+                            setCourseOpen(true);
+                          }}
+                        >
+                          <Plus aria-hidden="true" size={15} /> 添加
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                }),
+              ])}
+            </section>
+          </div>
 
           <section className="timetable-mobile" aria-label={`第 ${week} 周按天课程表`}>
             <div className="timetable-mobile__days" role="tablist" aria-label="选择星期">
@@ -754,12 +759,15 @@ export function TimetablePage(): React.JSX.Element {
         title="新建学期课表"
         description="可以复制默认作息，课程不会从其他学期自动带入。"
         onClose={() => setSemesterOpen(false)}
+        busy={createSemester.isPending}
+        error={createSemester.error ? humanizeApiError(createSemester.error) : null}
         className="modal--wide"
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={createSemester.isPending}
               onClick={() => setSemesterOpen(false)}
             >
               取消
@@ -788,6 +796,12 @@ export function TimetablePage(): React.JSX.Element {
         title="课程表设置"
         description={`${currentSemester.shortName} · 日期和作息修改后整张课表同步更新`}
         onClose={() => setSettingsOpen(false)}
+        busy={saveSettings.isPending || archiveSemester.isPending || restoreSemester.isPending}
+        error={
+          saveSettings.error || archiveSemester.error || restoreSemester.error
+            ? humanizeApiError(saveSettings.error ?? archiveSemester.error ?? restoreSemester.error)
+            : null
+        }
         className="modal--timetable-settings"
         footer={
           <>
@@ -795,7 +809,9 @@ export function TimetablePage(): React.JSX.Element {
               type="button"
               className="button button--danger-quiet"
               onClick={() => archiveSemester.mutate(currentSemester)}
-              disabled={archiveSemester.isPending}
+              disabled={
+                saveSettings.isPending || archiveSemester.isPending || restoreSemester.isPending
+              }
             >
               <Archive aria-hidden="true" size={16} /> 归档学期
             </button>
@@ -803,6 +819,9 @@ export function TimetablePage(): React.JSX.Element {
             <button
               type="button"
               className="button button--quiet"
+              disabled={
+                saveSettings.isPending || archiveSemester.isPending || restoreSemester.isPending
+              }
               onClick={() => {
                 setSettingsOpen(false);
                 setSemesterOpen(true);
@@ -835,7 +854,14 @@ export function TimetablePage(): React.JSX.Element {
               <h3>已归档学期</h3>
             </div>
           </header>
-          {archivedSemesters.data?.items.length ? (
+          {archivedSemesters.isError ? (
+            <SectionError
+              message={humanizeApiError(archivedSemesters.error)}
+              onRetry={() => void archivedSemesters.refetch()}
+            />
+          ) : archivedSemesters.isLoading ? (
+            <p>正在读取已归档学期…</p>
+          ) : archivedSemesters.data?.items.length ? (
             <div>
               {archivedSemesters.data.items.map((semester) => (
                 <article key={semester.id}>
@@ -846,6 +872,7 @@ export function TimetablePage(): React.JSX.Element {
                   <button
                     type="button"
                     className="button button--quiet"
+                    disabled={restoreSemester.isPending}
                     onClick={() => restoreSemester.mutate(semester)}
                   >
                     恢复
@@ -879,12 +906,19 @@ export function TimetablePage(): React.JSX.Element {
           setConflictMessage('');
           setPreset(null);
         }}
+        busy={createCourse.isPending}
+        error={
+          createCourse.error && !isConflictConfirmation(createCourse.error)
+            ? humanizeApiError(createCourse.error)
+            : null
+        }
         className="modal--timetable-course"
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={createCourse.isPending}
               onClick={() => setCourseOpen(false)}
             >
               取消
@@ -917,12 +951,19 @@ export function TimetablePage(): React.JSX.Element {
           setCourseEditOpen(false);
           setConflictMessage('');
         }}
+        busy={updateCourse.isPending}
+        error={
+          updateCourse.error && !isConflictConfirmation(updateCourse.error)
+            ? humanizeApiError(updateCourse.error)
+            : null
+        }
         className="modal--timetable-course"
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={updateCourse.isPending}
               onClick={() => setCourseEditOpen(false)}
             >
               取消
@@ -954,6 +995,12 @@ export function TimetablePage(): React.JSX.Element {
         title={selectedCourse?.name ?? '课表课程'}
         description={selectedCourse?.shortName || '课程详情'}
         onClose={() => setCourseDetailOpen(false)}
+        busy={archiveCourse.isPending || restoreCourse.isPending}
+        error={
+          courseLookup.error || archiveCourse.error || restoreCourse.error
+            ? humanizeApiError(courseLookup.error ?? archiveCourse.error ?? restoreCourse.error)
+            : null
+        }
         className="modal--wide"
         footer={
           selectedCourse ? (
@@ -962,6 +1009,7 @@ export function TimetablePage(): React.JSX.Element {
                 <button
                   type="button"
                   className="button button--quiet"
+                  disabled={restoreCourse.isPending}
                   onClick={() => restoreCourse.mutate(selectedCourse)}
                 >
                   <ArchiveRestore aria-hidden="true" size={17} /> 恢复课程
@@ -982,6 +1030,7 @@ export function TimetablePage(): React.JSX.Element {
                 <button
                   type="button"
                   className="button button--quiet"
+                  disabled={archiveCourse.isPending}
                   onClick={() => archiveCourse.mutate(selectedCourse)}
                 >
                   <Archive aria-hidden="true" size={17} /> 归档
@@ -1042,6 +1091,8 @@ export function TimetablePage(): React.JSX.Element {
           ? { description: `${selectedOccurrence.date} · ${selectedOccurrence.timeBlock.label}` }
           : {})}
         onClose={() => setOccurrenceOpen(false)}
+        busy={removeAdjustment.isPending}
+        error={removeAdjustment.error ? humanizeApiError(removeAdjustment.error) : null}
         className="modal--wide"
         footer={
           selectedOccurrence ? (
@@ -1050,6 +1101,7 @@ export function TimetablePage(): React.JSX.Element {
                 <button
                   type="button"
                   className="button button--quiet"
+                  disabled={removeAdjustment.isPending}
                   onClick={() => removeAdjustment.mutate(selectedOccurrence)}
                 >
                   <RotateCcw aria-hidden="true" size={17} /> 恢复原安排
@@ -1116,12 +1168,15 @@ export function TimetablePage(): React.JSX.Element {
         title="临时调整本次课程"
         description="只影响这一次，不改变其他教学周。"
         onClose={() => setAdjustmentOpen(false)}
+        busy={saveAdjustment.isPending}
+        error={saveAdjustment.error ? humanizeApiError(saveAdjustment.error) : null}
         className="modal--wide"
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={saveAdjustment.isPending}
               onClick={() => setAdjustmentOpen(false)}
             >
               取消
@@ -1154,11 +1209,14 @@ export function TimetablePage(): React.JSX.Element {
         title="永久删除课表课程"
         description="课程、上课安排和临时调整都会一起删除。"
         onClose={() => setDeleteCourseOpen(false)}
+        busy={permanentDeleteCourse.isPending}
+        error={permanentDeleteCourse.error ? humanizeApiError(permanentDeleteCourse.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={permanentDeleteCourse.isPending}
               onClick={() => setDeleteCourseOpen(false)}
             >
               取消
@@ -1182,11 +1240,16 @@ export function TimetablePage(): React.JSX.Element {
         title="永久删除学期课表"
         description="该学期中的所有课程和调整都会一起删除。"
         onClose={() => setDeleteSemester(null)}
+        busy={permanentDeleteSemester.isPending}
+        error={
+          permanentDeleteSemester.error ? humanizeApiError(permanentDeleteSemester.error) : null
+        }
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={permanentDeleteSemester.isPending}
               onClick={() => setDeleteSemester(null)}
             >
               取消

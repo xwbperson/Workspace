@@ -116,7 +116,7 @@ export function OverviewBlockView({ block }: { block: OverviewBlock }): React.JS
 
 export function OverviewPage(): React.JSX.Element {
   const navigate = useNavigate();
-  const { preferences, save, saving } = usePreferences();
+  const { preferences, save, saving, error: preferenceError } = usePreferences();
   const [editing, setEditing] = useState(false);
   const [draftBlocks, setDraftBlocks] = useState<string[]>(preferences.overviewBlockIds);
   const definitions = useQuery({
@@ -139,8 +139,12 @@ export function OverviewPage(): React.JSX.Element {
     setEditing(true);
   };
   const saveBlocks = async (): Promise<void> => {
-    await save({ ...preferences, overviewBlockIds: draftBlocks });
-    setEditing(false);
+    try {
+      await save({ ...preferences, overviewBlockIds: draftBlocks });
+      setEditing(false);
+    } catch {
+      // The modal keeps the draft and renders the preferences error in place.
+    }
   };
 
   return (
@@ -181,153 +185,165 @@ export function OverviewPage(): React.JSX.Element {
         />
       ) : null}
 
-      <div className="overview-core-grid">
-        <section className="focus-panel">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">当前关注</p>
-              <h2>离现在最近的一件事</h2>
-            </div>
-          </div>
-          {overview.isLoading ? (
-            <div className="skeleton skeleton--focus" />
-          ) : overview.data?.focus.primary ? (
-            <div className="focus-item">
-              <div className="focus-item__time">
-                <span>目标时间</span>
-                <strong>
-                  {formatRelativeTime(overview.data.focus.primary.dueAt ?? new Date())}
-                </strong>
-                {overview.data.focus.primary.dueAt ? (
-                  <small>{formatShortDateTime(overview.data.focus.primary.dueAt)}</small>
-                ) : null}
+      {!overview.isError ? (
+        <>
+          <div className="overview-core-grid">
+            <section className="focus-panel">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">当前关注</p>
+                  <h2>离现在最近的一件事</h2>
+                </div>
               </div>
-              <div className="focus-item__copy">
-                <span className="source-pill">{focusFeatureName}</span>
-                <h3>{overview.data.focus.primary.title}</h3>
-                <Link
-                  className="button button--primary"
-                  to={overview.data.focus.primary.targetRoute}
-                >
-                  查看详情 <ArrowRight aria-hidden="true" size={17} />
-                </Link>
+              {overview.isLoading ? (
+                <div className="skeleton skeleton--focus" />
+              ) : overview.data?.focus.primary ? (
+                <div className="focus-item">
+                  <div className="focus-item__time">
+                    <span>目标时间</span>
+                    <strong>
+                      {formatRelativeTime(overview.data.focus.primary.dueAt ?? new Date())}
+                    </strong>
+                    {overview.data.focus.primary.dueAt ? (
+                      <small>{formatShortDateTime(overview.data.focus.primary.dueAt)}</small>
+                    ) : null}
+                  </div>
+                  <div className="focus-item__copy">
+                    <span className="source-pill">{focusFeatureName}</span>
+                    <h3>{overview.data.focus.primary.title}</h3>
+                    <Link
+                      className="button button--primary"
+                      to={overview.data.focus.primary.targetRoute}
+                    >
+                      查看详情 <ArrowRight aria-hidden="true" size={17} />
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState
+                  title="当前没有需要关注的事项"
+                  description="倒计时、课程、目标和任务中的临近内容会集中显示在这里。"
+                  action={
+                    <Link className="button button--primary" to="/features">
+                      查看全部功能 <ArrowRight aria-hidden="true" size={17} />
+                    </Link>
+                  }
+                />
+              )}
+            </section>
+
+            <aside className="quick-create-panel">
+              <p className="eyebrow">快速开始</p>
+              <h2>记下一个日期</h2>
+              <p>把重要节点放进工作台，之后所有端都会看见。</p>
+              <button
+                type="button"
+                className="button button--primary"
+                onClick={() => void navigate('/features/countdowns?create=1')}
+              >
+                <Plus aria-hidden="true" size={18} /> 添加倒计时
+              </button>
+              <span className="shortcut-hint">
+                也可以按 <kbd>Alt N</kbd>
+              </span>
+            </aside>
+          </div>
+
+          <section className="timeline-panel">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">来自多个功能</p>
+                <h2>时间轨道</h2>
               </div>
             </div>
-          ) : (
-            <EmptyState
-              title="当前没有需要关注的事项"
-              description="倒计时、课程、目标和任务中的临近内容会集中显示在这里。"
-              action={
-                <Link className="button button--primary" to="/features">
-                  查看全部功能 <ArrowRight aria-hidden="true" size={17} />
-                </Link>
-              }
-            />
-          )}
-        </section>
-
-        <aside className="quick-create-panel">
-          <p className="eyebrow">快速开始</p>
-          <h2>记下一个日期</h2>
-          <p>把重要节点放进工作台，之后所有端都会看见。</p>
-          <button
-            type="button"
-            className="button button--primary"
-            onClick={() => void navigate('/features/countdowns?create=1')}
-          >
-            <Plus aria-hidden="true" size={18} /> 添加倒计时
-          </button>
-          <span className="shortcut-hint">
-            也可以按 <kbd>Ctrl N</kbd>
-          </span>
-        </aside>
-      </div>
-
-      <section className="timeline-panel">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">来自多个功能</p>
-            <h2>时间轨道</h2>
-          </div>
-        </div>
-        <div className="time-rail" aria-hidden="true">
-          <CalendarClock />
-          <span />
-        </div>
-        {overview.isLoading ? (
-          <div className="timeline-skeleton" role="status" aria-label="正在加载时间轨道">
-            <div className="skeleton" />
-            <div className="skeleton" />
-          </div>
-        ) : overview.data?.upcoming.length ? (
-          <div className="timeline-list">
-            {overview.data.upcoming.slice(0, 6).map((item) => (
-              <UpcomingRow key={`${item.featureId}:${item.recordId}`} item={item} />
-            ))}
-          </div>
-        ) : (
-          <EmptyState
-            title="未来 90 天还没有时间节点"
-            description="新建倒计时后，这里会按时间顺序排列。"
-          />
-        )}
-      </section>
-
-      {overview.data?.errors.length ? (
-        <section className="overview-alerts" aria-labelledby="overview-alert-title">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">局部异常</p>
-              <h2 id="overview-alert-title">部分来源暂时不可用</h2>
+            <div className="time-rail" aria-hidden="true">
+              <CalendarClock />
+              <span />
             </div>
-          </div>
-          {overview.data.errors.map((error, index) => (
-            <SectionError
-              key={`${error.featureId}:${index}`}
-              message={error.message}
-              onRetry={() => void overview.refetch()}
-            />
-          ))}
-        </section>
-      ) : null}
+            {overview.isLoading ? (
+              <div className="timeline-skeleton" role="status" aria-label="正在加载时间轨道">
+                <div className="skeleton" />
+                <div className="skeleton" />
+              </div>
+            ) : overview.data?.upcoming.length ? (
+              <div className="timeline-list">
+                {overview.data.upcoming.slice(0, 6).map((item) => (
+                  <UpcomingRow key={`${item.featureId}:${item.recordId}`} item={item} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="未来 90 天还没有时间节点"
+                description="新建倒计时后，这里会按时间顺序排列。"
+              />
+            )}
+          </section>
 
-      <div className="overview-secondary-grid">
-        <div className="overview-blocks">
-          {overview.data?.blocks.map((block) => (
-            <OverviewBlockView key={block.blockId} block={block} />
-          ))}
-        </div>
-        <section className="recent-panel">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">最近内容</p>
-              <h2>刚刚处理过</h2>
-            </div>
-          </div>
-          {overview.data?.recent.length ? (
-            <div className="compact-list">
-              {overview.data.recent.slice(0, 5).map((item) => (
-                <Link key={`${item.featureId}:${item.recordId}`} to={item.targetRoute}>
-                  <Clock3 aria-hidden="true" size={18} />
-                  <span>
-                    <strong>{item.title}</strong>
-                    <small>{formatRelativeTime(item.updatedAt)}</small>
-                  </span>
-                  <ArrowRight aria-hidden="true" size={16} />
-                </Link>
+          {overview.data?.errors.length ? (
+            <section className="overview-alerts" aria-labelledby="overview-alert-title">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">局部异常</p>
+                  <h2 id="overview-alert-title">部分来源暂时不可用</h2>
+                </div>
+              </div>
+              {overview.data.errors.map((error, index) => (
+                <SectionError
+                  key={`${error.featureId}:${index}`}
+                  message={error.message}
+                  onRetry={() => void overview.refetch()}
+                />
+              ))}
+            </section>
+          ) : null}
+
+          <div className="overview-secondary-grid">
+            <div className="overview-blocks">
+              {overview.data?.blocks.map((block) => (
+                <OverviewBlockView key={block.blockId} block={block} />
               ))}
             </div>
-          ) : (
-            <EmptyState title="没有最近内容" description="打开或修改功能内容后会显示在这里。" />
-          )}
-        </section>
-      </div>
+            <section className="recent-panel">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">最近内容</p>
+                  <h2>刚刚处理过</h2>
+                </div>
+              </div>
+              {overview.isLoading ? (
+                <div
+                  className="skeleton skeleton--settings"
+                  role="status"
+                  aria-label="正在加载最近内容"
+                />
+              ) : overview.data?.recent.length ? (
+                <div className="compact-list">
+                  {overview.data.recent.slice(0, 5).map((item) => (
+                    <Link key={`${item.featureId}:${item.recordId}`} to={item.targetRoute}>
+                      <Clock3 aria-hidden="true" size={18} />
+                      <span>
+                        <strong>{item.title}</strong>
+                        <small>{formatRelativeTime(item.updatedAt)}</small>
+                      </span>
+                      <ArrowRight aria-hidden="true" size={16} />
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState title="没有最近内容" description="打开或修改功能内容后会显示在这里。" />
+              )}
+            </section>
+          </div>
+        </>
+      ) : null}
 
       <Modal
         open={editing}
         title="编辑总览"
         description="选择总览需要显示的功能摘要，并调整语义顺序。"
         onClose={() => setEditing(false)}
+        busy={saving}
+        error={preferenceError ? humanizeApiError(preferenceError) : null}
         footer={
           <>
             <button

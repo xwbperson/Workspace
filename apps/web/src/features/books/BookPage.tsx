@@ -210,7 +210,14 @@ export function BookPage(): React.JSX.Element {
             type="button"
             className={filter === value ? 'active' : ''}
             aria-pressed={filter === value}
-            onClick={() => changeFilter(value)}
+            onClick={(event) => {
+              changeFilter(value);
+              event.currentTarget.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+                inline: 'nearest',
+              });
+            }}
           >
             {label}
           </button>
@@ -343,6 +350,8 @@ export function BookPage(): React.JSX.Element {
         title="添加书籍"
         description="先建立书目，之后可添加封面和章节。"
         onClose={() => setCreateOpen(false)}
+        busy={create.isPending}
+        error={create.error ? humanizeApiError(create.error) : null}
         className="modal--wide"
       >
         <BookForm
@@ -354,6 +363,8 @@ export function BookPage(): React.JSX.Element {
         open={editOpen}
         title="编辑书籍"
         onClose={() => setEditOpen(false)}
+        busy={update.isPending}
+        error={update.error ? humanizeApiError(update.error) : null}
         className="modal--wide"
       >
         {selected ? (
@@ -375,6 +386,16 @@ export function BookPage(): React.JSX.Element {
           setChapterOpen(false);
           setChapterToEdit(undefined);
         }}
+        busy={createChapter.isPending || updateChapter.isPending}
+        error={
+          chapterToEdit
+            ? updateChapter.error
+              ? humanizeApiError(updateChapter.error)
+              : null
+            : createChapter.error
+              ? humanizeApiError(createChapter.error)
+              : null
+        }
       >
         {selected ? (
           <ChapterForm
@@ -399,6 +420,8 @@ export function BookPage(): React.JSX.Element {
         title="归档书籍"
         text={`归档“${selected?.title ?? ''}”后，封面、章节和进度仍会保留。`}
         confirmLabel="确认归档"
+        busy={archive.isPending}
+        error={archive.error ? humanizeApiError(archive.error) : undefined}
         onClose={() => setArchiveOpen(false)}
         onConfirm={() => selected && archive.mutate(selected)}
       />
@@ -408,6 +431,8 @@ export function BookPage(): React.JSX.Element {
         title="永久删除书籍"
         text={`确定永久删除“${selected?.title ?? ''}”吗？章节和阅读进度也会删除，无法恢复。`}
         confirmLabel="确认永久删除"
+        busy={permanentDelete.isPending}
+        error={permanentDelete.error ? humanizeApiError(permanentDelete.error) : undefined}
         onClose={() => setDeleteOpen(false)}
         onConfirm={() => selected && permanentDelete.mutate(selected)}
       />
@@ -417,6 +442,8 @@ export function BookPage(): React.JSX.Element {
         title="删除章节"
         text={`确定删除“${chapterToDelete?.title ?? ''}”及其页码进度吗？`}
         confirmLabel="删除章节"
+        busy={deleteChapter.isPending}
+        error={deleteChapter.error ? humanizeApiError(deleteChapter.error) : undefined}
         onClose={() => setChapterToDelete(undefined)}
         onConfirm={() =>
           selected &&
@@ -626,6 +653,8 @@ function ConfirmModal({
   text,
   confirmLabel,
   danger = false,
+  busy = false,
+  error,
   onClose,
   onConfirm,
 }: {
@@ -634,6 +663,8 @@ function ConfirmModal({
   text: string;
   confirmLabel: string;
   danger?: boolean;
+  busy?: boolean;
+  error?: string | undefined;
   onClose(): void;
   onConfirm(): void;
 }): React.JSX.Element {
@@ -642,17 +673,20 @@ function ConfirmModal({
       open={open}
       title={title}
       onClose={onClose}
+      busy={busy}
+      error={error ?? null}
       footer={
         <>
-          <button type="button" className="button button--quiet" onClick={onClose}>
+          <button type="button" className="button button--quiet" disabled={busy} onClick={onClose}>
             取消
           </button>
           <button
             type="button"
             className={`button ${danger ? 'button--danger' : 'button--primary'}`}
+            disabled={busy}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {busy ? '处理中…' : confirmLabel}
           </button>
         </>
       }

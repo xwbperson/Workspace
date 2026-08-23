@@ -373,6 +373,8 @@ export function ChecklistPage(): React.JSX.Element {
         title="新建清单"
         description="先确定用途，条目可以随后连续添加。"
         onClose={() => setCreateOpen(false)}
+        busy={create.isPending}
+        error={create.error ? humanizeApiError(create.error) : null}
       >
         <ChecklistForm
           submitting={create.isPending}
@@ -381,7 +383,13 @@ export function ChecklistPage(): React.JSX.Element {
           }}
         />
       </Modal>
-      <Modal open={editOpen} title="编辑清单" onClose={() => setEditOpen(false)}>
+      <Modal
+        open={editOpen}
+        title="编辑清单"
+        onClose={() => setEditOpen(false)}
+        busy={update.isPending}
+        error={update.error ? humanizeApiError(update.error) : null}
+      >
         {selected ? (
           <ChecklistForm
             key={`${selected.id}:${selected.version}`}
@@ -393,7 +401,13 @@ export function ChecklistPage(): React.JSX.Element {
           />
         ) : null}
       </Modal>
-      <Modal open={Boolean(editingItem)} title="编辑条目" onClose={() => setEditingItem(undefined)}>
+      <Modal
+        open={Boolean(editingItem)}
+        title="编辑条目"
+        onClose={() => setEditingItem(undefined)}
+        busy={updateItem.isPending}
+        error={updateItem.error ? humanizeApiError(updateItem.error) : null}
+      >
         {selected && editingItem ? (
           <ChecklistItemForm
             key={`${editingItem.id}:${editingItem.version}`}
@@ -412,6 +426,8 @@ export function ChecklistPage(): React.JSX.Element {
           selected?.status === 'completed' ? '已完成' : '使用中'
         }状态。`}
         confirmLabel="确认归档"
+        busy={archive.isPending}
+        error={archive.error ? humanizeApiError(archive.error) : undefined}
         onClose={() => setArchiveOpen(false)}
         onConfirm={() => selected && archive.mutate(selected)}
       />
@@ -420,6 +436,8 @@ export function ChecklistPage(): React.JSX.Element {
         title="永久删除清单"
         description="清单及其所有条目都会被永久删除，无法恢复。"
         confirmLabel="永久删除"
+        busy={remove.isPending}
+        error={remove.error ? humanizeApiError(remove.error) : undefined}
         onClose={() => setDeleteOpen(false)}
         onConfirm={() => selected && remove.mutate(selected)}
       />
@@ -429,6 +447,8 @@ export function ChecklistPage(): React.JSX.Element {
         description="清单条目会保留，所有条目恢复为未勾选。"
         confirmLabel="确认重置"
         danger={false}
+        busy={reset.isPending}
+        error={reset.error ? humanizeApiError(reset.error) : undefined}
         onClose={() => setResetOpen(false)}
         onConfirm={() => selected && reset.mutate(selected)}
       />
@@ -437,6 +457,8 @@ export function ChecklistPage(): React.JSX.Element {
         title="清除已勾条目"
         description={`将永久删除 ${selected?.progress.checked ?? 0} 个已勾条目，未勾条目不受影响。`}
         confirmLabel="确认清除"
+        busy={clearChecked.isPending}
+        error={clearChecked.error ? humanizeApiError(clearChecked.error) : undefined}
         onClose={() => setClearOpen(false)}
         onConfirm={() => selected && clearChecked.mutate(selected)}
       />
@@ -445,6 +467,8 @@ export function ChecklistPage(): React.JSX.Element {
         title="删除条目"
         description={deletingItem ? `“${deletingItem.name}”将被永久删除。` : ''}
         confirmLabel="删除条目"
+        busy={deleteItem.isPending}
+        error={deleteItem.error ? humanizeApiError(deleteItem.error) : undefined}
         onClose={() => setDeletingItem(undefined)}
         onConfirm={() =>
           selected && deletingItem && deleteItem.mutate({ checklist: selected, item: deletingItem })
@@ -657,6 +681,8 @@ function ConfirmModal({
   description,
   confirmLabel,
   danger = true,
+  busy = false,
+  error,
   onClose,
   onConfirm,
 }: {
@@ -665,6 +691,8 @@ function ConfirmModal({
   description: string;
   confirmLabel: string;
   danger?: boolean;
+  busy?: boolean;
+  error?: string | undefined;
   onClose(): void;
   onConfirm(): void;
 }): React.JSX.Element {
@@ -673,17 +701,20 @@ function ConfirmModal({
       open={open}
       title={title}
       onClose={onClose}
+      busy={busy}
+      error={error ?? null}
       footer={
         <>
-          <button type="button" className="button button--quiet" onClick={onClose}>
+          <button type="button" className="button button--quiet" disabled={busy} onClick={onClose}>
             取消
           </button>
           <button
             type="button"
             className={`button ${danger ? 'button--danger' : 'button--primary'}`}
+            disabled={busy}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {busy ? '处理中…' : confirmLabel}
           </button>
         </>
       }

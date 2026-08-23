@@ -253,6 +253,8 @@ export function GoalPage(): React.JSX.Element {
         title="添加目标"
         description="先定义周期和完成证据，后续都可以修改。"
         onClose={() => setCreateOpen(false)}
+        busy={create.isPending}
+        error={create.error ? humanizeApiError(create.error) : null}
         className="modal--wide"
       >
         <GoalForm
@@ -266,6 +268,8 @@ export function GoalPage(): React.JSX.Element {
         open={editOpen}
         title="编辑目标"
         onClose={() => setEditOpen(false)}
+        busy={update.isPending}
+        error={update.error ? humanizeApiError(update.error) : null}
         className="modal--wide"
       >
         {selected ? (
@@ -283,11 +287,14 @@ export function GoalPage(): React.JSX.Element {
         title="归档目标"
         description="目标和数值历史会保留，可以随时恢复。"
         onClose={() => setArchiveOpen(false)}
+        busy={archive.isPending}
+        error={archive.error ? humanizeApiError(archive.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={archive.isPending}
               onClick={() => setArchiveOpen(false)}
             >
               取消
@@ -298,7 +305,7 @@ export function GoalPage(): React.JSX.Element {
               disabled={!selected || archive.isPending}
               onClick={() => selected && archive.mutate(selected)}
             >
-              确认归档
+              {archive.isPending ? '正在归档…' : '确认归档'}
             </button>
           </>
         }
@@ -310,11 +317,14 @@ export function GoalPage(): React.JSX.Element {
         title="永久删除目标"
         description="这个操作无法撤销，数值记录和关键结果也会一并删除。"
         onClose={() => setDeleteOpen(false)}
+        busy={permanentDelete.isPending}
+        error={permanentDelete.error ? humanizeApiError(permanentDelete.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={permanentDelete.isPending}
               onClick={() => setDeleteOpen(false)}
             >
               取消
@@ -325,7 +335,7 @@ export function GoalPage(): React.JSX.Element {
               disabled={!selected || permanentDelete.isPending}
               onClick={() => selected && permanentDelete.mutate(selected)}
             >
-              永久删除
+              {permanentDelete.isPending ? '正在删除…' : '永久删除'}
             </button>
           </>
         }

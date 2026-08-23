@@ -175,7 +175,7 @@
     --color-surface-accent: #e2eee9;
     --color-text: #17211d;
     --color-text-secondary: #5a6761;
-    --color-text-tertiary: #7d8983;
+    --color-text-tertiary: #66736c;
     --color-border: #d8e1dc;
     --color-border-strong: #becbc4;
     --color-accent: #176b5b;
@@ -442,6 +442,33 @@
 
 @layer responsive {
   @media (max-width: 839px) {
+    .button,
+    .button--text,
+    .icon-button,
+    .icon-button--small,
+    .segmented-control button,
+    .learning-filter button,
+    .lifecycle-tabs button {
+      min-height: 44px;
+    }
+
+    .icon-button,
+    .icon-button--small {
+      width: 44px;
+      height: 44px;
+    }
+
+    .learning-filter {
+      scroll-padding-inline: 10px;
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        currentColor 12px,
+        currentColor calc(100% - 22px),
+        transparent
+      );
+    }
+
     .metric-card-row--finance {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -1006,6 +1033,14 @@
     background: var(--color-accent-soft);
   }
 
+  .timetable-grid-scroll {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    overscroll-behavior-inline: contain;
+  }
+
   .timetable-grid {
     display: grid;
     grid-template-columns: 112px repeat(5, minmax(132px, 1fr));
@@ -1019,7 +1054,6 @@
 
   .timetable-grid.has-weekend {
     grid-template-columns: 112px repeat(7, minmax(116px, 1fr));
-    overflow-x: auto;
   }
 
   .timetable-grid__corner,
@@ -1686,7 +1720,7 @@
       min-width: 0;
     }
 
-    .timetable-grid {
+    .timetable-grid-scroll {
       display: none;
     }
 
@@ -2270,6 +2304,7 @@
   }
 
   .modal {
+    position: relative;
     width: min(560px, calc(100vw - 32px));
     max-height: min(760px, calc(100vh - 32px));
     grid-template-rows: auto minmax(0, 1fr) auto;
@@ -2319,6 +2354,52 @@
     min-height: 0;
     overflow: auto;
     padding: 22px;
+  }
+
+  .modal__error {
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    color: var(--color-danger);
+    background: var(--color-danger-soft);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 48%, var(--color-border));
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .modal__discard-confirm {
+    position: absolute;
+    z-index: 5;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: var(--modal-backdrop);
+    backdrop-filter: var(--modal-backdrop-filter);
+  }
+
+  .modal__discard-confirm > div {
+    width: min(420px, 100%);
+    padding: 22px;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-float);
+  }
+
+  .modal__discard-confirm h3 {
+    font-size: 19px;
+  }
+
+  .modal__discard-confirm p {
+    margin: 7px 0 20px;
+    color: var(--color-text-secondary);
+  }
+
+  .modal__discard-confirm > div > div {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
   }
 
   .modal__footer {
@@ -2525,6 +2606,7 @@
     background: var(--sidebar-background);
     border-right: 1px solid var(--sidebar-border);
     backdrop-filter: var(--sidebar-backdrop-filter);
+    overflow: hidden;
     transition: width 180ms ease;
   }
 
@@ -2588,7 +2670,12 @@
   }
 
   .sidebar__group {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
     padding-top: 24px;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
   }
 
   .sidebar__group-label {
@@ -2600,6 +2687,7 @@
   }
 
   .sidebar__footer {
+    flex: none;
     margin-top: auto;
   }
 
@@ -2700,6 +2788,11 @@
     font-size: 19px;
     line-height: 1.2;
     white-space: nowrap;
+  }
+
+  .topbar__title h1:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
   }
 
   .search-trigger,
@@ -3083,6 +3176,12 @@
     border-radius: var(--radius-sm);
   }
 
+  .search-field:focus-within,
+  .global-search-field:focus-within {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-soft);
+  }
+
   .search-field input,
   .global-search-field input {
     min-width: 0;
@@ -3143,7 +3242,7 @@
     overflow: hidden;
     flex-direction: column;
     justify-content: space-between;
-    padding: 18px;
+    padding: 0;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -3152,6 +3251,17 @@
       box-shadow 180ms ease,
       border-color 180ms ease;
     min-width: 0;
+  }
+
+  .feature-tile__cover {
+    display: flex;
+    min-height: 218px;
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 18px;
+    color: inherit;
   }
 
   .feature-tile:hover {
@@ -3892,10 +4002,11 @@
 
   .login-story__copy h1 {
     margin: 12px 0 20px;
-    font-size: clamp(38px, 5vw, 68px);
+    font-size: clamp(36px, 4.3vw, 62px);
     font-weight: 650;
     letter-spacing: -0.055em;
     line-height: 1.08;
+    text-wrap: balance;
   }
 
   .login-story__copy > p:last-child {
@@ -6248,6 +6359,19 @@
     border-color: var(--color-accent);
   }
 
+  .annual-debt-cell-editor {
+    display: grid;
+    justify-items: end;
+    gap: 5px;
+  }
+
+  .annual-debt-cell-editor small {
+    max-width: 150px;
+    color: var(--color-danger);
+    line-height: 1.35;
+    white-space: normal;
+  }
+
   .annual-debt-table__unbilled th,
   .annual-debt-table__unbilled td {
     background: color-mix(in srgb, var(--color-brass-soft) 70%, var(--color-surface));
@@ -6699,8 +6823,8 @@
     }
 
     .topbar__context-actions .button {
-      width: 38px;
-      min-height: 38px;
+      width: 44px;
+      min-height: 44px;
       justify-content: center;
       padding: 0;
     }
@@ -7008,6 +7132,11 @@
     .feature-tile {
       min-height: 190px;
       aspect-ratio: auto;
+      padding: 0;
+    }
+
+    .feature-tile__cover {
+      min-height: 188px;
       padding: 14px;
     }
 
@@ -7146,6 +7275,31 @@
 }
 
 @layer responsive {
+  @media (pointer: coarse) {
+    .button,
+    .button--text,
+    .icon-button,
+    .icon-button--small,
+    .segmented-control button,
+    .learning-filter button,
+    .lifecycle-tabs button {
+      min-height: 44px;
+    }
+
+    .icon-button,
+    .icon-button--small,
+    .topbar__context-actions .button,
+    .sidebar-feature-row__moves .icon-button {
+      width: 44px;
+      height: 44px;
+    }
+
+    .sidebar-feature-row__toggle {
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+
   @media (max-width: 599px) {
     .annual-debt-card > header,
     .finance-subheading {
@@ -7293,12 +7447,76 @@
     textarea {
       font-size: 16px;
     }
+
+    .month-calendar {
+      overflow-x: visible;
+    }
+
+    .month-calendar__weekdays,
+    .month-calendar__grid {
+      min-width: 0;
+    }
+
+    .month-calendar__weekdays span {
+      padding: 8px 2px;
+      font-size: 10px;
+    }
+
+    .calendar-day {
+      min-height: 68px;
+      align-items: center;
+      gap: 5px;
+      padding: 5px;
+    }
+
+    .calendar-day__number {
+      width: 25px;
+      height: 25px;
+      font-size: 12px;
+    }
+
+    .calendar-day__items {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+
+    .calendar-chip {
+      width: 7px;
+      height: 7px;
+      flex: 0 0 7px;
+      padding: 0;
+      background: var(--color-accent);
+      border: 0;
+      border-radius: 50%;
+      font-size: 0;
+    }
+
+    .calendar-chip.type-journal {
+      background: var(--color-brass);
+    }
+
+    .calendar-chip.type-summary {
+      background: var(--color-info);
+    }
+
+    .calendar-day__items small {
+      width: 100%;
+      font-size: 9px;
+      text-align: center;
+    }
   }
 
   @media (max-width: 699px) {
     .sidebar-feature-row {
-      grid-template-columns: 32px 36px minmax(0, 1fr) 18px;
+      grid-template-columns: 32px 36px minmax(0, 1fr) 44px;
       gap: 8px;
+    }
+
+    .sidebar-feature-row__toggle {
+      min-width: 44px;
+      min-height: 44px;
     }
 
     .sidebar-feature-row__state {
@@ -7310,6 +7528,11 @@
       justify-content: flex-end;
       padding-top: 6px;
       border-top: 1px solid var(--color-border);
+    }
+
+    .sidebar-feature-row__moves .icon-button {
+      width: 44px;
+      height: 44px;
     }
   }
 }

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Modal } from './Modal.js';
 
 const originalShowModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
@@ -88,5 +88,55 @@ describe('Modal', () => {
     );
 
     expect(screen.getByLabelText('标题')).toHaveValue('');
+  });
+
+  it('asks before closing a form whose values changed', () => {
+    const onClose = vi.fn();
+    render(
+      <Modal open title="新建" onClose={onClose}>
+        <DraftField />
+      </Modal>,
+    );
+    fireEvent.change(screen.getByLabelText('标题'), { target: { value: '尚未保存' } });
+
+    fireEvent.click(screen.getByRole('button', { name: '关闭' }));
+
+    expect(screen.getByRole('alertdialog', { name: '放弃未保存内容？' })).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('标题')).toHaveValue('尚未保存');
+
+    fireEvent.click(screen.getByRole('button', { name: '继续编辑' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('标题')).toHaveValue('尚未保存');
+  });
+
+  it('closes a dirty form after the user confirms discarding it', () => {
+    const onClose = vi.fn();
+    render(
+      <Modal open title="新建" onClose={onClose}>
+        <DraftField />
+      </Modal>,
+    );
+    fireEvent.change(screen.getByLabelText('标题'), { target: { value: '尚未保存' } });
+
+    fireEvent.click(screen.getByRole('button', { name: '关闭' }));
+    fireEvent.click(screen.getByRole('button', { name: '放弃并关闭' }));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps keyboard focus inside an open dialog', () => {
+    render(
+      <Modal open title="新建" onClose={() => undefined}>
+        <DraftField />
+        <button type="button">最后操作</button>
+      </Modal>,
+    );
+    const close = screen.getByRole('button', { name: '关闭' });
+    close.focus();
+
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Tab', shiftKey: true });
+
+    expect(screen.getByRole('button', { name: '最后操作' })).toHaveFocus();
   });
 });

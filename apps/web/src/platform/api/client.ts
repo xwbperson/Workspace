@@ -25,6 +25,11 @@ export const queryClient = new QueryClient({
 
 export function humanizeApiError(error: unknown): string {
   if (error instanceof ApiClientError) return error.message;
-  if (error instanceof Error) return error.message;
+  if (error instanceof Error) {
+    if (/failed to fetch|networkerror|load failed/i.test(error.message)) {
+      return '无法连接服务器，请检查网络后重试。';
+    }
+    return error.message;
+  }
   return '操作没有完成，请稍后重试。';
 }

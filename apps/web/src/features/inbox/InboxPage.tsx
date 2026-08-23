@@ -248,6 +248,8 @@ export function InboxPage(): React.JSX.Element {
         title="收集内容"
         description="只需先写清标题，其他信息之后仍可补充。"
         onClose={() => setCreateOpen(false)}
+        busy={create.isPending}
+        error={create.error ? humanizeApiError(create.error) : null}
         className="modal--wide"
       >
         <InboxItemForm
@@ -262,6 +264,8 @@ export function InboxPage(): React.JSX.Element {
         open={editOpen}
         title="编辑收集内容"
         onClose={() => setEditOpen(false)}
+        busy={update.isPending}
+        error={update.error ? humanizeApiError(update.error) : null}
         className="modal--wide"
       >
         {selected ? (
@@ -279,11 +283,14 @@ export function InboxPage(): React.JSX.Element {
         open={archiveOpen}
         title="归档收集内容"
         onClose={() => setArchiveOpen(false)}
+        busy={archive.isPending}
+        error={archive.error ? humanizeApiError(archive.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={archive.isPending}
               onClick={() => setArchiveOpen(false)}
             >
               取消
@@ -294,7 +301,7 @@ export function InboxPage(): React.JSX.Element {
               disabled={!selected || archive.isPending}
               onClick={() => selected && archive.mutate(selected)}
             >
-              确认归档
+              {archive.isPending ? '正在归档…' : '确认归档'}
             </button>
           </>
         }
@@ -306,11 +313,14 @@ export function InboxPage(): React.JSX.Element {
         title="永久删除收集内容"
         description="记录会被删除；已上传的底层文件仍可能被其他功能引用。"
         onClose={() => setDeleteOpen(false)}
+        busy={permanentDelete.isPending}
+        error={permanentDelete.error ? humanizeApiError(permanentDelete.error) : null}
         footer={
           <>
             <button
               type="button"
               className="button button--quiet"
+              disabled={permanentDelete.isPending}
               onClick={() => setDeleteOpen(false)}
             >
               取消
@@ -321,7 +331,7 @@ export function InboxPage(): React.JSX.Element {
               disabled={!selected || permanentDelete.isPending}
               onClick={() => selected && permanentDelete.mutate(selected)}
             >
-              永久删除
+              {permanentDelete.isPending ? '正在删除…' : '永久删除'}
             </button>
           </>
         }

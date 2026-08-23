@@ -32,6 +32,8 @@ export function usePreferences(): {
   loading: boolean;
   save(input: WorkbenchPreferences): Promise<WorkbenchPreferences>;
   saving: boolean;
+  error: unknown;
+  retry(): Promise<unknown>;
 } {
   const { session } = useAuth();
   const query = useQuery({
@@ -48,9 +50,7 @@ export function usePreferences(): {
       return { previous };
     },
     onError: (_error, _input, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(['workbench', 'preferences'], context.previous);
-      }
+      queryClient.setQueryData(['workbench', 'preferences'], context?.previous);
     },
     onSuccess: (value) => queryClient.setQueryData(['workbench', 'preferences'], value),
   });
@@ -65,5 +65,12 @@ export function usePreferences(): {
     loading: query.isLoading,
     save: async (input) => mutation.mutateAsync(input),
     saving: mutation.isPending,
+    error: mutation.error ?? query.error,
+    retry: async () => {
+      if (mutation.isError && mutation.variables) {
+        return mutation.mutateAsync(mutation.variables);
+      }
+      return query.refetch();
+    },
   };
 }
