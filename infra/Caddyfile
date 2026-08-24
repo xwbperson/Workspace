@@ -32,3 +32,8 @@
     -Server
   }
 }
+
+
+uric.u24.site {
+  reverse_proxy host.docker.internal:4318
+}
