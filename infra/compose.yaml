@@ -56,7 +56,7 @@ services:
       dockerfile: infra/Dockerfile.web
     restart: unless-stopped
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     environment:
       DOMAIN: ${DOMAIN:?DOMAIN is required}
       DOMAIN_ALIAS_1: ${DOMAIN_ALIAS_1:-http://domain-alias-1.invalid}
