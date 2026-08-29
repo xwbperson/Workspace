@@ -24,6 +24,7 @@ export default tseslint.config(
           allowDefaultProject: [
             'eslint.config.mjs',
             'apps/web/vitest.config.ts',
+            'scripts/generate-workbench-icons.mjs',
             'scripts/validate-real-postgres.ts',
           ],
         },
