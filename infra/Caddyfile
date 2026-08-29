@@ -37,3 +37,7 @@
 uric.u24.site {
   reverse_proxy host.docker.internal:4318
 }
+
+food.u24.site {
+  reverse_proxy host.docker.internal:4320
+}
