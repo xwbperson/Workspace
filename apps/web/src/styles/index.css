@@ -944,6 +944,53 @@
     width: auto;
   }
 
+  .inventory-toolbar__controls {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .inventory-view-switch {
+    display: flex;
+    min-height: 52px;
+    flex: none;
+    align-items: center;
+    gap: 4px;
+    padding: 5px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .inventory-view-switch button {
+    display: inline-flex;
+    min-height: 40px;
+    align-items: center;
+    gap: 6px;
+    padding: 0 11px;
+    color: var(--color-text-secondary);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .inventory-view-switch button:hover,
+  .inventory-view-switch button.active {
+    color: var(--color-text);
+    background: var(--color-surface-muted);
+  }
+
+  .inventory-view-switch button.active {
+    color: var(--color-accent);
+    box-shadow: inset 3px 0 0 var(--color-accent);
+  }
+
   .inventory-group-filters {
     display: flex;
     gap: 8px;
@@ -1019,7 +1066,7 @@
 
   .inventory-ledger {
     min-height: 430px;
-    padding: 18px;
+    padding: 12px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
@@ -1027,16 +1074,16 @@
 
   .inventory-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+    gap: 10px;
   }
 
   .inventory-card {
     display: grid;
     min-width: 0;
-    grid-template-rows: auto minmax(54px, 1fr) auto;
-    gap: 14px;
-    padding: 16px;
+    grid-template-rows: auto minmax(36px, 1fr) auto;
+    gap: 10px;
+    padding: 12px;
     background: var(--color-surface-raised);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -1049,19 +1096,19 @@
 
   .inventory-card > header {
     display: grid;
-    grid-template-columns: 42px minmax(0, 1fr) auto;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 11px;
+    gap: 9px;
   }
 
   .inventory-card__icon {
     display: grid;
-    width: 42px;
-    height: 42px;
+    width: 34px;
+    height: 34px;
     place-items: center;
     color: var(--color-accent);
     background: var(--color-accent-soft);
-    border-radius: 12px;
+    border-radius: 10px;
   }
 
   .inventory-card--zero .inventory-card__icon {
@@ -1072,7 +1119,7 @@
   .inventory-card h2 {
     margin: 2px 0 0;
     overflow: hidden;
-    font-size: 17px;
+    font-size: 16px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -1089,7 +1136,11 @@
   }
 
   .inventory-card__copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.75fr);
     min-width: 0;
+    align-items: center;
+    gap: 8px;
   }
 
   .inventory-card__copy p,
@@ -1103,13 +1154,19 @@
   }
 
   .inventory-card__copy p {
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 1;
+    font-size: 13px;
   }
 
   .inventory-card__copy small {
-    margin-top: 5px;
+    padding-left: 8px;
+    border-left: 1px solid var(--color-border);
     -webkit-line-clamp: 1;
     color: var(--color-text-tertiary);
+  }
+
+  .inventory-card__copy > :only-child {
+    grid-column: 1 / -1;
   }
 
   .inventory-card__copy .inventory-card__empty {
@@ -1119,7 +1176,7 @@
 
   .inventory-stepper {
     display: grid;
-    grid-template-columns: 48px minmax(90px, 1fr) 48px;
+    grid-template-columns: 42px minmax(72px, 1fr) 42px;
     align-items: stretch;
     overflow: hidden;
     background: var(--color-surface-muted);
@@ -1134,7 +1191,7 @@
 
   .inventory-stepper__button {
     display: grid;
-    min-height: 54px;
+    min-height: 44px;
     place-items: center;
     color: var(--color-text);
     background: transparent;
@@ -1169,7 +1226,7 @@
 
   .inventory-stepper__value strong {
     color: var(--color-text);
-    font-size: 24px;
+    font-size: 20px;
     line-height: 1;
     font-variant-numeric: tabular-nums;
   }
@@ -1183,10 +1240,10 @@
 
   .inventory-card__archived-quantity {
     display: flex;
-    min-height: 54px;
+    min-height: 44px;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px;
+    padding: 0 13px;
     color: var(--color-text-secondary);
     background: var(--color-surface-muted);
     border-radius: 14px;
@@ -1194,8 +1251,33 @@
 
   .inventory-card__archived-quantity strong {
     color: var(--color-text);
-    font-size: 22px;
+    font-size: 19px;
     font-variant-numeric: tabular-nums;
+  }
+
+  .inventory-grid--list {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-grid--list .inventory-card {
+    grid-template-columns: minmax(240px, 0.9fr) minmax(180px, 1.35fr) minmax(190px, 0.65fr);
+    grid-template-rows: auto;
+    align-items: center;
+    min-height: 72px;
+    box-shadow: inset 3px 0 0 var(--color-accent);
+  }
+
+  .inventory-grid--list .inventory-card--zero {
+    box-shadow: inset 3px 0 0 var(--color-brass);
+  }
+
+  .inventory-grid--list .inventory-card__copy p,
+  .inventory-grid--list .inventory-card__copy small {
+    -webkit-line-clamp: 1;
+  }
+
+  .inventory-grid--list .inventory-card__copy small {
+    padding-left: 8px;
   }
 
   .inventory-group-manager {
@@ -1263,8 +1345,62 @@
       grid-template-columns: 1fr;
     }
 
-    .inventory-toolbar .lifecycle-tabs {
+    .inventory-toolbar__controls {
       width: 100%;
+    }
+
+    .inventory-toolbar__controls .lifecycle-tabs {
+      width: auto;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .inventory-grid--list .inventory-card {
+      grid-template-areas:
+        'header header'
+        'copy quantity';
+      grid-template-columns: minmax(0, 1fr) 136px;
+      grid-template-rows: auto auto;
+      align-items: center;
+      gap: 8px 10px;
+      min-height: 0;
+      padding: 10px;
+    }
+
+    .inventory-grid--list .inventory-card > header {
+      grid-area: header;
+    }
+
+    .inventory-grid--list .inventory-card__copy {
+      grid-area: copy;
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+
+    .inventory-grid--list .inventory-card__copy small {
+      padding-left: 0;
+      border-left: 0;
+    }
+
+    .inventory-grid--list .inventory-stepper,
+    .inventory-grid--list .inventory-card__archived-quantity {
+      grid-area: quantity;
+    }
+
+    .inventory-grid--list .inventory-stepper {
+      grid-template-columns: 44px minmax(48px, 1fr) 44px;
+    }
+
+    .inventory-grid--list .inventory-stepper__value span {
+      display: none;
+    }
+
+    .inventory-grid--list .inventory-card__archived-quantity {
+      padding: 0 10px;
+    }
+
+    .inventory-grid--list .inventory-card__archived-quantity span {
+      font-size: 11px;
     }
 
     .inventory-summary > div {
@@ -1300,7 +1436,25 @@
     }
 
     .inventory-card {
-      padding: 14px;
+      padding: 12px;
+    }
+
+    .inventory-view-switch button {
+      width: 44px;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .inventory-view-switch button span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     .inventory-group-create,
@@ -1320,6 +1474,7 @@
 
   @media (pointer: coarse) {
     .inventory-group-filters button,
+    .inventory-view-switch button,
     .inventory-stepper__button {
       min-height: 44px;
     }

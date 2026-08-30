@@ -17,10 +17,17 @@ import { humanizeApiError } from '../../platform/api/client.js';
 import { inventoryApi, inventoryKeys, invalidateInventoryData } from './api.js';
 import { GroupManager } from './components/GroupManager.js';
 import { InventoryForm } from './components/InventoryForm.js';
+import { InventoryViewSwitch, type InventoryViewMode } from './components/InventoryViewSwitch.js';
 import { QuantityStepper } from './components/QuantityStepper.js';
 
 type View = 'active' | 'zero' | 'archived';
 type GroupFilter = string;
+
+const inventoryViewPreferenceKey = 'workbench.inventory-view';
+
+function readInventoryViewPreference(): InventoryViewMode {
+  return window.localStorage.getItem(inventoryViewPreferenceKey) === 'list' ? 'list' : 'cards';
+}
 
 const viewLabels: Record<View, string> = {
   active: '使用中',
@@ -38,6 +45,7 @@ export function InventoryPage(): React.JSX.Element {
   const [params] = useSearchParams();
   const { show } = useToast();
   const [view, setView] = useState<View>('active');
+  const [viewMode, setViewMode] = useState<InventoryViewMode>(readInventoryViewPreference);
   const [groupFilter, setGroupFilter] = useState<GroupFilter>('all');
   const [query, setQuery] = useState('');
   const [createOpen, setCreateOpen] = useState(params.get('create') === '1');
@@ -195,6 +203,11 @@ export function InventoryPage(): React.JSX.Element {
     adjustQuantity.mutate({ id: item.id, delta });
   };
 
+  const changeViewMode = (next: InventoryViewMode): void => {
+    setViewMode(next);
+    window.localStorage.setItem(inventoryViewPreferenceKey, next);
+  };
+
   return (
     <div className="feature-shell-page feature-shell-page--inventory">
       <PageTopbarActions>
@@ -234,18 +247,21 @@ export function InventoryPage(): React.JSX.Element {
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
-        <div className="lifecycle-tabs" role="group" aria-label="物品状态">
-          {(['active', 'zero', 'archived'] as const).map((option) => (
-            <button
-              type="button"
-              key={option}
-              className={view === option ? 'active' : ''}
-              aria-pressed={view === option}
-              onClick={() => setView(option)}
-            >
-              {viewLabels[option]}
-            </button>
-          ))}
+        <div className="inventory-toolbar__controls">
+          <div className="lifecycle-tabs" role="group" aria-label="物品状态">
+            {(['active', 'zero', 'archived'] as const).map((option) => (
+              <button
+                type="button"
+                key={option}
+                className={view === option ? 'active' : ''}
+                aria-pressed={view === option}
+                onClick={() => setView(option)}
+              >
+                {viewLabels[option]}
+              </button>
+            ))}
+          </div>
+          <InventoryViewSwitch value={viewMode} onChange={changeViewMode} />
         </div>
       </section>
 
@@ -302,7 +318,7 @@ export function InventoryPage(): React.JSX.Element {
             onRetry={() => void itemsQuery.refetch()}
           />
         ) : items.length ? (
-          <div className="inventory-grid">
+          <div className={`inventory-grid inventory-grid--${viewMode}`}>
             {items.map((item) => (
               <InventoryCard
                 key={item.id}
