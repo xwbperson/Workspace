@@ -171,7 +171,7 @@ describe('workbench HTTP vertical slice', () => {
     expect(systemStatus.json()).toMatchObject({
       connected: true,
       ready: true,
-      databaseMigration: '022-backup-restore-timestamps',
+      databaseMigration: '023-inventory',
       lastSuccessfulBackupAt: '2026-01-01T00:00:00.000Z',
       lastVerifiedBackupAt: '2026-01-02T00:00:00.000Z',
       lastSuccessfulRestoreAt: '2026-02-01T00:00:00.000Z',

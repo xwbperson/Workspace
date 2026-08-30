@@ -914,6 +914,62 @@ export interface SubscriptionListResponse {
   items: Subscription[];
 }
 
+export type InventoryItemStatus = 'active' | 'archived';
+export type InventoryStockFilter = 'all' | 'zero' | 'positive';
+
+export interface InventoryGroup {
+  id: string;
+  name: string;
+  position: number;
+  itemCount: number;
+  totalQuantity: number;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InventoryGroupInput {
+  name: string;
+}
+
+export interface InventoryGroupUpdateInput extends InventoryGroupInput {
+  version: number;
+}
+
+export interface InventoryItem {
+  id: string;
+  group: Pick<InventoryGroup, 'id' | 'name'> | null;
+  name: string;
+  purpose: string;
+  note: string;
+  quantity: number;
+  status: InventoryItemStatus;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InventoryItemInput {
+  name: string;
+  purpose?: string;
+  note?: string;
+  quantity: number;
+  groupId?: string | null;
+}
+
+export interface InventoryItemUpdateInput extends Partial<InventoryItemInput> {
+  version: number;
+}
+
+export interface InventoryItemListResponse {
+  items: InventoryItem[];
+  summary: {
+    kinds: number;
+    totalQuantity: number;
+    zeroQuantity: number;
+  };
+}
+
 export type FinanceAccountType =
   'cash' | 'alipay' | 'wechat' | 'bank' | 'credit' | 'digital-cny' | 'other';
 export interface FinanceAccount {

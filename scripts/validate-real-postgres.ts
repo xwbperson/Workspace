@@ -191,6 +191,22 @@ try {
     },
     '清单条目',
   );
+  const inventoryGroup = await createApiRecord<{ id: string }>(
+    '/api/v1/inventory-groups',
+    { name: '真实 PostgreSQL 收纳箱' },
+    '物品分组',
+  );
+  const inventoryItem = await createApiRecord<{ id: string }>(
+    '/api/v1/inventory-items',
+    {
+      name: '真实 PostgreSQL 物品样本',
+      purpose: '验证分组与数量恢复',
+      note: '数量为 0 时仍必须保留',
+      quantity: 0,
+      groupId: inventoryGroup.id,
+    },
+    '物品',
+  );
   await createApiRecord(
     '/api/v1/calendar-entries',
     {
@@ -419,6 +435,8 @@ try {
         tasks: number;
         checklists: number;
         checklistItems: number;
+        inventoryGroups: number;
+        inventoryItems: number;
         calendarEntries: number;
         inboxItems: number;
         subscriptions: number;
@@ -454,6 +472,8 @@ try {
            (SELECT count(*)::int FROM tasks) AS tasks,
            (SELECT count(*)::int FROM checklists) AS checklists,
            (SELECT count(*)::int FROM checklist_items) AS "checklistItems",
+           (SELECT count(*)::int FROM inventory_groups) AS "inventoryGroups",
+           (SELECT count(*)::int FROM inventory_items) AS "inventoryItems",
            (SELECT count(*)::int FROM calendar_entries) AS "calendarEntries",
            (SELECT count(*)::int FROM inbox_items) AS "inboxItems",
            (SELECT count(*)::int FROM subscriptions) AS subscriptions,
@@ -491,6 +511,8 @@ try {
         value.tasks !== 1 ||
         value.checklists !== 1 ||
         value.checklistItems !== 1 ||
+        value.inventoryGroups !== 1 ||
+        value.inventoryItems !== 1 ||
         value.calendarEntries !== 1 ||
         value.inboxItems !== 1 ||
         value.subscriptions !== 1 ||
@@ -540,6 +562,24 @@ try {
         restoredChecklistItem.rows[0]?.price_cents !== null
       ) {
         throw new Error('恢复后的清单条目或可选金额字段不一致。');
+      }
+      const restoredInventoryItem = await restoredDatabase.query<{
+        group_id: string | null;
+        name: string;
+        purpose: string;
+        note: string;
+        quantity: number;
+      }>('SELECT group_id,name,purpose,note,quantity FROM inventory_items WHERE id=$1', [
+        inventoryItem.id,
+      ]);
+      if (
+        restoredInventoryItem.rows[0]?.group_id !== inventoryGroup.id ||
+        restoredInventoryItem.rows[0]?.name !== '真实 PostgreSQL 物品样本' ||
+        restoredInventoryItem.rows[0]?.purpose !== '验证分组与数量恢复' ||
+        restoredInventoryItem.rows[0]?.note !== '数量为 0 时仍必须保留' ||
+        restoredInventoryItem.rows[0]?.quantity !== 0
+      ) {
+        throw new Error('恢复后的物品分组、字段或零数量不一致。');
       }
       const storedFile = await restoredDatabase.query<{ storage_key: string }>(
         'SELECT storage_key FROM stored_files WHERE id=$1',

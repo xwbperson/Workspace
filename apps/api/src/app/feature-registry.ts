@@ -29,6 +29,12 @@ import { createInboxContributions } from '../features/inbox/contributions.js';
 import { InboxRepository } from '../features/inbox/repository.js';
 import { registerInboxRoutes } from '../features/inbox/routes.js';
 import { InboxService } from '../features/inbox/service.js';
+import {
+  createInventoryContributions,
+  InventoryRepository,
+  InventoryService,
+  registerInventoryRoutes,
+} from '../features/inventory/index.js';
 import { createFinanceContributions } from '../features/finance/contributions.js';
 import { FinanceRepository } from '../features/finance/repository.js';
 import { registerFinanceRoutes } from '../features/finance/routes.js';
@@ -95,6 +101,8 @@ export function createFeatureRegistry(
   const timetableService = new TimetableService(timetable);
   const checklists = new ChecklistRepository(database);
   const checklistService = new ChecklistService(checklists);
+  const inventory = new InventoryRepository(database);
+  const inventoryService = new InventoryService(inventory);
 
   return [
     {
@@ -181,6 +189,13 @@ export function createFeatureRegistry(
       featureId: 'checklists',
       contribution: createChecklistContributions(checklistService),
       registerRoutes: async (app) => registerChecklistRoutes(app, checklistService),
+      syncNotifications: async () => {},
+      startScheduler: () => () => {},
+    },
+    {
+      featureId: 'inventory',
+      contribution: createInventoryContributions(inventory),
+      registerRoutes: async (app) => registerInventoryRoutes(app, inventoryService),
       syncNotifications: async () => {},
       startScheduler: () => () => {},
     },

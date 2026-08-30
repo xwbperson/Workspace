@@ -8,6 +8,7 @@ import {
   Hourglass,
   Inbox,
   ListChecks,
+  Package,
   Target,
   Timer,
   WalletCards,
@@ -33,5 +34,6 @@ export function FeatureIcon({
   if (name === 'wallet-cards') return <WalletCards aria-hidden="true" size={size} />;
   if (name === 'hourglass') return <Hourglass aria-hidden="true" size={size} />;
   if (name === 'clipboard-list') return <ClipboardList aria-hidden="true" size={size} />;
+  if (name === 'package') return <Package aria-hidden="true" size={size} />;
   return <Timer aria-hidden="true" size={size} />;
 }

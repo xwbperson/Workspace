@@ -10,7 +10,8 @@ export type IconName =
   | 'credit-card'
   | 'wallet-cards'
   | 'hourglass'
-  | 'clipboard-list';
+  | 'clipboard-list'
+  | 'package';
 export type FeatureCategory =
   | 'planning-execution'
   | 'notes-knowledge'
@@ -251,6 +252,19 @@ export const featureCatalog: readonly WorkbenchFeatureDefinition[] = [
     category: 'tools',
     keywords: ['清单', '购物', '观影', '行李', '勾选', '检查', '列表'],
     order: 110,
+    lifecycle: 'released',
+    discoverableInProduction: true,
+    capabilities: { recent: true, overviewBlocks: true, search: true, quickCreate: true },
+  },
+  {
+    featureId: 'inventory',
+    name: '物品记录',
+    description: '记录现有物品、用途、分组和数量，并在列表中快速加减。',
+    icon: 'package',
+    route: '/features/inventory',
+    category: 'tools',
+    keywords: ['物品', '数量', '库存', '收纳', '分组', '工具', '用品'],
+    order: 120,
     lifecycle: 'released',
     discoverableInProduction: true,
     capabilities: { recent: true, overviewBlocks: true, search: true, quickCreate: true },

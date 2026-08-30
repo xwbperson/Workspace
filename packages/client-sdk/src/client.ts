@@ -59,6 +59,15 @@ import type {
   InboxItemListResponse,
   InboxItemStatus,
   InboxItemUpdateInput,
+  InventoryGroup,
+  InventoryGroupInput,
+  InventoryGroupUpdateInput,
+  InventoryItem,
+  InventoryItemInput,
+  InventoryItemListResponse,
+  InventoryItemStatus,
+  InventoryItemUpdateInput,
+  InventoryStockFilter,
   LoginInput,
   LoginResponse,
   LifeCountdownDashboard,
@@ -1075,6 +1084,82 @@ export class WorkbenchClient {
   }
   public deleteSubscriptionPermanently(id: string, version: number): Promise<void> {
     return this.request(`/subscriptions/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+
+  public getInventoryGroups(): Promise<{ items: InventoryGroup[] }> {
+    return this.request('/inventory-groups');
+  }
+  public createInventoryGroup(input: InventoryGroupInput): Promise<InventoryGroup> {
+    return this.request('/inventory-groups', { method: 'POST', body: input });
+  }
+  public updateInventoryGroup(
+    id: string,
+    input: InventoryGroupUpdateInput,
+  ): Promise<InventoryGroup> {
+    return this.request(`/inventory-groups/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: input,
+    });
+  }
+  public deleteInventoryGroup(id: string, version: number): Promise<void> {
+    return this.request(`/inventory-groups/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      body: { version },
+    });
+  }
+  public getInventoryItems(
+    options: {
+      status?: InventoryItemStatus;
+      stock?: InventoryStockFilter;
+      groupId?: string;
+      query?: string;
+      limit?: number;
+    } = {},
+  ): Promise<InventoryItemListResponse> {
+    const query = new URLSearchParams();
+    if (options.status) query.set('status', options.status);
+    if (options.stock) query.set('stock', options.stock);
+    if (options.groupId) query.set('groupId', options.groupId);
+    if (options.query) query.set('query', options.query);
+    if (options.limit) query.set('limit', String(options.limit));
+    const suffix = query.size ? `?${query.toString()}` : '';
+    return this.request(`/inventory-items${suffix}`);
+  }
+  public getInventoryItem(id: string): Promise<InventoryItem> {
+    return this.request(`/inventory-items/${encodeURIComponent(id)}`);
+  }
+  public createInventoryItem(input: InventoryItemInput): Promise<InventoryItem> {
+    return this.request('/inventory-items', { method: 'POST', body: input });
+  }
+  public updateInventoryItem(id: string, input: InventoryItemUpdateInput): Promise<InventoryItem> {
+    return this.request(`/inventory-items/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: input,
+    });
+  }
+  public adjustInventoryItemQuantity(id: string, delta: -1 | 1): Promise<InventoryItem> {
+    return this.request(`/inventory-items/${encodeURIComponent(id)}/adjust-quantity`, {
+      method: 'POST',
+      body: { delta },
+    });
+  }
+  public archiveInventoryItem(id: string, version: number): Promise<void> {
+    return this.request(`/inventory-items/${encodeURIComponent(id)}/archive`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public restoreInventoryItem(id: string, version: number): Promise<InventoryItem> {
+    return this.request(`/inventory-items/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      body: { version },
+    });
+  }
+  public deleteInventoryItemPermanently(id: string, version: number): Promise<void> {
+    return this.request(`/inventory-items/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       body: { version },
     });

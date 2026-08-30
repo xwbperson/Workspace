@@ -44,6 +44,9 @@ const TimetablePage = lazy(() =>
 const ChecklistPage = lazy(() =>
   import('../features/checklists/index.js').then((module) => ({ default: module.ChecklistPage })),
 );
+const InventoryPage = lazy(() =>
+  import('../features/inventory/index.js').then((module) => ({ default: module.InventoryPage })),
+);
 
 function featurePage(page: React.JSX.Element): React.JSX.Element {
   return <Suspense fallback={<PageLoader label="正在加载功能" />}>{page}</Suspense>;
@@ -76,4 +79,5 @@ export const featureRoutes = [
   { path: 'features/life-countdown/:eventId', element: featurePage(<LifeCountdownPage />) },
   { path: 'features/checklists', element: featurePage(<ChecklistPage />) },
   { path: 'features/checklists/:checklistId', element: featurePage(<ChecklistPage />) },
+  { path: 'features/inventory', element: featurePage(<InventoryPage />) },
 ] as const;

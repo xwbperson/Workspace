@@ -20,6 +20,7 @@ import { checklistsMigration } from './019-checklists.js';
 import { checklistLifecycleMigration } from './020-checklist-lifecycle.js';
 import { fileReferenceProtectionMigration } from './021-file-reference-protection.js';
 import { backupRestoreTimestampsMigration } from './022-backup-restore-timestamps.js';
+import { inventoryMigration } from './023-inventory.js';
 
 export interface Migration {
   id: string;
@@ -49,4 +50,5 @@ export const migrations: readonly Migration[] = [
   checklistLifecycleMigration,
   fileReferenceProtectionMigration,
   backupRestoreTimestampsMigration,
+  inventoryMigration,
 ];
