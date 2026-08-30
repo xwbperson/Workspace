@@ -6,7 +6,17 @@ import type {
   InventoryStockFilter,
 } from '@workspace/client-sdk';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Archive, Edit3, FolderCog, Package, Plus, RotateCcw, Search, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  Edit3,
+  FolderCog,
+  FolderOpen,
+  Package,
+  Plus,
+  RotateCcw,
+  Search,
+  Trash2,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Modal } from '../../components/ui/Modal.js';
@@ -17,8 +27,10 @@ import { humanizeApiError } from '../../platform/api/client.js';
 import { inventoryApi, inventoryKeys, invalidateInventoryData } from './api.js';
 import { GroupManager } from './components/GroupManager.js';
 import { InventoryForm } from './components/InventoryForm.js';
+import { InventoryOrderSwitch } from './components/InventoryOrderSwitch.js';
 import { InventoryViewSwitch, type InventoryViewMode } from './components/InventoryViewSwitch.js';
 import { QuantityStepper } from './components/QuantityStepper.js';
+import { arrangeInventoryItems, type InventoryOrderMode } from './inventory-layout.js';
 
 type View = 'active' | 'zero' | 'archived';
 type GroupFilter = string;
@@ -46,6 +58,7 @@ export function InventoryPage(): React.JSX.Element {
   const { show } = useToast();
   const [view, setView] = useState<View>('active');
   const [viewMode, setViewMode] = useState<InventoryViewMode>(readInventoryViewPreference);
+  const [orderMode, setOrderMode] = useState<InventoryOrderMode>('grouped');
   const [groupFilter, setGroupFilter] = useState<GroupFilter>('all');
   const [query, setQuery] = useState('');
   const [createOpen, setCreateOpen] = useState(params.get('create') === '1');
@@ -99,6 +112,10 @@ export function InventoryPage(): React.JSX.Element {
       zeroQuantity: items.filter((item) => item.quantity === 0).length,
     }),
     [items],
+  );
+  const itemSections = useMemo(
+    () => arrangeInventoryItems(items, groups, orderMode),
+    [groups, items, orderMode],
   );
 
   const createItem = useMutation({
@@ -265,36 +282,39 @@ export function InventoryPage(): React.JSX.Element {
         </div>
       </section>
 
-      <nav className="inventory-group-filters" aria-label="按物品分组筛选">
-        <button
-          type="button"
-          className={groupFilter === 'all' ? 'active' : ''}
-          aria-pressed={groupFilter === 'all'}
-          onClick={() => setGroupFilter('all')}
-        >
-          全部
-        </button>
-        <button
-          type="button"
-          className={groupFilter === 'ungrouped' ? 'active' : ''}
-          aria-pressed={groupFilter === 'ungrouped'}
-          onClick={() => setGroupFilter('ungrouped')}
-        >
-          无分组
-        </button>
-        {groups.map((group) => (
+      <div className="inventory-group-bar">
+        <nav className="inventory-group-filters" aria-label="按物品分组筛选">
           <button
             type="button"
-            key={group.id}
-            className={groupFilter === group.id ? 'active' : ''}
-            aria-pressed={groupFilter === group.id}
-            onClick={() => setGroupFilter(group.id)}
+            className={groupFilter === 'all' ? 'active' : ''}
+            aria-pressed={groupFilter === 'all'}
+            onClick={() => setGroupFilter('all')}
           >
-            {group.name}
-            <span>{group.itemCount}</span>
+            所有分组
           </button>
-        ))}
-      </nav>
+          <button
+            type="button"
+            className={groupFilter === 'ungrouped' ? 'active' : ''}
+            aria-pressed={groupFilter === 'ungrouped'}
+            onClick={() => setGroupFilter('ungrouped')}
+          >
+            无分组
+          </button>
+          {groups.map((group) => (
+            <button
+              type="button"
+              key={group.id}
+              className={groupFilter === group.id ? 'active' : ''}
+              aria-pressed={groupFilter === group.id}
+              onClick={() => setGroupFilter(group.id)}
+            >
+              {group.name}
+              <span>{group.itemCount}</span>
+            </button>
+          ))}
+        </nav>
+        <InventoryOrderSwitch value={orderMode} onChange={setOrderMode} />
+      </div>
 
       <section className="inventory-summary" aria-label="物品汇总">
         <div>
@@ -318,18 +338,42 @@ export function InventoryPage(): React.JSX.Element {
             onRetry={() => void itemsQuery.refetch()}
           />
         ) : items.length ? (
-          <div className={`inventory-grid inventory-grid--${viewMode}`}>
-            {items.map((item) => (
-              <InventoryCard
-                key={item.id}
-                item={item}
-                onAdjust={(delta) => queueQuantityAdjustment(item, delta)}
-                onEdit={() => setEditingItem(item)}
-                onArchive={() => setArchivingItem(item)}
-                onRestore={() => restoreItem.mutate(item)}
-                onDelete={() => setDeletingItem(item)}
-              />
-            ))}
+          <div className={`inventory-collection inventory-collection--${orderMode}`}>
+            {itemSections.map((section) => {
+              const headingId = `inventory-section-${section.key}`;
+              return (
+                <section
+                  key={section.key}
+                  className="inventory-group-section"
+                  aria-labelledby={headingId}
+                >
+                  {orderMode === 'grouped' ? (
+                    <header className="inventory-group-section__header">
+                      <FolderOpen aria-hidden="true" size={17} />
+                      <h2 id={headingId}>{section.label}</h2>
+                      <span>{section.items.length} 种</span>
+                    </header>
+                  ) : (
+                    <h2 id={headingId} className="sr-only">
+                      {section.label}
+                    </h2>
+                  )}
+                  <div className={`inventory-grid inventory-grid--${viewMode}`}>
+                    {section.items.map((item) => (
+                      <InventoryCard
+                        key={item.id}
+                        item={item}
+                        onAdjust={(delta) => queueQuantityAdjustment(item, delta)}
+                        onEdit={() => setEditingItem(item)}
+                        onArchive={() => setArchivingItem(item)}
+                        onRestore={() => restoreItem.mutate(item)}
+                        onDelete={() => setDeletingItem(item)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
         ) : (
           <EmptyState
@@ -461,7 +505,7 @@ function InventoryCard({
         </span>
         <div>
           <span className="inventory-card__group">{item.group?.name ?? '无分组'}</span>
-          <h2>{item.name}</h2>
+          <h3>{item.name}</h3>
         </div>
         <div className="inventory-card__actions">
           {item.status === 'archived' ? (
