@@ -10,6 +10,7 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/playwright-report/**',
       '**/test-results/**',
+      '.local-private/**',
       'contracts/openapi.json',
       'packages/client-sdk/src/generated/**',
     ],
